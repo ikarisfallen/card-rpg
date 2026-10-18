@@ -18,7 +18,7 @@
 // `key` is the one Element line the situation is built around. It appears in the description,
 // never in the A/B/C choices (the choices name no Element lines at all), and it must come from
 // a card the description names: a location feature (🌉, 🧱…) needs 🏠, a line like 👿🔒 needs 👿.
-// Its approach goes on the Scene die: +1 for characters whose Concept or Boon shows it.
+// Its approach goes on the Scene die: +1 for characters whose Concept or Asset shows it.
 
 window.GAME_DATA.situations = [
   // ---- From the spreadsheet ----

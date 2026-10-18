@@ -8,24 +8,24 @@ const RULES_TEXT = [
   'Three acts, one Situation each, each harder than the last (the difficulty for your player count is at the top of the Board). Each new act draws a new Location card.',
   'Every player takes Edge as each act begins; how much depends on the act and the number of players (see the top of the Board).',
   'Each round, in initiative order, every player bets: <b>Main</b> on a free row, <b>Help</b> a row whose approach is on one of their Relationship cards (+1), give up their bet to <b>clear a Minus die</b> (and take 1 Edge' + (SIM_RULES.clearSpotlight ? ' and bank ' + SIM_RULES.clearSpotlight + ' spotlight' : '') + '), or pass.' + (SIM_RULES.clearTiming === 'end' ? ' Clearing means putting your pawn in the <b>Clear seat</b> at the foot of the Minus box (one pawn per round): the die comes off at the <b>end of the round</b>, so this round\u2019s rolls still feel it. While you hold the seat, one failure can\u2019t lose the situation: you hold the line.' + (SIM_RULES.clearGoesFirst ? ' Whoever clears also <b>bets first next round</b>.' : '') : '') + '',
-  ...(SIM_RULES.sceneModifier ? ['<b>Scene die:</b> each Situation\u2019s description names one Element line (like the Location\u2019s 🌉 crossing). That line\u2019s approach goes on the Scene die at the left of the Board\u2019s banner. ' + (SIM_RULES.sceneBy === 'approach' ? (SIM_RULES.sceneClaim ? 'Each round, the first Main player to go in with that approach takes the Scene die into their Main box: ' + sceneMod() + ' on their roll, and nobody else gets it that round. It goes back once everyone has gone.' : 'For the whole situation, a roll made with that approach gets ' + sceneMod() + '.') : 'For the whole situation, any character whose Concept or Boon shows that approach gets ' + sceneMod() + ' on whichever row they bet. Their badge is marked.')] : []),
-  ...(SIM_RULES.freeApproach ? ['<b>Cost vs. Approaches:</b> rows have no set approach. The Main player picks the approach they go in with and sets that die in their box; Help, Concept, Boon, Trouble, Bane, the Minus dice and the Fate card all read it. Each row risks one resource (Intel, Reputation, Resources, Drive, Efficiency or Time). A failure costs 1 of it, but <b>0</b> with the approach that guards it and <b>2</b> with the one that squanders it (shown in the Risk box): 🕶️ guards Intel, 📢 guards Reputation, 🧠 Resources, 💪 Drive, 🐢 Efficiency, ⚡ Time.'] : []),
+  ...(SIM_RULES.sceneModifier ? ['<b>Scene die:</b> each Situation\u2019s description names one Element line (like the Location\u2019s 🌉 crossing). That line\u2019s approach goes on the Scene die at the left of the Board\u2019s banner. ' + (SIM_RULES.sceneBy === 'approach' ? (SIM_RULES.sceneClaim ? 'Each round, the first Main player to go in with that approach takes the Scene die into their Main box: ' + sceneMod() + ' on their roll, and nobody else gets it that round. It goes back once everyone has gone.' : 'For the whole situation, a roll made with that approach gets ' + sceneMod() + '.') : 'For the whole situation, any character whose Concept or Asset shows that approach gets ' + sceneMod() + ' on whichever row they bet. Their badge is marked.')] : []),
+  ...(SIM_RULES.freeApproach ? ['<b>Cost vs. Approaches:</b> rows have no set approach. The Main player picks the approach they go in with and sets that die in their box; Help, Concept, Asset, Trouble, Liability, the Minus dice and the Fate card all read it. Each row risks one resource (Intel, Reputation, Resources, Drive, Efficiency or Time). A failure costs 1 of it, but <b>0</b> with the approach that guards it and <b>2</b> with the one that squanders it (shown in the Risk box): 🕶️ guards Intel, 📢 guards Reputation, 🧠 Resources, 💪 Drive, 🐢 Efficiency, ⚡ Time.'] : []),
   '<b>One Fate card</b> is drawn for everyone. Each row reads its own approach\u2019s number.',
   ...(INVOKE_LINES ? ['When betting as Main, a player may <b>invoke</b> one unused line on an Element card (Location, Villain, Ally, MacGuffin) whose approach matches the row: +1. Each line can be invoked once per situation.'] : []),
   ...(SIM_RULES.troubleInvoke ? ['<b>➖ Troubles</b> never count on their own. After the bets, before the card is turned, a Main player whose row shows one of their Trouble’s approaches may <b>invoke</b> it: −1 on the roll, and ' + SIM_RULES.troubleEdge + ' Edge from the pile goes on their Trouble card. If they don’t, any other player may <b>compel</b> it by putting ' + SIM_RULES.troubleEdge + ' of their own Edge there instead; the Main player can refuse by paying 1 Edge to the pile, and then the compeller’s Edge goes to the pile too. If the Scene die shows a Trouble approach too, take ' + SIM_RULES.sceneTroubleEdge + ' more Edge from the pile. The Edge on the Trouble card is theirs once the roll is over (not for this roll). Once per roll.'] : []),
-  ...(SIM_RULES.banes ? ['<b>✖️ Banes:</b> a Main player who fails draws a Bane at random (like a Broken Leg) and explains how it happened. It shows two approaches and works like a Trouble (invoke it for −1 and Edge), but anyone can compel it <b>for free</b>: the Edge comes from the pile. Refusing costs you 1 Edge to the pile. One Bane at a time: if you get another, keep either one. Get rid of it by giving up your bet for a round, or by spending ' + SIM_RULES.baneRemoveEdge + ' Edge.' + (SIM_RULES.baneClearAtActEnd === false ? ' Otherwise it stays, from act to act.' : ' All Banes go back in the deck at the end of each act.')] : []),
-  ...(SIM_RULES.boonUpgrades ? ['<b>✔️ Boon upgrades:</b> beat the difficulty by ' + SIM_RULES.boonMargin + ' or more as Main and draw a Boon from the ones nobody holds: keep it or your old one.'] : []),
-  ...(SIM_RULES.boonShield === 'heal' ? ['<b>Burn your Boon:</b> when you fail as Main, you may discard your Boon. You still lose the resource, but you draw no Bane, and you shake off the Bane you carry. An empty Boon slot fills again with your next Boon upgrade.'] : []),
+  ...(SIM_RULES.banes ? ['<b>✖️ Liabilities:</b> a Main player who fails draws a Liability at random (like a Broken Leg) and explains how it happened. It shows two approaches and works like a Trouble (invoke it for −1 and Edge), but anyone can compel it <b>for free</b>: the Edge comes from the pile. Refusing costs you 1 Edge to the pile. One Liability at a time: if you get another, keep either one. Get rid of it by giving up your bet for a round, or by spending ' + SIM_RULES.baneRemoveEdge + ' Edge.' + (SIM_RULES.baneClearAtActEnd === false ? ' Otherwise it stays, from act to act.' : ' All Liabilities go back in the deck at the end of each act.')] : []),
+  ...(SIM_RULES.boonUpgrades ? ['<b>✔️ Asset upgrades:</b> beat the difficulty by ' + SIM_RULES.boonMargin + ' or more as Main and draw an Asset from the ones nobody holds: keep it or your old one.'] : []),
+  ...(SIM_RULES.boonShield === 'heal' ? ['<b>Burn your Asset:</b> when you fail as Main, you may discard your Asset. You still lose the resource, but you draw no Liability, and you shake off the Liability you carry. An empty Asset slot fills again with your next Asset upgrade.'] : []),
   (SIM_RULES.maxStake ? 'A Main player may <b>stake</b> up to 2 spotlight tokens from their <b>Scored</b> pile. If the bet succeeds, the stake comes back plus <b>double</b> the stake on top (stake 2, get 6). Anything less than a success and the stake is lost for good.' : null),
   'After the card is turned, a Main player may spend up to <b>2 Edge</b> on their roll: +1 each.' + (SIM_RULES.helperEdge ? ' Helpers on the row may chip in their own Edge too (still 2 per roll in all).' : ''),
   ...(SIM_RULES.maxEdgeHeld ? ['<b>Edge limit:</b> nobody holds more than ' + SIM_RULES.maxEdgeHeld + ' Edge. Any more you would take stays in (or goes back to) the pile.'] : []),
-  `Effort = ➕ Concept +1, ✔️ Boon +1, ${SIM_RULES.troubleInvoke ? '➖ Trouble −1 if invoked or compelled' : '➖ Trouble −1'}, ${SIM_RULES.sceneModifier ? `the Scene die ${sceneMod()} ${SIM_RULES.sceneBy === 'approach' ? 'if the roll uses its approach' : 'if their Concept or Boon shows its approach'}, ` : ''}${INVOKE_LINES ? 'invoked line +1, ' : ''}each helper +1, each Edge spent +1, each Minus die showing the row\u2019s approach −1, plus the Fate number.`,
+  `Effort = ➕ Concept +1, ✔️ Asset +1, ${SIM_RULES.troubleInvoke ? '➖ Trouble −1 if invoked or compelled' : '➖ Trouble −1'}, ${SIM_RULES.sceneModifier ? `the Scene die ${sceneMod()} ${SIM_RULES.sceneBy === 'approach' ? 'if the roll uses its approach' : 'if their Concept or Asset shows its approach'}, ` : ''}${INVOKE_LINES ? 'invoked line +1, ' : ''}each helper +1, each Edge spent +1, each Minus die showing the row\u2019s approach −1, plus the Fate number.`,
   ...(SIM_RULES.takeSpotlight ? ['<b>Taking spotlight:</b> spotlight tokens are neutral. Each situation starts with a stack in every row\u2019s Successes box, as many as it takes to win (the target). Scoring <b>takes</b> tokens from the row\u2019s stack into your <b>This scene</b> spot. The first row emptied completes the situation, and everyone\u2019s This scene tokens are scored. If the situation is lost, they go back to the pool unscored. Act bonuses' + (SIM_RULES.maxStake ? ', stake payouts' : '') + ' and cashed-in Edge come from the pool.'] : []),
   'Beat the difficulty by N: the Main player puts N spotlight tokens on the row\u2019s Successes' + (SIM_RULES.maxTokensPerRoll ? ' (at most ' + SIM_RULES.maxTokensPerRoll + (SIM_RULES.overflowToEdge ? '; each point over that is 1 Edge instead' : '') + ')' : '') + (SIM_RULES.overflowAtRowLimit ? ', but never more than the row still needs to win: each point over that is 1 Edge instead (for a helper too, when the row is already full)' : '') + '; each helper adds 1.' + (SIM_RULES.endEdgePerSpotlight ? ' At the end of the game, every ' + SIM_RULES.endEdgePerSpotlight + ' leftover Edge buy 1 spotlight.' : '') + (SIM_RULES.helpTokensSafe ? ' A helper\u2019s token is <b>safe</b> (ringed): it counts toward the row like any other, and if the situation is lost it still scores.' : ''),
   ...(SIM_RULES.pushResource ? ['<b>Succeed at a cost:</b> after the Fate card, a Main player whose roll would miss may lower their die for the row’s resource by as many points as it takes to succeed, +1 each' + (SIM_RULES.pushToSucceed ? '' : ' (1 point at most)') + ', but never below 1.'] : []),
   ...(SIM_RULES.escalationChoice ? ['<b>Escalations:</b> when a Main player fails, they choose which of the Situation\u2019s two Escalations happens, and narrate it. The same one can happen again: that trouble just got really bad.'] : []),
-  ...(SIM_RULES.minorFailure ? ['<b>Miss by 1: a minor failure.</b> The Main player and helpers each lose the row\u2019s resource (0, 1 or 2 by the approach), but nobody draws a Bane or takes Edge, and the situation doesn\u2019t escalate.'] : []),
-  'Miss by 2 or more: the Main player and helpers each lose ' + (SIM_RULES.freeApproach ? '0, 1 or 2 (by the approach)' : '1') + ' of the row\u2019s <b>Risk</b> resource. Helpers take 1 <b>Edge</b>; the Main player takes 1 Edge' + (playerRule('failEdgePerMinus', 4) ? ' plus 1 for each Minus die already out (<b>desperation</b>, up to 3)' : '') + (SIM_RULES.banes ? ' and draws a Bane' : '') + '. The next Escalation happens and its Minus die goes in the Minus box: <b>−1 to every roll using that approach</b>, on any row' + (SIM_RULES.minusNextRound ? ', from the <b>next round</b> on (this round\u2019s other rows roll against the box as it was when they bet)' : '') + '. With 2 Minus dice out, the next failure loses the situation (unless someone holds the Clear seat), and the tokens on the board go back unscored.',
+  ...(SIM_RULES.minorFailure ? ['<b>Miss by 1: a minor failure.</b> The Main player and helpers each lose the row\u2019s resource (0, 1 or 2 by the approach), but nobody draws a Liability or takes Edge, and the situation doesn\u2019t escalate.'] : []),
+  'Miss by 2 or more: the Main player and helpers each lose ' + (SIM_RULES.freeApproach ? '0, 1 or 2 (by the approach)' : '1') + ' of the row\u2019s <b>Risk</b> resource. Helpers take 1 <b>Edge</b>; the Main player takes 1 Edge' + (playerRule('failEdgePerMinus', 4) ? ' plus 1 for each Minus die already out (<b>desperation</b>, up to 3)' : '') + (SIM_RULES.banes ? ' and draws a Liability' : '') + '. The next Escalation happens and its Minus die goes in the Minus box: <b>−1 to every roll using that approach</b>, on any row' + (SIM_RULES.minusNextRound ? ', from the <b>next round</b> on (this round\u2019s other rows roll against the box as it was when they bet)' : '') + '. With 2 Minus dice out, the next failure loses the situation (unless someone holds the Clear seat), and the tokens on the board go back unscored.',
   'A resource that drops to <b>0</b> costs you your next turn: flip your initiative token to <b>OUT</b>, and flip it back at the end of the round you sit out. On the turn after, the resource comes back at 1.',
   '<b># of players</b> tokens on one row defeats the situation: every token on the board is scored.',
   (SIM_RULES.spotlightShift ? '<b>Spotlight Shift:</b> the bonus below goes to whoever on the winning row (Main or helper) has the least scored spotlight; ties go to the Main, who then takes the helper share. ' : '') + 'Finishing a situation earns a bonus for the winning row, banked straight away: the Beginning <b>2</b> for the Main player; the Middle <b>3</b> for the Main player and <b>1</b> for each helper; the Ending <b>4</b> for the Main player and <b>2</b> for each helper.',
@@ -91,11 +91,11 @@ function castLine(pl) {
   const article = !boon || (/s$/i.test(boon.text) && !/ss$/i.test(boon.text)) ? '' : (/^[aeiou]/i.test(item) ? 'an ' : 'a ');
   const partners = [TABLE.players[(pl.index + 1) % n], TABLE.players[(pl.index - 1 + n) % n]];
   const ties = rels.map((r, i) => `${i ? 'with' : 'Their relationship with'} ${who(partners[i])} is “${esc(trim(r.text))}” (${r.approaches.join('')})`);
-  const carrying = boon ? `, carrying ${article}<b>${esc(item)}</b> (✔️${boon.approaches.join('')})` : ', with no Boon yet';
+  const carrying = boon ? `, carrying ${article}<b>${esc(item)}</b> (✔️${boon.approaches.join('')})` : ', with no Asset yet';
   return `${who(pl)}, <b>${esc(role)}</b> ${symbols('➕', concept)} <b>${esc(flaw)}</b> ${symbols('➖', trouble)}${carrying}. ${ties.join('; ')}.`;
 }
 
-// The Boon in a character's slot right now (Boons can be earned and swapped during the game).
+// The Asset in a character's slot right now (Assets can be earned and swapped during the game).
 const boonOf = pl => (pl.zones.boon.occupant ? pl.zones.boon.occupant.card : null);
 
 // `row`: the row being rolled (the Scene die counts if it's in that row's box); without one,
@@ -107,7 +107,7 @@ function bonusParts(pl, approach, row = null) {
   if (boon && has(boon.approaches, approach)) parts.push([`✔️ ${boon.text}`, 1]);
   if (!SIM_RULES.troubleInvoke && has(pl.info.trouble.approaches, approach)) parts.push(['➖ Trouble', -1]);
   // The Scene die: on a roll made with its approach ('approach'), or (old rule, 'character') on any
-  // roll by a character whose Concept or Boon shows it.
+  // roll by a character whose Concept or Asset shows it.
   const sceneCounts = TABLE.scene && (SIM_RULES.sceneBy === 'approach'
     ? same(approach, TABLE.scene.approach) && (!SIM_RULES.sceneClaim || (row ? !!row.sceneDie : !TABLE.sceneRow))
     : has(pl.info.concept.approaches, TABLE.scene.approach) || (boon && has(boon.approaches, TABLE.scene.approach)));
@@ -198,7 +198,7 @@ function gainEdge(pl) {
   return true;
 }
 
-// Edge earned from a Trouble or Bane waits on that card until the roll is over, so it can't
+// Edge earned from a Trouble or Liability waits on that card until the roll is over, so it can't
 // be spent to cancel its own -1.
 function parkEdge(row, token, card = row.main.zones.trouble.occupant) {
   const k = row.troubleEdge.length;
@@ -325,7 +325,7 @@ function* simGame() {
   TABLE.history = [];
   TABLE.shownAct = null;
   renderActTabs();
-  // Earned Boons: nobody starts with one; every Boon goes into an off-table deck.
+  // Earned Assets: nobody starts with one; every Asset goes into an off-table deck.
   if (SIM_RULES.boonsEarned) {
     players.forEach(pl => {
       const piece = pl.zones.boon.occupant;
@@ -337,7 +337,7 @@ function* simGame() {
     TABLE.boonDeck = shuffle(buildPcDeck('boon', DATA.boons, DATA.boonStates, '✔️', 1));
     updateSceneBoard();
   } else if (SIM_RULES.boonUpgrades || SIM_RULES.boonShield) {
-    // Boon upgrades: the Boons nobody was dealt make an off-table deck to draw from.
+    // Asset upgrades: the Assets nobody was dealt make an off-table deck to draw from.
     const dealt = new Set(players.map(pl => pl.zones.boon.occupant && pl.zones.boon.occupant.card.text));
     TABLE.boonDeck = shuffle(buildPcDeck('boon', DATA.boons, DATA.boonStates, '✔️', 1).filter(c => !dealt.has(c.text)));
   }
@@ -491,7 +491,7 @@ function* playSituation(situation, act, label = act) {
     for (const row of rollOrder) {
       if (!row.main) continue;
       // The human player on this row decides their Edge, and (as a failing Main) whether to burn
-      // their Boon, before the roll is settled.
+      // their Asset, before the roll is settled.
       row.plan = null;
       if ([row.main, ...row.helpers].some(p => p.human)) {
         row.plan = yield* humanEdgePlan(row, fateOf(row.approach), difficulty, board);
@@ -508,9 +508,9 @@ function* playSituation(situation, act, label = act) {
         const boon = row.main.zones.boon.occupant;
         if (row.main.human && !board.over && row.plan && row.plan.margin <= -SIM_RULES.failBy && SIM_RULES.boonShield && boon) {
           const carried = row.main.zones.bane && row.main.zones.bane.occupant;
-          row.plan.burn = yield ask('Burn your Boon?',
-            `<p>The roll misses by ${-row.plan.margin}: a failure. You can discard your Boon, <b>${esc(boon.card.text)}</b>, to shrug it off. You still lose ${lossWords(row)}, but you draw no Bane${carried ? ` and you shake off ${baneName(carried)}` : ''}.</p>`,
-            [{ label: 'Burn it', hint: carried ? 'no Bane, and heal' : 'no Bane', value: true }, { label: 'Keep it', hint: 'take the Bane', value: false }]);
+          row.plan.burn = yield ask('Burn your Asset?',
+            `<p>The roll misses by ${-row.plan.margin}: a failure. You can discard your Asset, <b>${esc(boon.card.text)}</b>, to shrug it off. You still lose ${lossWords(row)}, but you draw no Liability${carried ? ` and you shake off ${baneName(carried)}` : ''}.</p>`,
+            [{ label: 'Burn it', hint: carried ? 'no Liability, and heal' : 'no Liability', value: true }, { label: 'Keep it', hint: 'take the Liability', value: false }]);
         }
       }
       const step = resolveRow(row, fateOf(row.approach), difficulty, target, board);
@@ -547,10 +547,10 @@ function* playSituation(situation, act, label = act) {
       if (SIM_RULES.freeApproach) dropApproachDie(row);
       if (row.main.initHome) { row.main.initToken.el.classList.remove('on-board'); glide(row.main.initToken, row.main.initHome.x, row.main.initHome.y); }
       yield step;
-      if (TABLE.pendingSwap) { // the human player drew a second Boon or Bane
+      if (TABLE.pendingSwap) { // the human player drew a second Asset or Liability
         const sw = TABLE.pendingSwap;
         TABLE.pendingSwap = null;
-        const old = (sw.kind === 'Boon' ? sw.pl.zones.boon : sw.pl.zones.bane).occupant;
+        const old = (sw.kind === 'Asset' ? sw.pl.zones.boon : sw.pl.zones.bane).occupant;
         const takeNew = yield ask(`Which ${sw.kind} do you keep?`, `<p>You can only hold one ${sw.kind}.</p>`,
           [{ label: `Keep ${old.card.text}`, hint: old.card.approaches.join(''), value: false }, { label: `Take ${sw.card.text}`, hint: sw.card.approaches.join(''), value: true }]);
         yield applySwap(sw, takeNew);
@@ -700,14 +700,14 @@ function patchUp(pl, bane, recovered) {
   returnBane(bane);
   return {
     title: `${pl.letter} patches themselves up`,
-    html: `${recovered}<p>${who(pl)} gives up their bet this round to deal with their Bane ${baneName(bane)}: back into the deck.</p>`,
+    html: `${recovered}<p>${who(pl)} gives up their bet this round to deal with their Liability ${baneName(bane)}: back into the deck.</p>`,
   };
 }
 
 function shakeOffBane(pl, bane) {
   for (let i = 0; i < SIM_RULES.baneRemoveEdge; i++) spendEdge(pl);
   returnBane(bane);
-  return `<p>${who(pl)} spends ${SIM_RULES.baneRemoveEdge} Edge to shake off their Bane ${baneName(bane)}: back into the deck.</p>`;
+  return `<p>${who(pl)} spends ${SIM_RULES.baneRemoveEdge} Edge to shake off their Liability ${baneName(bane)}: back into the deck.</p>`;
 }
 
 // The Scene die, claimed for a row (SIM_RULES.sceneClaim): into the Main box beside the pawn,
@@ -847,7 +847,7 @@ function bet(pl, rows, board, difficulty, isLast = false) {
   // player to bet also takes it if nobody is holding the line yet.
   if (seatFree && board.minus.length >= SIM_RULES.maxEscalations && (noGoodBet || (seatRule && isLast))) return takeClearSeat(pl, rows, board, recovered);
 
-  // ✖️ A Bane that hits the row they'd bet on: spend Edge to shake it off if they can spare
+  // ✖️ A Liability that hits the row they'd bet on: spend Edge to shake it off if they can spare
   // it, or, if it hits most of this situation's rows, give up the bet to patch themselves up.
   const bane = SIM_RULES.banes && pl.zones.bane && pl.zones.bane.occupant;
   if (bane && best && has(bane.card.approaches, pick.approach)) {
@@ -901,16 +901,16 @@ function* humanBet(pl, rows, board, difficulty) {
         label: `Main ${rowTag(r)}`,
         hint: SIM_RULES.freeApproach
           ? `${r.action} · risks ${riskName(r.risk)}: ${RISKS[r.risk] ? `${RISKS[r.risk].good} costs nothing, ${RISKS[r.risk].bad} costs 2` : ''}`
-          : `${r.action} · your cards ${signed(cards(r))} · risks ${r.risk}${has(pl.info.trouble.approaches, r.approach) ? ' · matches your Trouble' : ''}${bane && has(bane.card.approaches, r.approach) ? ' · matches your Bane' : ''}`,
+          : `${r.action} · your cards ${signed(cards(r))} · risks ${r.risk}${has(pl.info.trouble.approaches, r.approach) ? ' · matches your Trouble' : ''}${bane && has(bane.card.approaches, r.approach) ? ' · matches your Liability' : ''}`,
         value: ['main', r.index],
       })),
       ...helpable.map(r => ({ label: `Help ${rowTag(r)}`, hint: `back up ${r.main.letter}: +1 to their roll, 1 token if it works · risks ${r.risk}`, value: ['help', r.index] })),
       ...(seatFree ? [{ label: 'Clear box', hint: 'hold the line, and remove a Minus die at the end of the round (+1 Edge)', value: ['clear'] }] : []),
-      ...(bane && pl.edge.length >= SIM_RULES.baneRemoveEdge ? [{ label: `Shake off your Bane (${SIM_RULES.baneRemoveEdge} Edge)`, hint: `discard ${bane.card.text}, then bet`, value: ['shake'] }] : []),
+      ...(bane && pl.edge.length >= SIM_RULES.baneRemoveEdge ? [{ label: `Shake off your Liability (${SIM_RULES.baneRemoveEdge} Edge)`, hint: `discard ${bane.card.text}, then bet`, value: ['shake'] }] : []),
       ...(bane ? [{ label: 'Patch yourself up', hint: `give up your bet to discard ${bane.card.text}`, value: ['patch'] }] : []),
       { label: 'Pass', hint: 'sit this round out', value: ['pass'] },
     ];
-    const status = `<p>You have <b>${pl.edge.length}</b> Edge and <b>${pl.score}</b> scored spotlight${bane ? `, and you carry the Bane ${baneName(bane)}` : ''}. Difficulty <b>${difficulty}</b>.</p>`;
+    const status = `<p>You have <b>${pl.edge.length}</b> Edge and <b>${pl.score}</b> scored spotlight${bane ? `, and you carry the Liability ${baneName(bane)}` : ''}. Difficulty <b>${difficulty}</b>.</p>`;
     const [what, i] = yield ask(`Your bet, ${pl.info.name}`, `${recovered}${status}<p>Where does your pawn go?</p>`, opts);
     const row = rows[i];
     if (what === 'shake') { recovered += shakeOffBane(pl, bane); continue; }
@@ -921,7 +921,7 @@ function* humanBet(pl, rows, board, difficulty) {
         approach = yield ask('Which approach?', `<p>How do you <i>${row.action}</i>? ${rowTag(row)} risks <b>${riskName(row.risk)}</b>: the approach you pick sets what a failure costs.</p>`,
           APPROACHES.map(a => ({
             label: a,
-            hint: `your cards ${signed(score(a))} · a failure costs ${lossWords(row, a)}${has(pl.info.trouble.approaches, a) ? ' · matches your Trouble' : ''}${bane && has(bane.card.approaches, a) ? ' · matches your Bane' : ''}`,
+            hint: `your cards ${signed(score(a))} · a failure costs ${lossWords(row, a)}${has(pl.info.trouble.approaches, a) ? ' · matches your Trouble' : ''}${bane && has(bane.card.approaches, a) ? ' · matches your Liability' : ''}`,
             value: a,
           })));
       }
@@ -945,14 +945,14 @@ function* humanBet(pl, rows, board, difficulty) {
 // ---------------------------------------------------------------------------
 
 // The effort parts of a row's roll before any Edge: cards, help, Minus dice, invoked lines,
-// Trouble / Bane hits and the Fate number.
+// Trouble / Liability hits and the Fate number.
 function rowParts(row, fate, board) {
   const parts = [...bonusParts(row.main, row.approach, row)];
   if (row.helpers.length) parts.push([`Help ×${row.helpers.length}`, row.helpers.length]);
   const minus = minusFor(board, row.approach);
   if (minus) parts.push([`Minus ➖${row.approach} ×${minus}`, -minus]);
   if (row.invoke) parts.push([`Invoke “${row.invoke.text}”`, 1]);
-  (row.hits || []).forEach(h => parts.push([h, -1])); // invoked or compelled Trouble / Bane
+  (row.hits || []).forEach(h => parts.push([h, -1])); // invoked or compelled Trouble / Liability
   parts.push([`Fate ${row.approach}`, fate]);
   return parts;
 }
@@ -1003,20 +1003,20 @@ function* humanEdgePlan(row, fate, difficulty, board) {
   return { spend: plan, margin: before + plan.reduce((n, [, x]) => n + x, 0) };
 }
 
-// The human player chooses between their Boon or Bane and the one they just drew.
+// The human player chooses between their Asset or Liability and the one they just drew.
 function applySwap({ kind, pl, card }, takeNew) {
-  const name = c => `<b>${esc(c.text)}</b> (${kind === 'Boon' ? '✔️' : '✖️'}${c.approaches.join('')})`;
-  const zone = kind === 'Boon' ? pl.zones.boon : pl.zones.bane;
-  const deck = kind === 'Boon' ? TABLE.boonDeck : TABLE.bane.deck;
+  const name = c => `<b>${esc(c.text)}</b> (${kind === 'Asset' ? '✔️' : '✖️'}${c.approaches.join('')})`;
+  const zone = kind === 'Asset' ? pl.zones.boon : pl.zones.bane;
+  const deck = kind === 'Asset' ? TABLE.boonDeck : TABLE.bane.deck;
   const old = zone.occupant;
   if (!takeNew) {
     deck.push(card);
     pulse(old);
     return { title: `You keep your ${kind}`, html: `<p>${who(pl)} keeps ${name(old.card)}; ${name(card)} goes back in the deck.</p>` };
   }
-  if (kind === 'Bane') returnBane(old);
+  if (kind === 'Liability') returnBane(old);
   else { leaveZone(old); [...old.children].forEach(removePiece); removePiece(old); deck.push(old.card); }
-  if (kind === 'Boon') placeBoon(pl, card);
+  if (kind === 'Asset') placeBoon(pl, card);
   else {
     const piece = placePcCard(card, zone.x, zone.y - 60, false);
     snapTo(piece, zone);
@@ -1053,7 +1053,7 @@ function resolveRow(row, fate, difficulty, target, board) {
     pushNote = `<p>${who(main)} succeeds at a cost, lowering their ${row.risk} ${riskName(row.risk)} from ${have} to ${have - pushN} for +${pushN}.</p>`;
   }
 
-  // Now the roll is settled, the Edge waiting on the Trouble / Bane card goes to its owner.
+  // Now the roll is settled, the Edge waiting on the Trouble / Liability card goes to its owner.
   let troubleNote = '';
   if (row.troubleEdge && row.troubleEdge.length) {
     const n = row.troubleEdge.length;
@@ -1141,10 +1141,10 @@ function resolveRow(row, fate, difficulty, target, board) {
   }
 
   if (margin <= -SIM_RULES.failBy) {
-    // Boon shield: discard the Boon to keep the resource and skip the Bane. Bots burn it when the
-    // failure would knock them out, or when the Boon fits none of this situation's rows.
-    // 'heal' version: you still lose the resource, but draw no Bane and discard the one you carry.
-    // Bots heal when their Bane hurts this situation, or block when the Boon fits none of its rows.
+    // Asset shield: discard the Asset to keep the resource and skip the Liability. Bots burn it when the
+    // failure would knock them out, or when the Asset fits none of this situation's rows.
+    // 'heal' version: you still lose the resource, but draw no Liability and discard the one you carry.
+    // Bots heal when their Liability hurts this situation, or block when the Asset fits none of its rows.
     const boonPiece = main.zones.boon.occupant;
     const healMode = SIM_RULES.boonShield === 'heal';
     const carried = main.zones.bane && main.zones.bane.occupant;
@@ -1161,13 +1161,13 @@ function resolveRow(row, fate, difficulty, target, board) {
       updateSceneBoard(); // the Scene die may no longer favour them
       if (healMode && carried) returnBane(carried);
       shieldText = healMode
-        ? `${who(main)} discards their Boon, <b>${esc(boonPiece.card.text)}</b>, to shrug it off: no new Bane${carried ? `, and they shake off ${baneName(carried)}` : ''}. `
-        : `${who(main)} discards their Boon, <b>${esc(boonPiece.card.text)}</b>, to shrug it off: they keep their ${row.risk} and draw no Bane. `;
+        ? `${who(main)} discards their Asset, <b>${esc(boonPiece.card.text)}</b>, to shrug it off: no new Liability${carried ? `, and they shake off ${baneName(carried)}` : ''}. `
+        : `${who(main)} discards their Asset, <b>${esc(boonPiece.card.text)}</b>, to shrug it off: they keep their ${row.risk} and draw no Liability. `;
     }
-    // Pick your loss (failPickLoss): the Main player loses the resource OR takes a Bane. Bots
-    // keep a resource that would drop to 0 and take the Bane; otherwise they lose the resource.
+    // Pick your loss (failPickLoss): the Main player loses the resource OR takes a Liability. Bots
+    // keep a resource that would drop to 0 and take the Liability; otherwise they lose the resource.
     const banesOn = SIM_RULES.banes && TABLE.bane && TABLE.bane.deck.length;
-    // With failPickLossNoBane, the choice is only open to someone who doesn't already have a Bane.
+    // With failPickLossNoBane, the choice is only open to someone who doesn't already have a Liability.
     const mayPick = !SIM_RULES.failPickLossNoBane || !(main.zones.bane && main.zones.bane.occupant);
     const mainTakesBane = !shield && (!SIM_RULES.failPickLoss || (banesOn && mayPick && main.res[row.risk] <= 1));
     const losers = (shield && !healMode) || (SIM_RULES.failPickLoss && mainTakesBane && banesOn) ? row.helpers : team;
@@ -1181,7 +1181,7 @@ function resolveRow(row, fate, difficulty, target, board) {
     const helpersEdged = row.helpers.filter(gainEdge);
     const baneNote = SIM_RULES.banes && mainTakesBane ? giveBane(main, board.rows || []) : ''; // only the Main player
     const guarded = SIM_RULES.freeApproach && !cost ? `Going in ${row.approach} guarded their ${riskName(row.risk)}: nobody loses any. ` : '';
-    const lossText = shieldText + (guarded || (losers.length ? `${losers.map(who).join(' and ')} ${losers.length > 1 ? 'each lose' : 'loses'} ${cost} ${row.risk} ${riskName(row.risk)}${cost > 1 ? ` (${row.approach} squanders it)` : ''}. ` : shield ? '' : `${who(main)} keeps their ${row.risk} and takes a Bane instead. `));
+    const lossText = shieldText + (guarded || (losers.length ? `${losers.map(who).join(' and ')} ${losers.length > 1 ? 'each lose' : 'loses'} ${cost} ${row.risk} ${riskName(row.risk)}${cost > 1 ? ` (${row.approach} squanders it)` : ''}. ` : shield ? '' : `${who(main)} keeps their ${row.risk} and takes a Liability instead. `));
     const edgeText = [got ? `${who(main)} takes ${got} Edge${board.minus.length && playerRule('failEdgePerMinus') ? ' (desperation: the Minus box is filling up)' : ''}` : '', ...helpersEdged.map(h => `${who(h)} takes 1 Edge`)].filter(Boolean).join(', ');
     return {
       failed: true,
@@ -1193,10 +1193,10 @@ function resolveRow(row, fate, difficulty, target, board) {
   }
 
   // A near miss (SIM_RULES.closeMissBane, test): missing by less than failBy still leaves a
-  // mark on the Main player, a Bane, though it's no failure (no escalation, nothing lost).
+  // mark on the Main player, a Liability, though it's no failure (no escalation, nothing lost).
   const closeBane = SIM_RULES.closeMissBane && SIM_RULES.banes && margin < 0 && !board.over ? giveBane(main, board.rows || []) : '';
   // A minor failure (SIM_RULES.minorFailure, test): missing by less than failBy costs the row's
-  // resource (by the approach) and draws the Main player a Bane, but adds no Tension die and
+  // resource (by the approach) and draws the Main player a Liability, but adds no Tension die and
   // gives no Edge. Only a full failure (miss by failBy+) escalates the situation.
   if (SIM_RULES.minorFailure && margin < 0 && !board.over) {
     const cost = riskCost(row.risk, row.approach);
@@ -1268,13 +1268,13 @@ function wantsCompel(pl, row, rows, board, harm, target, free = false) {
   const finishing = row.tokens.length + 2 >= target;
   const threat = finishing || row.main.score + onBoard(row.main) >= pl.score + onBoard(pl);
   const risky = board.minus.length >= SIM_RULES.maxEscalations && onBoard(pl) > 0;
-  // A paid compel costs them 1 Edge and hands the target 1; a free one (a Bane) only hands it over.
+  // A paid compel costs them 1 Edge and hands the target 1; a free one (a Liability) only hands it over.
   return threat && !risky && harm >= (free ? 1 : 2) * SIM_RULES.troubleEdge * EDGE_WORTH;
 }
 
 // After the bets, before the Fate card: each Main player whose row shows an approach on their
-// ➖ Trouble or ✖️ Bane may invoke that card (-1, Edge from the pile). If they don't, another
-// player may compel it: for a Trouble the compeller pays the Edge, for a Bane it's free (the
+// ➖ Trouble or ✖️ Liability may invoke that card (-1, Edge from the pile). If they don't, another
+// player may compel it: for a Trouble the compeller pays the Edge, for a Liability it's free (the
 // pile pays). The Main player can refuse by paying 1 Edge to the pile (a refused Trouble compel
 // also sends the compeller's Edge there). The Edge waits on the card until the roll is over.
 // Each card counts once per roll, so a roll can take both.
@@ -1284,7 +1284,7 @@ function* troublePhase(rows, order, board, difficulty, target) {
     const row = rows.find(r => r.main === pl);
     if (!row) continue;
     const cards = [{ kind: 'Trouble', sign: '➖', piece: pl.zones.trouble.occupant }];
-    if (pl.zones.bane && pl.zones.bane.occupant) cards.push({ kind: 'Bane', sign: '✖️', piece: pl.zones.bane.occupant });
+    if (pl.zones.bane && pl.zones.bane.occupant) cards.push({ kind: 'Liability', sign: '✖️', piece: pl.zones.bane.occupant });
     for (const c of cards) {
       if (has(c.piece.card.approaches, row.approach)) yield* invokeOrCompel(pl, row, c, order, rows, board, difficulty, target);
     }
@@ -1292,7 +1292,7 @@ function* troublePhase(rows, order, board, difficulty, target) {
 }
 
 function* invokeOrCompel(pl, row, { kind, sign, piece }, order, rows, board, difficulty, target) {
-  const bane = kind === 'Bane';
+  const bane = kind === 'Liability';
   const scene = !bane && !!(TABLE.scene && has(piece.card.approaches, TABLE.scene.approach));
   const extra = scene ? SIM_RULES.sceneTroubleEdge : 0;
   const reward = SIM_RULES.troubleEdge + extra;
@@ -1352,7 +1352,7 @@ function* invokeOrCompel(pl, row, { kind, sign, piece }, order, rows, board, dif
   }
   row.hits.push(`${sign} ${kind} (compelled)`);
   let paid;
-  if (bane) paid = `The ${fromPile(SIM_RULES.troubleEdge)} Edge comes from the pile: compelling a Bane is free.`;
+  if (bane) paid = `The ${fromPile(SIM_RULES.troubleEdge)} Edge comes from the pile: compelling a Liability is free.`;
   else {
     for (let i = 0; i < SIM_RULES.troubleEdge; i++) parkEdge(row, by.edge.pop(), piece);
     const got = fromPile(extra);
@@ -1366,20 +1366,20 @@ function* invokeOrCompel(pl, row, { kind, sign, piece }, order, rows, board, dif
 }
 
 // ---------------------------------------------------------------------------
-// ✖️ Banes
+// ✖️ Liabilities
 // ---------------------------------------------------------------------------
 
 const baneName = piece => `<b>${esc(piece.card.text)}</b> (✖️${piece.card.approaches.join('')})`;
 const baneBite = (piece, rows) => rows.filter(r => has(piece.card.approaches, r.approach)).length;
 
-// Back into the (off-table) Bane deck: the card leaves the table.
+// Back into the (off-table) Liability deck: the card leaves the table.
 function returnBane(piece) {
   leaveZone(piece);
   removePiece(piece);
   TABLE.bane.deck.push(piece.card);
 }
 
-// A Main player who fails draws a Bane at random (and explains how it happened). Only one at a
+// A Main player who fails draws a Liability at random (and explains how it happened). Only one at a
 // time: with one already, they keep whichever they prefer (bots: the one fewer of this
 // situation's rows use) and the other goes back in the deck.
 function giveBane(pl, rows) {
@@ -1389,27 +1389,27 @@ function giveBane(pl, rows) {
   const name = baneName({ card });
   const old = pl.zones.bane.occupant;
   if (old && pl.human) { // the human player chooses: see applySwap
-    TABLE.pendingSwap = { kind: 'Bane', pl, card };
-    return `<p>${who(pl)} draws the Bane ${name}. How did that happen? Keep it, or the one you have, ${baneName(old)}?</p>`;
+    TABLE.pendingSwap = { kind: 'Liability', pl, card };
+    return `<p>${who(pl)} draws the Liability ${name}. How did that happen? Keep it, or the one you have, ${baneName(old)}?</p>`;
   }
   if (old && baneBite(old, rows) <= baneBite({ card }, rows)) {
     deck.push(card);
     pulse(old);
-    return `<p>${who(pl)} draws the Bane ${name}, but keeps the one they have, ${baneName(old)}. The new one goes back in the deck.</p>`;
+    return `<p>${who(pl)} draws the Liability ${name}, but keeps the one they have, ${baneName(old)}. The new one goes back in the deck.</p>`;
   }
   if (old) returnBane(old);
   const zone = pl.zones.bane;
   const piece = placePcCard(card, zone.x, zone.y - 60, false);
   snapTo(piece, zone); // slides in and turns face up
   raise(piece);
-  return `<p>${who(pl)} draws the Bane ${name}${old ? `, replacing ${baneName(old)}` : ''}. How did that happen?</p>`;
+  return `<p>${who(pl)} draws the Liability ${name}${old ? `, replacing ${baneName(old)}` : ''}. How did that happen?</p>`;
 }
 
 // ---------------------------------------------------------------------------
-// ✔️ Earned Boons (SIM_RULES.boonsEarned)
+// ✔️ Earned Assets (SIM_RULES.boonsEarned)
 // ---------------------------------------------------------------------------
 
-// A Main player who succeeds by SIM_RULES.boonMargin or more draws a Boon at random. With one
+// A Main player who succeeds by SIM_RULES.boonMargin or more draws an Asset at random. With one
 // already, they keep whichever they prefer (bots: the one more of this situation's rows use).
 function giveBoon(pl, rows) {
   const deck = TABLE.boonDeck;
@@ -1419,13 +1419,13 @@ function giveBoon(pl, rows) {
   const name = c => `<b>${esc(c.text)}</b> (✔️${c.approaches.join('')})`;
   const zone = pl.zones.boon, old = zone.occupant;
   if (old && pl.human) { // the human player chooses: see applySwap
-    TABLE.pendingSwap = { kind: 'Boon', pl, card };
-    return `<p>${who(pl)} draws the Boon ${name(card)}: keep it, or the one you have, ${name(old.card)}?</p>`;
+    TABLE.pendingSwap = { kind: 'Asset', pl, card };
+    return `<p>${who(pl)} draws the Asset ${name(card)}: keep it, or the one you have, ${name(old.card)}?</p>`;
   }
   if (old && fit(old.card) >= fit(card)) {
     deck.push(card);
     pulse(old);
-    return `<p>${who(pl)} draws the Boon ${name(card)}, but keeps the one they have, ${name(old.card)}.</p>`;
+    return `<p>${who(pl)} draws the Asset ${name(card)}, but keeps the one they have, ${name(old.card)}.</p>`;
   }
   if (old) {
     leaveZone(old);
@@ -1434,14 +1434,14 @@ function giveBoon(pl, rows) {
     deck.push(old.card);
   }
   placeBoon(pl, card);
-  return `<p>${who(pl)} earns the Boon ${name(card)}${old ? `, swapping out ${name(old.card)}` : ''}.</p>`;
+  return `<p>${who(pl)} earns the Asset ${name(card)}${old ? `, swapping out ${name(old.card)}` : ''}.</p>`;
 }
 
-// A Boon drawn mid-game slides into the slot, and like at the start, a random spare Boon is
+// An Asset drawn mid-game slides into the slot, and like at the start, a random spare Asset is
 // flipped face down and tucked under it so one of its conditions ("Borrowed...") names it.
 function placeBoon(pl, card) {
   const zone = pl.zones.boon;
-  const stale = zone.nameZone.occupant; // the old Boon's name card, if it left the table
+  const stale = zone.nameZone.occupant; // the old Asset's name card, if it left the table
   if (stale && !stale.el.isConnected) zone.nameZone.occupant = null;
   const piece = placePcCard(card, zone.x, zone.y - 60, false);
   snapTo(piece, zone); // slides in and turns face up
@@ -1450,7 +1450,7 @@ function placeBoon(pl, card) {
   const { card: nameCard, rot } = drawNameCard(spares);
   const name = placePcCard(nameCard, zone.x, zone.y - PEEK - 60, false);
   name.rot = rot;
-  snapTo(name, zone.nameZone); // tucked under the new Boon
+  snapTo(name, zone.nameZone); // tucked under the new Asset
   updateSceneBoard(); // the Scene die may favour them now
   return piece;
 }
@@ -1474,7 +1474,7 @@ function escalate(situation, n, board, pick = null) {
 }
 
 // The failing Main player picks the Escalation (SIM_RULES.escalationChoice): you, with buttons;
-// a bot, the one whose Tension die hits the most of the others' Concept / Boon approaches and the
+// a bot, the one whose Tension die hits the most of the others' Concept / Asset approaches and the
 // fewest of its own. Returns the Escalation's index, or null (they happen in order).
 const escalationApproach = text => { const m = noVS(text || '').match(/➖\s*(\S+)\s*$/); return m ? m[1] : ''; };
 function* chooseEscalation(main, situation, board) {
@@ -1574,14 +1574,14 @@ function endSituation(rows, board) {
   flipBackOut();
   board.minus.forEach(removePiece);
   board.minus = [];
-  // Banes clear at the end of an act (unless the rule says they stay until removed).
+  // Liabilities clear at the end of an act (unless the rule says they stay until removed).
   const healed = SIM_RULES.baneClearAtActEnd === false ? [] : TABLE.players.filter(pl => pl.zones.bane && pl.zones.bane.occupant);
   healed.forEach(pl => returnBane(pl.zones.bane.occupant));
   const initiative = reorderInitiative(rows);
   returnPawns();
   return {
     title: 'Clearing the board',
-    html: `<p>Minus dice are removed and pawns go home.${healed.length ? ` ${healed.map(who).join(', ')} shake${healed.length > 1 ? '' : 's'} off their Bane${healed.length > 1 ? 's' : ''}: back into the deck.` : ''} Spotlight so far: ${TABLE.players.map(pl => `${who(pl)} ${pl.score}`).join(' · ')}.</p>${initiative}`,
+    html: `<p>Minus dice are removed and pawns go home.${healed.length ? ` ${healed.map(who).join(', ')} shake${healed.length > 1 ? '' : 's'} off their Liability${healed.length > 1 ? 's' : ''}: back into the deck.` : ''} Spotlight so far: ${TABLE.players.map(pl => `${who(pl)} ${pl.score}`).join(' · ')}.</p>${initiative}`,
   };
 }
 

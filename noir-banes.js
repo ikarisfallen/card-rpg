@@ -1,4 +1,4 @@
-// Film Noir Bane cards: bad things that happen to a Main player who fails a roll (misses by
+// Film Noir Liability cards: bad things that happen to a Main player who fails a roll (misses by
 // 2 or more). They're drawn at random, so part of the fun is explaining how it happened.
 // Each shows ✖️ and two approaches; like a Trouble, it only hurts when invoked or compelled.
 // Copy them into the spreadsheet when convenient.

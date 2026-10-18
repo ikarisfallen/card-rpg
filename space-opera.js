@@ -49,7 +49,7 @@ window.SPACE_OPERA_DATA = (() => {
       'Salvaged...', 'Ancestral...', 'Prototype...', 'Battle-scarred...', 'Black-market...', 'Military-issue...',
       'Jury-rigged...', 'Gilded...', 'Stolen...', 'Sand-scoured...', 'Freshly printed...', 'Cursed...',
     ],
-    // Banes: what a failed roll does to the Main player, drawn at random (see noir-banes.js).
+    // Liabilities: what a failed roll does to the Main player, drawn at random (see noir-banes.js).
     banes: [
       { text: 'Broken Leg', approaches: ['⚡', '💪'] },
       { text: 'Blaster Burn', approaches: ['💪', '🐢'] },

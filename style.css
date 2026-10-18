@@ -214,7 +214,7 @@ html, body {
 .portrait svg { display: block; width: 100%; height: 100%; }
 
 /* Card-back label along the bottom edge, in the same style as the other backs. When the
-   card is used as a portrait, this strip is what slides under the Boon's name card. */
+   card is used as a portrait, this strip is what slides under the Asset's name card. */
 .back-strip {
   flex: none;
   height: 22px;
@@ -251,7 +251,7 @@ html, body {
 .kind-location     { --accent: #c00000; --back: #4a0f0f; }
 .situation-card { --accent: #34495e; --back: #1c2530; }
 
-/* PC cards (Concept / Trouble / Boon / Relationship): small squares */
+/* PC cards (Concept / Trouble / Asset / Relationship): small squares */
 .pc-card .card-front { padding: 8px 9px; gap: 4px; }
 
 .pc-text {
@@ -1114,7 +1114,7 @@ body[data-theme="space"] #table {
 /* How many tokens a pile holds, after its label: "Edge (3)". */
 .pile-count { font-weight: 600; opacity: 0.75; }
 
-/* Boon art: a small line drawing between the name and the approach row. */
+/* Asset art: a small line drawing between the name and the approach row. */
 /* The name keeps its full size; the art shrinks to fit (a two-line name leaves ~30px). */
 .pc-text:has(+ .pc-art) { flex: none; }
 .pc-art {
@@ -1314,16 +1314,16 @@ body[data-theme="space"] #table {
 .situation-card .sit-choice-text { text-align: left; }
 .situation-card .sit-stamp { position: absolute; right: 6px; bottom: 4px; padding: 3px 9px; font-size: 13px; }
 
-/* Concept, Trouble, Boon and Bane: Fate-card sized, with larger text. */
+/* Concept, Trouble, Asset and Liability: Fate-card sized, with larger text. */
 .pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .card-front { padding: 10px 10px 9px; gap: 6px; }
 .pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .kind-label { font-size: 13px; }
 .pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .pc-text { font-size: 21px; line-height: 1.15; }
 .pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .pc-text.long { font-size: 19px; }
 .pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .approach-row { font-size: 25px; gap: 4px; }
 .pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .approach-row .sign { font-size: 19px; }
-.pc-text:has(+ .pc-art) { padding-bottom: 3px; } /* room for descenders above a Bane's drawing */
+.pc-text:has(+ .pc-art) { padding-bottom: 3px; } /* room for descenders above a Liability's drawing */
 
-/* One text size, not bold, on every card's text: Concept, Trouble, Boon, Bane, Relationship,
+/* One text size, not bold, on every card's text: Concept, Trouble, Asset, Liability, Relationship,
    Situation and the Elements (long text may still shrink to fit its card). */
 :root { --card-text: 17px; }
 .pc-card .pc-text, .pc-card .pc-text.long,
@@ -1446,7 +1446,7 @@ body[data-theme="space"] #table {
 .sit-risk-side b.good { color: #1f7a45; }
 .sit-risk-side b.bad { color: #b03a2e; }
 
-/* Rules printed inside the Boon and Bane slots. */
+/* Rules printed inside the Asset and Liability slots. */
 .zone.rules-zone {
   place-items: start;
   padding: 10px 10px;
@@ -1462,7 +1462,7 @@ body[data-theme="space"] #table {
 .zone.rules-zone p { margin: 0 0 5px; }
 
 /* The player board: a grey panel behind the character sheet, reaching left under the edges of
-   the Boon and Bane, which sit off the board. Each tucks into a slot whose visible strip is
+   the Asset and Liability, which sit off the board. Each tucks into a slot whose visible strip is
    marked ✔️ / ✖️. The sheet itself sits on the board, unframed. */
 .player-board {
   border-radius: 16px;
@@ -1470,9 +1470,9 @@ body[data-theme="space"] #table {
   box-shadow: var(--shadow-rest), inset 0 0 0 2px rgba(255, 255, 255, 0.25);
 }
 .sheet { background: transparent; box-shadow: none; }
-/* The ✔️ / ✖️ down the board's left edge that the Boon and Bane line up with. */
+/* The ✔️ / ✖️ down the board's left edge that the Asset and Liability line up with. */
 .player-board-mark { width: 34px; text-align: center; font-family: var(--emoji); font-size: 24px; line-height: 32px; }
-/* The Boon and Bane slots have no outline (the board's marks line them up). */
+/* The Asset and Liability slots have no outline (the board's marks line them up). */
 .zone.hidden-zone { border-color: transparent; color: transparent; background: none; }
 .zone.rules-zone { background: rgba(0, 0, 0, 0.35); border-color: rgba(255, 255, 255, 0.45); color: rgba(255, 255, 255, 0.8); }
 
@@ -1496,3 +1496,31 @@ body[data-theme="space"] #table {
    under the pawn, at 80% so the pawn's base still reads. */
 .die.die-scene.in-box .lift { transform: scale(0.7); }
 .token.spotlight.staked .lift { transform: scale(0.8); }
+
+/* The Asset and Liability rules spread over the taller footer. */
+.sheet-foot { justify-content: space-evenly; gap: 6px; line-height: 1.3; }
+
+/* Where the cards go (see placeBox in deal.js): dashed boxes against the cards' edges, around
+   the Concept and Trouble headers and the Asset and Liability marks. */
+.place-box {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(255, 255, 255, 0.7);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+.place-box .sheet-sign { font-size: 20px; }
+.place-box.open-left { border-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.place-box.open-top { border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+.sheet-head { padding: 0 6px; }
+.sheet-head .sheet-note { max-width: none; font-size: 10px; }
+
+/* "This scene (0)" on one line, above the portrait instead of wrapping behind it. */
+.pair-label.stack-label { white-space: nowrap; }
+/* The Asset / Liability rules sit low in their (shorter) footer. */
+.sheet-foot { justify-content: center; gap: 8px; padding-top: 6px; }
+.sheet .sheet-box { margin: 0 6px; } /* as tall as its row: hugs the die */
+.sheet-foot { padding-top: 0; }

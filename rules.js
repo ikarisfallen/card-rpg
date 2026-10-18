@@ -12,11 +12,11 @@ const SIM_RULES = {
   maxTokensPerRoll: 0,   // a success places at most this many spotlight tokens (0 = no cap)...
   overflowToEdge: true,  // ...and each point of margin above it is 1 Edge from the pile instead
   // Failing (the Main player): Edge taken = failEdgeMain + failEdgePerMinus per Minus die already
-  // out; helpers always take 1. failPickLoss: lose the resource OR take a Bane, not both.
+  // out; helpers always take 1. failPickLoss: lose the resource OR take a Liability, not both.
   failEdgeMain: 1,
   failEdgePerMinus: 0,   // desperation (removed 2026-10-18): +1 Edge per Minus die already out
   failPickLoss: false,
-  failPickLossNoBane: true, // ...but only while you don't already have a Bane (else: lose the resource)
+  failPickLossNoBane: true, // ...but only while you don't already have a Liability (else: lose the resource)
   overflowAtRowLimit: true,  // a row takes only the tokens it needs to win; the rest of the margin is Edge
   endEdgePerSpotlight: 2, // at the end of the game, this many leftover Edge buy 1 spotlight (0 = off)
   helpTokensSafe: false, // true: helpers' tokens score even if the situation is lost (tried; felt passive)
@@ -41,22 +41,22 @@ const SIM_RULES = {
   // can't lose the situation ("holding the line"). 'now': the old rule, cleared at once.
   clearTiming: 'end',
   clearGoesFirst: true,  // whoever clears a Minus die bets first next round (as well as 1 Edge)
-  // ✖️ Banes: a Main player who fails draws one at random (two approaches each). Like a
+  // ✖️ Liabilities: a Main player who fails draws one at random (two approaches each). Like a
   // Trouble it can be invoked or compelled, but compelling it is free (the pile pays). One at a
   // time; removed by giving up a bet or spending baneRemoveEdge Edge.
   banes: true,
   baneRemoveEdge: 2,
   baneClearAtActEnd: false,
-  // Earned Boons (test): nobody starts with a Boon; a Main player who succeeds by boonMargin or
+  // Earned Assets (test): nobody starts with an Asset; a Main player who succeeds by boonMargin or
   // more draws one at random, and with one already keeps whichever they prefer.
   boonsEarned: false,
-  // Boon upgrades: everyone starts with a Boon; succeeding by boonMargin+ draws one from the
-  // undealt Boons, and you keep whichever you prefer.
+  // Asset upgrades: everyone starts with an Asset; succeeding by boonMargin+ draws one from the
+  // undealt Assets, and you keep whichever you prefer.
   boonUpgrades: true,
   boonMargin: 2,
-  // Boon shield (test): a Main player who fails may discard their Boon to keep the resource and
-  // skip the Bane (the Escalation, Edge and any lost stake still happen).
-  boonShield: 'heal', // 'heal': still lose the resource, but no new Bane and the carried one is discarded; true: keep the resource too  // true: Banes clear at the end of each act; false: a Bane stays until removed
+  // Asset shield (test): a Main player who fails may discard their Asset to keep the resource and
+  // skip the Liability (the Escalation, Edge and any lost stake still happen).
+  boonShield: 'heal', // 'heal': still lose the resource, but no new Liability and the carried one is discarded; true: keep the resource too  // true: Liabilities clear at the end of each act; false: a Liability stays until removed
   edgeAtActStart: { 'Beginning': 1, 'Middle': 2, 'Ending': 3 }, // Edge every player takes as the act begins
   maxStake: 0,        // spotlight tokens a Main player may stake on their bet (stakes removed 2026-10-18: 0)
   stakeLostOn: 'miss', // 'miss': lost unless the bet succeeds; 'failure': only lost on a failure
@@ -73,7 +73,7 @@ const SIM_RULES = {
   edgePolicy: 'push', // bots: 'push' spends to turn a miss into a success; 'careful' only dodges failures
   // How the Scene die counts. 'approach' (2026-10-18): only on a roll made with its approach
   // (every bonus comes from the one approach you chose). 'character': the old rule, on any roll
-  // by a character whose Concept or Boon shows it.
+  // by a character whose Concept or Asset shows it.
   sceneBy: 'approach',
   // Claiming the Scene die (with sceneBy 'approach'): each round, the first Main player to go in
   // with its approach takes the die into their Main box for the +1; nobody else gets it that
@@ -97,9 +97,9 @@ const SIM_RULES = {
   // Narrow successes (test): beating the difficulty by less than narrowMargin still costs the
   // row's resource, by the approach (0 / 1 / 2), as in "Risks" on The Walking Mind.
   narrowCost: false,
-  closeMissBane: false, // test: missing by less than failBy draws a Bane (but isn't a failure)
+  closeMissBane: false, // test: missing by less than failBy draws a Liability (but isn't a failure)
   // Minor failures (ON 2026-10-17): missing by less than failBy (by 1) costs the row's resource,
-  // by the approach (0 / 1 / 2), but draws no Bane, gives no Edge and adds no Tension die.
+  // by the approach (0 / 1 / 2), but draws no Liability, gives no Edge and adds no Tension die.
   minorFailure: true,
   // Succeed at a cost (called "pushing" in the code): after the Fate card, a Main player whose roll would miss may lower
   // their die for the row's resource (never below 1) for +1 per point.
@@ -111,7 +111,7 @@ const SIM_RULES = {
   pushToSucceed: true, // ...as many points as it takes to succeed (+1 each), only if that reaches a success
   // The Fate deck: 'balanced' (24 cards, each −2 −1 0 0 +1 +2) or 'random' (the old 30 cards).
   fateDeck: 'balanced',
-  minorFailureBane: false, // ...and also draws the Main player a Bane
+  minorFailureBane: false, // ...and also draws the Main player a Liability
   narrowMargin: 2,
   // Taking spotlight. true: neutral spotlight tokens; each situation starts with a stack (the
   // target) in every row's Successes box, and scoring takes tokens from it into your "This
@@ -125,7 +125,7 @@ const SIM_RULES = {
 // falls back to SIM_RULES above. `target` is the successes on one row that win a situation.
 // Stacks grow each act (players / +1 / +2, but 2 / 3 / 3 for two players), with extra Ending Edge
 // to match: retuned 2026-10-17 with minor failures (sim: 13.3 / 11.8 / 9.9 rounds; acts won
-// 100/93/43%, 99/91/~45%, 100/94/56%; Banes and lost turns back near the old levels).
+// 100/93/43%, 99/91/~45%, 100/94/56%; Liabilities and lost turns back near the old levels).
 // Earlier: tuned so each count plays about the same (Acts won ~98% / ~90% / ~50%, ~8.5 rounds). Ending
 // Edge was cut by 2 at every count once the Scene die and invoked Troubles made it ~65-70%:
 //   2 players: fewer Edge (only 2 bets per spin means fewer failures to recover from)

@@ -278,7 +278,7 @@ function snapTo(piece, zone, animate = true) {
     }
   }
 
-  // A slot tucked beneath another (a portrait under the Boon) keeps that stack on top.
+  // A slot tucked beneath another (a portrait under the Asset) keeps that stack on top.
   if (zone.under) {
     [zone.under.occupant, zone.under.nameZone && zone.under.nameZone.occupant]
       .forEach(p => p && raise(p.parent || p));
