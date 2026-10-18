@@ -590,6 +590,7 @@ html, body {
 .die-approach { --die-hi: #fffaf0; --die-lo: #ddd3bd; }
 .die-minus    { --die-hi: #8a2234; --die-lo: #45101b; }
 .die-scene    { --die-hi: #2f9e5b; --die-lo: #145a33; } /* the Situation's Scene die (a bonus) */
+.die-obstacle { --die-hi: #4b4f86; --die-lo: #23264d; } /* the Storyteller's Obstacle die (−1 on one row) */
 
 .die.rolling .lift { animation: tumble 720ms cubic-bezier(0.25, 0.6, 0.35, 1); }
 
@@ -1416,16 +1417,6 @@ body[data-theme="space"] #table {
 .mat-rules th, .mat-rules td { padding: 1px 5px; }
 .mat-goal { flex: 1; min-width: 0; padding-right: 10px; }
 
-/* The Board's slot: a recess the Situation card slides into, its choices level with the rows. */
-.mat-slot {
-  grid-row: span 3;
-  margin: 0 6px 0 0;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.35);
-  box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.55), inset 0 0 0 2px rgba(255, 255, 255, 0.08);
-}
-.mat-foot.foot-slot { padding-top: 18px; } /* clear of the card's bottom edge */
-
 /* A choice's risk, where the Risk die used to be: the resource, ✓ guarding approach above it,
    ✗ squandering approach below. */
 .sit-risk {
@@ -1524,3 +1515,76 @@ body[data-theme="space"] #table {
 .sheet-foot { justify-content: center; gap: 8px; padding-top: 6px; }
 .sheet .sheet-box { margin: 0 6px; } /* as tall as its row: hugs the die */
 .sheet-foot { padding-top: 0; }
+
+/* The Situation card stands upright: the description on top, the three choices in the middle
+   (each a Board row tall, level with the Board's rows), the Escalations at the bottom. The
+   description and Escalations are smaller than the choices. */
+.situation-card .card-front { display: flex; flex-direction: column; }
+.situation-card .sit-intro, .situation-card .sit-escs {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  font-size: calc(var(--card-text) * 0.75);
+  font-weight: 400;
+}
+.situation-card .sit-intro { flex: none; height: 165px; box-sizing: border-box; padding: 8px 12px 6px; /* SIT_CARD.intro */ border-bottom: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.situation-card .sit-intro .sit-name { font-size: calc(var(--card-title) * 0.75); }
+.situation-card .sit-escs { justify-content: center; margin-top: 0; padding: 6px 12px 8px; }
+.situation-card .sit-choices { flex: none; height: calc(3 * 104px); } /* 3 x MAT_ROW in deal.js */
+/* The Board is narrower without the slot: the banner's small print wraps beside the act table. */
+.mat-goal .mat-sub, .mat-goal .mat-scene { white-space: normal; }
+
+/* The Storyteller token: passed round the table, with a slot the Obstacle die rests in (its
+   centre OBSTACLE_RIDE above the token's, in deal.js) and its name underneath. */
+.token.storyteller .lift {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  padding-top: 13px;
+  box-sizing: border-box;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  background: radial-gradient(circle at 35% 30%, #8a8fd0, #2e3266 75%);
+}
+.token.storyteller .story-slot {
+  flex: none;
+  width: 62px;
+  height: 62px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6), inset 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+.token.storyteller .story-name {
+  font: 800 10px "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+/* The Board is as tall as the Situation card: its banner and footer have room for larger,
+   more spaced-out text that's easier to scan across the table. */
+.mat-banner { align-items: center; }
+.mat-goal { font-size: 20px; line-height: 1.35; }
+.mat-goal b { font-size: 28px; }
+.mat-goal .mat-sub { font-size: 15px; margin-top: 3px; }
+.mat-goal .mat-scene { font-size: 15px; margin-top: 4px; }
+.mat-rules { line-height: 1.45; }
+.mat-rules th { font-size: 15px; }
+.mat-rules td { font-size: 19px; }
+.mat-rules tr:first-child th { font-size: 12px; }
+.mat-rules th, .mat-rules td { padding: 1px 7px; }
+.mat-foot { padding: 12px 6px 0; font-size: 13px; line-height: 1.45; }
+.mat-foot .mini-tok { width: 18px; height: 18px; font-size: 9px; vertical-align: -4px; }
+.mat-goal { white-space: normal; font-size: 18px; line-height: 1.3; }
+.mat-goal b { font-size: 24px; }
+.mat-goal .mat-sub, .mat-goal .mat-scene { font-size: 14px; }
+.mat-foot.foot-minus { font-size: 12px; line-height: 1.3; padding-top: 8px; }
+.mat-rules { line-height: 1.3; }
+.mat-rules th, .mat-rules td { padding: 1px 5px; }
+.mat-rules th { font-size: 14px; }
+.mat-goal .mat-scene { flex-wrap: wrap; column-gap: 6px; row-gap: 0; }
+.mat-goal .mat-scene-what { max-width: none; }
+.mat-goal { line-height: 1.2; }
+.mat-goal .mat-sub { margin-top: 2px; line-height: 1.25; }
+.mat-goal .mat-scene { margin-top: 3px; line-height: 1.25; }

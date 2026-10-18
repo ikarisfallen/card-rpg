@@ -44,7 +44,8 @@ const PC_CARD = { w: 150, h: 210 };
 // columns. Text is as large as the Situation card's.
 const EL_CARD = { w: 310, h: 380 }; // wide enough for two name cards side by side
 const EL_GAP = 20;
-const elSize = kind => (kind === 'location' ? { w: SIT_CARD.w, h: SIT_CARD.h } : EL_CARD);
+const LOC_CARD = { w: 620, h: 336 }; // the Location card: an index card (5 x 3), landscape
+const elSize = kind => (kind === 'location' ? LOC_CARD : EL_CARD);
 const PEEK = 44; // how much of a tucked name card shows above the card it's under
 const PORTRAIT_TUCK = 30; // how much of a portrait card slides under the Asset's name card
 
@@ -609,12 +610,13 @@ function buildSheet(x, y, concept, trouble) {
 // wider: it names the resource and which approaches guard or squander it.
 // The first column is a slot cut into the Board: the Situation card slides in so its three
 // choices (with their risks) sit in it, level with rows A, B and C.
-const SIT_CHOICES_W = 350; // the Situation card's right-hand column (wide enough for every choice)
-const MAT_COL_NAMES = ['slot', 'main', 'help', ...(SIM_RULES.freeApproach ? [] : ['approach']), 'minus', 'successes'];
-const MAT_COL_W = { slot: SIT_CHOICES_W + 5, main: 180, help: 104, approach: 104, minus: 104, successes: 124 };
+const MAT_COL_NAMES = ['main', 'help', ...(SIM_RULES.freeApproach ? [] : ['approach']), 'minus', ...(SIM_RULES.obstacle ? ['obstacle'] : []), 'successes'];
+const MAT_COL_W = { main: 180, help: 104, approach: 104, minus: 104, obstacle: 104, successes: 124 };
 const MAT_COLS = MAT_COL_NAMES.map(n => MAT_COL_W[n]);
 const matCol = name => MAT_COL_NAMES.indexOf(name);
-const MAT_BANNER = 96, MAT_HEAD = 36, MAT_ROW = 104, MAT_FOOT = 100, MAT_PAD = 8;
+// The Board is as tall as the upright Situation card beside it, top and bottom level with it: the
+// banner fills the card's description and the footer its Escalations, so the rows line up.
+const MAT_BANNER = 136, MAT_HEAD = 26, MAT_ROW = 104, MAT_FOOT = 147, MAT_PAD = 8;
 const MAT_W = MAT_COLS.reduce((a, b) => a + b, 0) + MAT_PAD * 2;
 const MAT_TOP = MAT_PAD + MAT_BANNER + MAT_HEAD; // where row A starts
 
@@ -657,22 +659,22 @@ function buildMat(x, y, situation) {
   const miniSpot = '<span class="mini-tok spot" title="spotlight">★</span>';
   const miniFirst = '<span class="mini-tok init" title="initiative">1</span>';
   const heads = {
-    slot: ['', `${SIM_RULES.minorFailure ? 'miss by 1 or more' : 'a failure'}: lose 1 of the row\u2019s resource${SIM_RULES.freeApproach ? '<br><b class="mk-good">✓</b> approach: 0 · <b class="mk-bad">✗</b> approach: 2' : ''}`],
-    main: ['Main', `${SIM_RULES.rowOrder === 'initiative' ? 'rolls in initiative order<br>' : ''}${SIM_RULES.maxStake ? `stake up to ${SIM_RULES.maxStake} ${miniSpot} · ` : ''}Edge up to ${SIM_RULES.maxEdgePerBet} ${miniEdge}`],
+    main: ['Main', `${SIM_RULES.rowOrder === 'initiative' ? 'rolls in initiative order<br>' : ''}${SIM_RULES.maxStake ? `stake up to ${SIM_RULES.maxStake} ${miniSpot} · ` : ''}Edge up to ${SIM_RULES.maxEdgePerBet}${(PLAYER_COUNT_RULES[players] || {}).endingEdgeCap ? ` (Ending ${PLAYER_COUNT_RULES[players].endingEdgeCap})` : ''} ${miniEdge}`],
     help: ['Help', '+1 each · needs a matching Relationship'],
     approach: ['Approach', 'read it on the Fate card'],
     minus: ['Tension', `−1 to its approach${SIM_RULES.minusNextRound ? '<br>from next round' : ''}<br>2 out: a fail loses${SIM_RULES.clearTiming === 'end' ? `<br>Clear: ${miniEdge}${SIM_RULES.clearGoesFirst ? ` ${miniFirst}st` : ''}` : ''}`],
+    obstacle: ['Obstacle', `${SIM_RULES.obstacleCancels ? 'its approach gets<br>no bonuses' : '−1 to its approach'}<br>on its row only<br>set by the Storyteller`],
     successes: ['Successes', `${typeof playerRule('target', players) === 'object' ? 'stack in the table' : playerRule('target', players)} to win${SIM_RULES.overflowAtRowLimit ? `<br>extra margin → ${miniEdge}` : ''}`],
   };
   MAT_COL_NAMES.forEach(c => mat.appendChild(el('div', 'mat-head', heads[c][0])));
   // Minus dice come from Escalations and hit every roll, so it's one tall box for all three
   // rows (added on row A only): the dice at the top, and a pawn clearing one of them at the bottom.
   const cellFor = {
-    slot: row => (row === 0 ? el('div', 'mat-slot') : null), // one recess for all three rows
     main: () => el('div', 'mat-cell'),
     help: () => el('div', 'mat-cell help'),
     approach: () => el('div', 'mat-cell'),
     minus: row => (row === 0 ? el('div', 'mat-cell minus') : null),
+    obstacle: () => el('div', 'mat-cell obstacle'),
     successes: () => el('div', 'mat-cell'),
   };
   [0, 1, 2].forEach(row => MAT_COL_NAMES.forEach(c => { const node = cellFor[c](row); if (node) mat.appendChild(node); }));
@@ -686,11 +688,11 @@ function buildMat(x, y, situation) {
   });
 }
 
-// The Situation card sits left of the Board. It's an index card (5 x 3), the same size as the
-// Location card: the description and escalations in a column on the left, the three choices
-// stacked in a column on the right (each its own section, its shape beside it).
-const SIT_CARD = { w: 620, border: 5 };
-SIT_CARD.h = 336; // 5 x 3 at the old width; the extra width went to the choices
+// The Situation card stands upright left of the Board: the description at the top, the three
+// choices in the middle (each a Board row tall, level with the Board's rows), the Escalations
+// at the bottom.
+const SIT_CARD = { w: 400, border: 5, intro: 165, escs: 150 }; // intro: the .sit-intro height in style.css
+SIT_CARD.h = 2 * SIT_CARD.border + SIT_CARD.intro + 3 * MAT_ROW + SIT_CARD.escs;
 
 // One size for the A/B/C shapes on the Board and on the Situation card.
 const ROW_SHAPE_SIZE = 25;
@@ -735,18 +737,16 @@ function situationFront(situation, result = null) {
     .map((text, i) => text && `<div class="sit-esc"><b>Escalation ${i + 1}:</b> ${esc(text)}</div>`)
     .join('');
   return `
-    <div class="sit-left">
-      <div class="sit-intro">
-        ${result && result.lost ? '<div class="sit-lost">Lost</div>' : ''}
-        <div class="sit-name">${esc(situation.name || 'Situation')}</div>
-        <div class="sit-text">${esc(intro)}</div>
-      </div>
-      <div class="sit-escs">${escalations}</div>
+    <div class="sit-intro">
+      ${result && result.lost ? '<div class="sit-lost">Lost</div>' : ''}
+      <div class="sit-name">${esc(situation.name || 'Situation')}</div>
+      <div class="sit-text">${esc(intro)}</div>
     </div>
     <div class="sit-choices">
       ${['A', 'B', 'C'].map((k, i) => `
         <div class="sit-choice${result && result.row === i ? ' won' : ''}"><span class="sit-choice-text">${esc(choices[k])}</span>${choiceRiskHtml(situation.risks[i])}${result && result.row === i ? `<span class="sit-stamp" style="--c:${result.color}">★ ${esc(result.name)}</span>` : ''}</div>`).join('')}
-    </div>`;
+    </div>
+    <div class="sit-escs">${escalations}</div>`;
 }
 
 // An initiative token has two sides: the player's place in the turn order, and OUT for a
@@ -769,13 +769,17 @@ function setOut(token, out) {
 // Round board: pawns sit around the ring with their initiative tokens, and each
 // Relationship card sits between the two players it links (W↔X between W and X).
 const REL_BOARD = 720; // room for Fate-card-sized Relationships between the pawns
+// The Storyteller token (SIM_RULES.obstacle), passed round the table: it sits in front of the
+// Storyteller, above their Concept and Trouble, with a slot (a little above its centre, the
+// token's name under it) where the Obstacle die rests while it isn't on the Board.
+const STORY_SIZE = 110, OBSTACLE_SIZE = 56, OBSTACLE_RIDE = 8;
+const STORY_ROOM = SIM_RULES.obstacle ? STORY_SIZE + 24 : 0; // extra room above the characters
 
 // Relationship cards on the ring: one per pair of neighbours (just one for two players).
 const relationshipCount = n => (n === 2 ? 1 : n);
 
 function relationshipBoard(x, y, players, relationships) {
-  label('Relationships', x + REL_BOARD / 2, y, 'section-label centered');
-  const top = y + 48;
+  const top = y + 18;
   const ring = addStatic(el('div', 'rel-board'), x, top);
   ring.style.width = ring.style.height = `${REL_BOARD}px`;
   const cx = x + REL_BOARD / 2, cy = top + REL_BOARD / 2;
@@ -1219,7 +1223,7 @@ function deal(mode = 'deal') {
   // ---- Layout: two columns, so the table fits beside the simulator panel ----
   // Left: Situation card | Board | Fate + Edge across the top, the characters underneath.
   // Right: the Relationship wheel, with the four Elements 2 x 2 below it.
-  const TOP = 70;
+  const TOP = 30; // the Board's and the Situation card's top
   // The Asset and Liability sit just off the player board, to its left, lined up with a ✔️ and a ✖️
   // down the board's left edge.
   const SLOT_MARK = 34;
@@ -1228,7 +1232,7 @@ function deal(mode = 'deal') {
   // middle), the Fate deck, and the Elements column on the right.
   const RX = 40;
   const SIT_X = RX + REL_BOARD + 40;
-  const BOARD_X = SIT_X + SIT_CARD.w - SIT_CHOICES_W - SIT_CARD.border - MAT_PAD; // the card's choices sit in the slot
+  const BOARD_X = SIT_X + SIT_CARD.w; // the Board, flush against the Situation card's right edge
   const FX = BOARD_X + MAT_W + 30, FY = TOP; // Fate: draw pile, its discard underneath
   // The characters sit in a single row under the Board (CHAR_COLS = 2 would make rows of two).
   const CHAR_COLS = players.length;
@@ -1247,8 +1251,7 @@ function deal(mode = 'deal') {
   relationshipBoard(RX, 12, players, fresh ? null : relationships);
   narration = null; // no read-aloud panel: the simulator panel tells the story
 
-  const ELY = 12 + 48; // the top of the first card's name card
-  label('Elements', EL_COL_X, 12);
+  const ELY = 30; // the top of the first card's name card
   // Name cards tucked above each element: an Asset's descriptor ("Brand new..."), a person's
   // first and last name from a spare Concept and Trouble side by side (like the characters'),
   // and a place adjective from a spare Location.
@@ -1280,14 +1283,13 @@ function deal(mode = 'deal') {
   // ---- Situation card | A/B/C board ----
   const ROW2 = TOP;
   // "Situation" title, with a button per act as the game goes on (see showAct).
-  // The Situation card sits low enough that its three choices (each a Board row tall, centred
-  // in the right-hand column) line up with the Board's rows A, B and C.
-  const SIT_Y = ROW2 + MAT_TOP - SIT_CARD.border - (SIT_CARD.h - 2 * SIT_CARD.border - 3 * MAT_ROW) / 2;
+  // The Situation card sits so its three choices (each a Board row tall, under the description)
+  // line up with the Board's rows.
+  const SIT_Y = ROW2 + MAT_TOP - SIT_CARD.border - SIT_CARD.intro;
   // "Situation" above the card's top left corner; the act tabs under its bottom left corner,
   // kept left of the Board (they wrap).
-  label('Situation', SIT_X, SIT_Y - 44);
   TABLE.actTabs = addStatic(el('div', 'act-tabs'), SIT_X, SIT_Y + SIT_CARD.h + 12);
-  TABLE.actTabs.style.width = `${BOARD_X - SIT_X - 16}px`;
+  TABLE.actTabs.style.width = `${SIT_CARD.w}px`;
   TABLE.history = [];
   TABLE.situation = situation;
   TABLE.situationCard = createCard({
@@ -1297,7 +1299,6 @@ function deal(mode = 'deal') {
     back: plainBack('Situation'),
   });
 
-  label('Board', BOARD_X, ROW2 - 48);
   const cell = buildMat(BOARD_X, ROW2, situation);
   TABLE.sceneDieAt = { x: BOARD_X + MAT_PAD + 8, y: ROW2 + MAT_PAD + (MAT_BANNER - 58) / 2 }; // left end of the banner
   TABLE.sceneNoteEl = document.querySelector('.mat .mat-scene');
@@ -1329,7 +1330,6 @@ function deal(mode = 'deal') {
   renderNarration();
 
   // ---- Fate deck: draw pile, with the discard underneath it, right of the Board ----
-  label('Fate', FX, FY - 48);
   const drawZone = addZone({
     accepts: 'fate', faceDown: true, x: FX, y: FY, w: FATE_CARD.w, h: FATE_CARD.h,
     el: zoneOutline(FX, FY, FATE_CARD.w, FATE_CARD.h, 'Draw'),
@@ -1381,9 +1381,9 @@ function deal(mode = 'deal') {
   const spread = players.length < 4 && 40 + 3 * BLOCK_W - 30 <= BOARD_R;
   const step = spread ? (BOARD_R - 40 - AREA_W) / 2 : BLOCK_W;
   const blockX = i => Math.round(spread ? BOARD_R - AREA_W - (players.length - 1 - i) * step : 40 + i * step);
-  const PC_TOP = Math.ceil(Math.max(boardBottom + 110,
+  // Clear of the board, the upright Situation card and its act tabs (up to two lines of them).
+  const PC_TOP = Math.ceil(Math.max(boardBottom + 110 + STORY_ROOM, SIT_Y + SIT_CARD.h + 12 + 90 + 60 + STORY_ROOM,
     ...players.map((_, i) => wheelBottomOver(blockX(i), blockX(i) + BLOCK_W - 30) + 22 + 16)));
-  label('Characters', blockX(0), PC_TOP - 88); // above the spotlight stacks
 
   // The column left of the sheet (Asset over Liability) can reach lower than the sheet.
   const CHAR_COL_H = Math.max(SHEET_H, PEEK + 2 * PC_CARD.h + 10);
@@ -1435,6 +1435,8 @@ function deal(mode = 'deal') {
     // Concept + first name, Trouble + last name, Asset + its condition: in each slot a spare
     // card is flipped and tucked underneath so one of its names reads above the card.
     const conceptSlot = cardSlot('concept', sheetX + 6, rowTop + PEEK);
+    // The Storyteller token's spot: centred above the Concept and Trouble name cards.
+    TABLE.players[i].obstacleHome = { x: sheetX + SHEET_W / 2, y: rowTop - 14 - STORY_SIZE / 2 };
     const troubleSlot = cardSlot('trouble', sheetX + SHEET_W - PC_CARD.w - 6, rowTop + PEEK);
     const boonSlot = cardSlot('boon', bx, boonTop);
     portraitSlot.under = boonSlot; // the Asset stack always sits on top of the portrait
@@ -1481,6 +1483,15 @@ function deal(mode = 'deal') {
     });
   });
 
+  // The Storyteller token starts by the first player's pawn (they're the first Storyteller),
+  // with the Obstacle die on top of it.
+  TABLE.obstacleDie = TABLE.storyToken = null;
+  if (SIM_RULES.obstacle) {
+    const home = TABLE.players[0].obstacleHome;
+    TABLE.storyToken = createToken({ className: 'storyteller', size: STORY_SIZE, html: '<span class="story-slot"></span><span class="story-name">Storyteller</span>', x: home.x - STORY_SIZE / 2, y: home.y - STORY_SIZE / 2 });
+    TABLE.obstacleDie = createDie({ className: 'die-obstacle', size: OBSTACLE_SIZE, faces: APPROACHES, value: 1, x: home.x - OBSTACLE_SIZE / 2, y: home.y - OBSTACLE_SIZE / 2 - OBSTACLE_RIDE });
+  }
+
   // The shared spotlight pool, under the Fate deck, and the first stacks on the Board.
   if (SIM_RULES.takeSpotlight) {
     const n = SPOTLIGHT_TOKENS * players.length;
@@ -1507,7 +1518,6 @@ function deal(mode = 'deal') {
   if (fresh) {
     const POOL_TOP = worldSize.h + 50;
     const STEP = PC_CARD.w + 16;
-    label('Deal', 40, POOL_TOP - 48);
     // Two of each character card per player (one to play, one spare for its name), the
     // Relationships for the ring (face up), and one more per player shown
     // portrait-side up for the portraits. `null` leaves a gap between groups.

@@ -119,6 +119,14 @@ const SIM_RULES = {
   // are then scored; if it's lost they go back to the pool. Bonuses and stake payouts come from
   // the pool. false: each player places their own coloured tokens on the rows.
   takeSpotlight: true,
+  // The Obstacle (2026-10-18, against spamming one approach): each round one player is the
+  // Storyteller (the seat passes clockwise every round). Before anyone bets, they set the
+  // Obstacle die to an approach and put it in one row's Obstacle box: going into that row with
+  // that approach is −1. The Storyteller still bets as usual.
+  obstacle: true,
+  // ...true: instead of −1, the Obstacle cancels the bonuses for its approach on its row (Concept,
+  // Asset, the Scene die), so it only hurts characters leaning on that approach.
+  obstacleCancels: true,
 };
 
 // Settings that change with the number of players. Anything not listed for a player count
@@ -138,6 +146,9 @@ const PLAYER_COUNT_RULES = {
     target: { 'Beginning': 2, 'Middle': 3, 'Ending': 3 },
     difficulty: { 'Beginning': 1, 'Middle': 2, 'Ending': 4 },
     edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 4 },
+    // In the Ending a Main player may spend up to 3 Edge on a roll, not 2 (2026-10-18, for the
+    // Obstacle: two players start the Ending with plenty of Edge the 2-per-roll limit kept unused).
+    endingEdgeCap: 3,
   },
   3: {
     target: { 'Beginning': 3, 'Middle': 4, 'Ending': 5 },
@@ -156,9 +167,12 @@ const GAME_LENGTH = { middles: 1, extra: 1 };
 const LENGTH_BASE = {
   // Ending stacks retuned 2026-10-18 (sim, Ending ~47 / 46 / 54% won): 2 players 2/3/2, 3 players
   // 3/4/4, 4 players 4/5/5 at +1 (the Ending grows with the Middles, not twice as fast).
-  2: { stack: 2, endingSteps: 0, endingEdge: 2, edgePerExtra: 2 },
-  3: { stack: 3, endingSteps: 1, endingEdge: 1, edgePerExtra: 2 },
-  4: { stack: 4, endingSteps: 1, endingEdge: 1, edgePerExtra: 0 },
+  // endingEdge +1 each (2026-10-18) to make up for the Storyteller's Obstacle.
+  // endingStack: added to the Ending's stacks (−1 at 3 players, 2026-10-18, for the Obstacle; at 2
+  // players −1 left a 1-success Ending, won 87%).
+  2: { stack: 2, endingSteps: 0, endingEdge: 2, edgePerExtra: 2 }, // no +1 here: 2 players get up to 3 Edge per Ending roll instead
+  3: { stack: 3, endingSteps: 1, endingEdge: 1, edgePerExtra: 2, endingStack: -1 }, // Ending Edge back to 1 (with the smaller stack)
+  4: { stack: 4, endingSteps: 1, endingEdge: 2, edgePerExtra: 0 },
 };
 function setGameLength(middles, extra) {
   GAME_LENGTH.middles = middles;
@@ -166,7 +180,7 @@ function setGameLength(middles, extra) {
   SIM_RULES.acts = ['Beginning', ...Array(middles).fill('Middle'), 'Ending'];
   for (const [n, b] of Object.entries(LENGTH_BASE)) {
     const r = PLAYER_COUNT_RULES[n];
-    r.target = { Beginning: b.stack, Middle: b.stack + extra, Ending: b.stack + extra * b.endingSteps };
+    r.target = { Beginning: b.stack, Middle: b.stack + extra, Ending: Math.max(1, b.stack + extra * b.endingSteps + (b.endingStack || 0)) };
     r.edgeAtActStart = { ...r.edgeAtActStart, Ending: b.endingEdge + b.edgePerExtra * extra };
   }
 }
