@@ -548,54 +548,62 @@ function dealIntoSlot(zone, deck) {
   return main;
 }
 
-// Character sheet: two columns of resource boxes (➕ side under the Concept, ➖ side under
-// the Trouble), each with a d6 on it showing the current value.
-const SHEET_COLS = [50, 90, 20, 50, 90];
-// The footer is sized so the player board ends level with the Liability stacked under the Asset
-// (board top = sheet top − 10; Asset name card at the sheet top, Asset + Liability = PEEK + 2 cards + 10).
-// The header row sits right at the top (no top padding), just tall enough for its text.
-// Each resource row is just taller than its die (the box hugs it), with equal gaps between the
-// header, the three rows and the footer; the Asset / Liability text sits low in the footer.
-const SHEET_HEAD = 40, SHEET_ROW = 80, SHEET_GAP = 20, SHEET_PAD = 10, SHEET_PAD_TOP = 0, SHEET_FOOT = 94;
+// Character sheet: three resource columns, two rows. Each resource has a small label (icon, then
+// name) above its box, and a d6 in the box showing the current value. The Concept and Trouble
+// sit side by side above the sheet, each with its note under it in the header.
+const SHEET_COL = 100;     // one resource column: the box hugs its die, with a little margin
+const SHEET_COLS = [SHEET_COL, SHEET_COL, SHEET_COL];
+// Top to bottom: the header (the Concept's and Trouble's notes), then a band as tall as a card
+// for the Asset (off the board's left edge) and the Liability (off its right edge), each with its
+// rules in a dashed box running in from that edge, then the two rows of resources. Each resource
+// cell is its label plus a box just taller than the die; equal gaps between them all.
+const SHEET_HEAD = 40, SHEET_LABEL = 20, SHEET_ROW = 80, SHEET_GAP = 14, SHEET_PAD = 10, SHEET_PAD_TOP = 0;
+const SHEET_CARDS = PC_CARD.h; // the Asset / Liability band
+const SHEET_CELL = SHEET_LABEL + SHEET_ROW;
 const SHEET_W = SHEET_COLS.reduce((a, b) => a + b, 0) + SHEET_PAD * 2;
-const SHEET_H = SHEET_PAD_TOP + SHEET_HEAD + SHEET_ROW * 3 + SHEET_GAP * 4 + SHEET_FOOT + SHEET_PAD;
-const SHEET_LAYOUT = [['ℹ️', '⭐'], ['📦', '🔥'], ['📏', '⌛']]; // [left, right] per row
+const SHEET_H = SHEET_PAD_TOP + SHEET_HEAD + SHEET_CARDS + SHEET_CELL * 2 + SHEET_GAP * 3 + SHEET_PAD;
+// Where the Asset / Liability band starts, from the sheet's top.
+const SHEET_CARDS_Y = SHEET_PAD_TOP + SHEET_HEAD + SHEET_GAP;
+// The Asset's and the Liability's rules, for the dashed boxes beside their cards.
+function sheetCardRules() {
+  return [
+    `✔️ <b>Asset:</b> +1 on its approach${SIM_RULES.boonUpgrades ? ` · beat the difficulty by ${SIM_RULES.boonMargin}+ as Main: draw an Asset, keep one` : ''}${SIM_RULES.boonShield === 'heal' ? ' · fail as Main: you may discard it to draw no Liability and shake off your Liability' : ''}`,
+    SIM_RULES.banes ? `✖️ <b>Liability:</b> miss by ${SIM_RULES.failBy}+ as Main: draw one at random (hold one: keep or swap) · ${SIM_RULES.compelOnly ? 'others compel it (free): −1, +Story Points' : 'invoke / compel: −1, +Story Points (compelling is free)'} · lose it: ${storyPts(SIM_RULES.baneRemoveEdge)} or give up a bet` : '✖️',
+  ];
+}
+const SHEET_LAYOUT = [['ℹ️', '⭐', '📦'], ['🔥', '📏', '⌛']]; // three per row
+// The Concept and Trouble, side by side and centred over the sheet: their left edges.
+const PAIR_GAP = 6;
+const conceptX = sheetX => sheetX + (SHEET_W - 2 * PC_CARD.w - PAIR_GAP) / 2;
+const troubleX = sheetX => conceptX(sheetX) + PC_CARD.w + PAIR_GAP;
 
 function buildSheet(x, y, concept, trouble) {
   const sheet = el('div', 'sheet');
   sheet.style.gridTemplateColumns = SHEET_COLS.map(c => `${c}px`).join(' ');
-  sheet.style.gridTemplateRows = `${SHEET_HEAD}px repeat(3, ${SHEET_ROW}px) ${SHEET_FOOT}px`;
+  sheet.style.gridTemplateRows = `${SHEET_HEAD}px ${SHEET_CARDS}px repeat(2, ${SHEET_CELL}px)`;
   sheet.style.paddingTop = `${SHEET_PAD_TOP}px`;
   sheet.style.rowGap = `${SHEET_GAP}px`;
   sheet.style.width = `${SHEET_W}px`;
-  // How the character's cards are used: Concept and Trouble above their columns, Asset and Liability
-  // in the footer.
-  const head = (sign, text) => el('div', 'sheet-head', `<span class="sheet-sign">${sign}</span><span class="sheet-note">${text}</span>`);
-  sheet.append(
-    head('➕', 'Concept: +1 on its approaches'),
-    el('div'),
-    head('➖', SIM_RULES.troubleInvoke ? 'Trouble: invoke / compel: −1, +Edge' : 'Trouble: −1 on its approaches'));
-  SHEET_LAYOUT.forEach(([left, right]) => {
-    const icon = res => el('div', 'sheet-icon', `<span>${res}</span><span class="sheet-res-name">${riskName(res)}</span>`);
-    sheet.append(icon(left), el('div', 'sheet-box'), el('div'), icon(right), el('div', 'sheet-box'));
-  });
-  // The Asset and Liability rules (the cards themselves sit to the left of the board).
-  const foot = [
-    `✔️ <b>Asset:</b> +1 on its approach${SIM_RULES.boonUpgrades ? ` · beat the difficulty by ${SIM_RULES.boonMargin}+ as Main: draw an Asset, keep one` : ''}${SIM_RULES.boonShield === 'heal' ? ' · fail as Main: you may discard it to draw no Liability and shake off your Liability' : ''}`,
-    ...(SIM_RULES.banes ? [`✖️ <b>Liability:</b> miss by ${SIM_RULES.failBy}+ as Main: draw one at random (hold one: keep or swap) · invoke / compel: −1, +Edge (compelling is free) · lose it: ${SIM_RULES.baneRemoveEdge} Edge or give up a bet`] : []),
-  ];
-  sheet.append(el('div', 'sheet-foot', foot.map(l => `<div>${l}</div>`).join('')));
+  // How the character's cards are used: the Concept's and Trouble's notes under each card; the
+  // Asset's and Liability's rules go in the band under them (dashed boxes, see the player area).
+  const head = (sign, text) => `<div class="sheet-head" style="width:${PC_CARD.w}px"><span class="sheet-sign">${sign}</span><span class="sheet-note">${text}</span></div>`;
+  sheet.append(el('div', 'sheet-heads', head('➕', 'Concept: +1 on its approaches')
+    + head('➖', SIM_RULES.troubleInvoke ? (SIM_RULES.compelOnly ? 'Trouble: others compel it: −1, +Story Points' : 'Trouble: invoke / compel: −1, +Story Points') : 'Trouble: −1 on its approaches')));
+  sheet.append(el('div', 'sheet-cards')); // the Asset / Liability band
+  SHEET_LAYOUT.forEach(trio => trio.forEach(res => sheet.append(el('div', 'sheet-cell',
+    `<div class="sheet-label"><span class="sheet-ico">${res}</span><span class="sheet-res-name">${riskName(res)}</span></div><div class="sheet-box"></div>`))));
   addStatic(sheet, x, y);
 
+  // The middle of a resource's box (under its label).
   const boxCenter = (row, col) => ({
-    x: x + SHEET_PAD + SHEET_COLS.slice(0, col).reduce((a, b) => a + b, 0) + SHEET_COLS[col] / 2,
-    y: y + SHEET_PAD_TOP + SHEET_HEAD + SHEET_GAP + row * (SHEET_ROW + SHEET_GAP) + SHEET_ROW / 2,
+    x: x + SHEET_PAD + col * SHEET_COL + SHEET_COL / 2,
+    y: y + SHEET_CARDS_Y + SHEET_CARDS + SHEET_GAP + row * (SHEET_CELL + SHEET_GAP) + SHEET_LABEL + SHEET_ROW / 2,
   });
   const DIE = 72;
   const dice = {};
-  SHEET_LAYOUT.forEach((pair, row) => pair.forEach((res, side) => {
+  SHEET_LAYOUT.forEach((trio, row) => trio.forEach((res, k) => {
     const value = RESOURCE_START + (concept?.resource === res) - (trouble?.resource === res);
-    const c = boxCenter(row, side ? 4 : 1);
+    const c = boxCenter(row, k);
     dice[res] = createDie({ className: 'die-sheet', size: DIE, value: Math.max(1, Math.min(6, value)), x: c.x - DIE / 2, y: c.y - DIE / 2 });
   }));
   return dice;
@@ -638,7 +646,7 @@ function boardRulesHtml(players) {
       <tr><th></th>${acts.map(a => `<th data-act="${a}">${a}</th>`).join('')}</tr>
       ${perAct ? row('Successes', a => actTarget(a, players)) : ''}
       ${row('Difficulty', a => playerRule('difficulty', players)[a])}
-      ${row('Edge at start', a => edge[a] || 0)}
+      ${row('Story Points at start', a => edge[a] || 0)}
       ${row(acts.some(a => bonus[a].helper) ? 'Win bonus <small>(helper)</small>' : 'Win bonus', a => `${bonus[a].main}${bonus[a].helper ? ` <small>(${bonus[a].helper})</small>` : ''}`)}
     </table>`;
 }
@@ -655,11 +663,11 @@ function buildMat(x, y, situation) {
   mat.appendChild(el('div', 'mat-banner', boardRulesHtml(Math.min(PLAYER_COUNT, DATA.players.length))));
   // Each column's title on top, and a reminder of its rules under the column.
   const players = Math.min(PLAYER_COUNT, DATA.players.length);
-  const miniEdge = '<span class="mini-tok edge" title="Edge">+1</span>';
+  const miniEdge = '<span class="mini-tok edge" title="Story Points">+1</span>';
   const miniSpot = '<span class="mini-tok spot" title="spotlight">★</span>';
   const miniFirst = '<span class="mini-tok init" title="initiative">1</span>';
   const heads = {
-    main: ['Main', `${SIM_RULES.rowOrder === 'initiative' ? 'rolls in initiative order<br>' : ''}${SIM_RULES.maxStake ? `stake up to ${SIM_RULES.maxStake} ${miniSpot} · ` : ''}Edge up to ${SIM_RULES.maxEdgePerBet}${(PLAYER_COUNT_RULES[players] || {}).endingEdgeCap ? ` (Ending ${PLAYER_COUNT_RULES[players].endingEdgeCap})` : ''} ${miniEdge}`],
+    main: ['Main', `${SIM_RULES.rowOrder === 'initiative' ? 'rolls in initiative order<br>' : ''}${SIM_RULES.maxStake ? `stake up to ${SIM_RULES.maxStake} ${miniSpot} · ` : ''}Story Points up to ${SIM_RULES.maxEdgePerBet}${(PLAYER_COUNT_RULES[players] || {}).endingEdgeCap ? ` (Ending ${PLAYER_COUNT_RULES[players].endingEdgeCap})` : ''} ${miniEdge}`],
     help: ['Help', '+1 each · needs a matching Relationship'],
     approach: ['Approach', 'read it on the Fate card'],
     minus: ['Tension', `−1 to its approach${SIM_RULES.minusNextRound ? '<br>from next round' : ''}<br>2 out: a fail loses${SIM_RULES.clearTiming === 'end' ? `<br>Clear: ${miniEdge}${SIM_RULES.clearGoesFirst ? ` ${miniFirst}st` : ''}` : ''}`],
@@ -769,11 +777,14 @@ function setOut(token, out) {
 // Round board: pawns sit around the ring with their initiative tokens, and each
 // Relationship card sits between the two players it links (W↔X between W and X).
 const REL_BOARD = 720; // room for Fate-card-sized Relationships between the pawns
-// The Storyteller token (SIM_RULES.obstacle), passed round the table: it sits in front of the
-// Storyteller, above their Concept and Trouble, with a slot (a little above its centre, the
-// token's name under it) where the Obstacle die rests while it isn't on the Board.
-const STORY_SIZE = 110, OBSTACLE_SIZE = 56, OBSTACLE_RIDE = 8;
-const STORY_ROOM = SIM_RULES.obstacle ? STORY_SIZE + 24 : 0; // extra room above the characters
+// The Storyteller token (SIM_RULES.obstacle), passed round the table: it sits right of the
+// Storyteller's Trouble card (above their Liability), with a slot (a little above its centre,
+// the token's name round the bottom) where the Obstacle die rests while it isn't on the Board.
+const STORY_SIZE = 110, OBSTACLE_SIZE = 58, OBSTACLE_RIDE = 7;
+// The token's face: a slot for the die, and its name curving round the bottom edge.
+const STORY_FACE = `<span class="story-slot"></span><svg class="story-ring" viewBox="0 0 ${STORY_SIZE} ${STORY_SIZE}" aria-hidden="true">`
+  + `<path id="story-arc" d="M 13 ${STORY_SIZE / 2} A ${STORY_SIZE / 2 - 13} ${STORY_SIZE / 2 - 13} 0 0 0 ${STORY_SIZE - 13} ${STORY_SIZE / 2}" fill="none"/>`
+  + '<text><textPath href="#story-arc" startOffset="50%" text-anchor="middle">STORYTELLER</textPath></text></svg>';
 
 // Relationship cards on the ring: one per pair of neighbours (just one for two players).
 const relationshipCount = n => (n === 2 ? 1 : n);
@@ -1058,10 +1069,12 @@ function spotlightArt(letter) {
 // to a roll.
 const EDGE_TOKENS = 36; // enough for 3 players' act bonuses (2+3+5 each) plus failures
 const EDGE_SIZE = 50;
+// Story Points and Scored spotlight, beside the Trouble card: tokens per stack (two stacks side by side).
+const STORY_STACK = 8, SCORE_STACK = 12;
 const EDGE_STEP = 1.5; // stacking offset, so the full pile stays clear of the Fate deck
 
 function edgeArt() {
-  return '<div class="edge-face"><b>+1</b><small>Edge</small></div>';
+  return '<div class="edge-face"><b>+1</b><small>Story</small></div>';
 }
 
 function placeEdgeSupply(x, y) {
@@ -1096,7 +1109,7 @@ function placeSpotlightTokens(letter, color, x, y) {
 // Neutral spotlight tokens: a shared pool beside the Fate deck, a stack in each row's
 // Successes box, and a "This scene" spot in front of each player for tokens they've taken.
 const POOL_COLOR = '#ffc845'; // spotlight yellow
-const POOL_COLUMN = 40; // tokens per column in the pool
+const POOL_COLUMN = 27; // tokens per column in the pool (up to three columns, under the Fate deck)
 function poolSpot(k) {
   return { x: TABLE.poolAt.x + Math.floor(k / POOL_COLUMN) * (SPOTLIGHT_SIZE + 10), y: TABLE.poolAt.y - (k % POOL_COLUMN) * SPOTLIGHT_STEP };
 }
@@ -1224,30 +1237,26 @@ function deal(mode = 'deal') {
   // Left: Situation card | Board | Fate + Edge across the top, the characters underneath.
   // Right: the Relationship wheel, with the four Elements 2 x 2 below it.
   const TOP = 30; // the Board's and the Situation card's top
-  // The Asset and Liability sit just off the player board, to its left, lined up with a ✔️ and a ✖️
-  // down the board's left edge.
-  const SLOT_MARK = 34;
-  const BLOCK_W = PC_CARD.w + 6 + SLOT_MARK + SHEET_W + 30; // boon / bane | marks | sheet | gap
-  // Left to right: the Relationship wheel, then the Situation card and Board (the focus, in the
-  // middle), the Fate deck, and the Elements column on the right.
-  const RX = 40;
-  const SIT_X = RX + REL_BOARD + 40;
+  // The Asset sits just off the player board's left edge, beside a ✔️, and the Liability off its
+  // right edge, beside a ✖️ (under the Story Points and Scored spotlight, right of the Trouble).
+  const BOARD_EDGE = 8; // the board's margin round the sheet: just wider than the Concept + Trouble
+  const BOARD_W = SHEET_W + 2 * BOARD_EDGE;
+  const BLOCK_W = PC_CARD.w + BOARD_W + PC_CARD.w + 30; // Asset | board | Liability | gap
+  // Two rows. Top, left to right: the Elements (Location and Object on top, the Ally and Villain
+  // under the Location, the Fate deck and the spotlight pool under the Object), the Situation
+  // card and Board (the focus, in the middle), and the Relationship wheel. Bottom: the characters.
+  const LEFT = 40;
+  const LOC = elSize('location');
+  const PEOPLE_W = 2 * EL_CARD.w + EL_GAP;             // the Ally and Villain side by side
+  const OBJ_X = LEFT + Math.max(LOC.w, PEOPLE_W) + EL_GAP; // the Object's column
+  const EL_R = OBJ_X + EL_CARD.w;                       // the Elements' right edge
+  const SIT_X = EL_R + 50;
   const BOARD_X = SIT_X + SIT_CARD.w; // the Board, flush against the Situation card's right edge
-  const FX = BOARD_X + MAT_W + 30, FY = TOP; // Fate: draw pile, its discard underneath
-  // The characters sit in a single row under the Board (CHAR_COLS = 2 would make rows of two).
+  const RX = BOARD_X + MAT_W + 50;    // the Relationship wheel, right of the Board
+  const TOP_R = RX + REL_BOARD;       // the top row's right edge
+  // The characters sit in a single row under it all (CHAR_COLS = 2 would make rows of two).
   const CHAR_COLS = players.length;
   const CHAR_ROW_H = 980; // one row of characters: spotlight stack and badge down to the Edge row
-  const CHARS_R = 40 + CHAR_COLS * BLOCK_W - 30; // the character row's right end (it may run under the wheel)
-
-  // The wheel, then the Elements in a column to its right, right-aligned: the Location on top,
-  // the Ally and Villain side by side under it, and the Object at the bottom.
-  const LOC = elSize('location');
-  const EL_COL_W = Math.max(LOC.w, 2 * EL_CARD.w + EL_GAP);
-  const EL_COL_X = FX + FATE_CARD.w + 40;
-  // The column's right edge: past the wheel, and far enough right that the cards level with the
-  // characters clear the character row.
-  const EL_COL_R = Math.max(EL_COL_X + EL_COL_W, CHARS_R + 30 + EL_COL_W);
-  const RIGHT_W = EL_COL_R - RX;
   relationshipBoard(RX, 12, players, fresh ? null : relationships);
   narration = null; // no read-aloud panel: the simulator panel tells the story
 
@@ -1264,11 +1273,11 @@ function deal(mode = 'deal') {
   // Each card's top-left corner (its name card peeks out above it).
   const LOC_Y = ELY + PEEK;
   const PEOPLE_Y = LOC_Y + LOC.h + EL_GAP + PEEK;
-  const OBJECT_Y = PEOPLE_Y + EL_CARD.h + EL_GAP + PEEK;
-  const elementAt = deck => (deck === locations ? [EL_COL_R - LOC.w, LOC_Y]
-    : deck === allies ? [EL_COL_R - 2 * EL_CARD.w - EL_GAP, PEOPLE_Y]
-    : deck === villains ? [EL_COL_R - EL_CARD.w, PEOPLE_Y]
-    : [EL_COL_R - EL_CARD.w, OBJECT_Y]); // the Object, under the Villain
+  const OBJECT_Y = PEOPLE_Y; // the Object, right of the Villain (the Fate deck is above it)
+  const elementAt = deck => (deck === locations ? [LEFT, LOC_Y]
+    : deck === allies ? [LEFT, PEOPLE_Y]
+    : deck === villains ? [LEFT + EL_CARD.w + EL_GAP, PEOPLE_Y]
+    : [OBJ_X, OBJECT_Y]);
   elementSlots.forEach(([deck, namers]) => {
     const main = placeElementCard(deck.pop(), ...elementAt(deck));
     if (deck === locations) TABLE.locationSlot = { x: main.x, y: main.y };
@@ -1305,8 +1314,10 @@ function deal(mode = 'deal') {
   TABLE.cell = cell;
   const boardBottom = ROW2 + MAT_TOP + MAT_ROW * 3 + MAT_FOOT + MAT_PAD;
   TABLE.lostAt = { x: BOARD_X + 130, y: boardBottom + 12 };
-  countedLabel('Lost stakes', BOARD_X, boardBottom + 30, 'pair-label', 'spotlight',
-    { x: TABLE.lostAt.x - 20, y: TABLE.lostAt.y - 40, w: 420, h: SPOTLIGHT_SIZE + 60 });
+  if (SIM_RULES.maxStake) { // only with stakes on
+    countedLabel('Lost stakes', BOARD_X, boardBottom + 30, 'pair-label', 'spotlight',
+      { x: TABLE.lostAt.x - 20, y: TABLE.lostAt.y - 40, w: 420, h: SPOTLIGHT_SIZE + 60 });
+  }
   TABLE.lost = [];
   // Where Minus dice sit. With the Clear seat, the Minus box covers rows A-B (a third die only
   // appears for a moment, while someone holds the line) and the Clear box is row C.
@@ -1329,15 +1340,16 @@ function deal(mode = 'deal') {
   updateSceneBoard();
   renderNarration();
 
-  // ---- Fate deck: draw pile, with the discard underneath it, right of the Board ----
+  // ---- Fate deck: draw pile and discard side by side, right of the Location (above the Object) ----
+  const FX = OBJ_X, FY = ELY;
   const drawZone = addZone({
     accepts: 'fate', faceDown: true, x: FX, y: FY, w: FATE_CARD.w, h: FATE_CARD.h,
     el: zoneOutline(FX, FY, FATE_CARD.w, FATE_CARD.h, 'Draw'),
   });
-  const discardY = FY + FATE_CARD.h + 30;
+  const discardX = FX + EL_CARD.w - FATE_CARD.w;
   const discardZone = addZone({
-    accepts: 'fate', x: FX, y: discardY, w: FATE_CARD.w, h: FATE_CARD.h,
-    el: zoneOutline(FX, discardY, FATE_CARD.w, FATE_CARD.h, 'Discard'),
+    accepts: 'fate', x: discardX, y: FY, w: FATE_CARD.w, h: FATE_CARD.h,
+    el: zoneOutline(discardX, FY, FATE_CARD.w, FATE_CARD.h, 'Discard'),
   });
   buildFateDeck().forEach(card => {
     const piece = createCard({
@@ -1352,9 +1364,9 @@ function deal(mode = 'deal') {
 
   // Edge supply: in the centre of the Relationship wheel (with two players their shared
   // Relationship card is there, so the pile sits just left of it).
-  const ringX = RX + REL_BOARD / 2 - (players.length === 2 ? 150 : 0), ringY = 12 + 48 + REL_BOARD / 2;
+  const ringX = RX + REL_BOARD / 2 - (players.length === 2 ? 150 : 0), ringY = 12 + 18 + REL_BOARD / 2;
   TABLE.edge = placeEdgeSupply(ringX - EDGE_SIZE / 2, ringY);
-  countedLabel('Edge', ringX - 36, ringY + EDGE_SIZE + 4, 'pair-label edge-label', 'edge', {
+  countedLabel('Story Points', ringX - 36, ringY + EDGE_SIZE + 4, 'pair-label edge-label', 'edge', {
     x: TABLE.edge.home.x - 20, y: TABLE.edge.home.y - EDGE_TOKENS * EDGE_STEP - 20,
     w: EDGE_SIZE + 40, h: EDGE_TOKENS * EDGE_STEP + EDGE_SIZE + 40,
   });
@@ -1363,46 +1375,37 @@ function deal(mode = 'deal') {
   // player draws one, at random, and leaves the table when it goes back in the deck.
   TABLE.bane = { deck: shuffle((DATA.banes || []).map(b => ({ kind: 'bane', text: b.text, sign: '✖️', approaches: b.approaches }))) };
 
-  // ---- Bottom of the left column: the characters ----
-  // Under the Board and its Lost stakes, with room for the spotlight stacks.
-  // Under the Board (clear of its Lost stakes) and, where the row runs under the wheel (3-4
-  // players), clear of the circle itself: each player's area only has to clear the lowest point
-  // of the circle above it. A player's badge sits 22 above PC_TOP.
-  const wheelBottomOver = (x0, x1) => {
-    const cx = RX + REL_BOARD / 2, cy = 12 + 48 + REL_BOARD / 2, r = REL_BOARD / 2;
-    if (cx >= x0 && cx <= x1) return cy + r;
-    const d = Math.min(Math.abs(x0 - cx), Math.abs(x1 - cx));
-    return d >= r ? -Infinity : cy + Math.sqrt(r * r - d * d);
-  };
-  // Where each player's area starts. With 2-3 players they're spaced out as three would be across
-  // the left edge to the Board's right edge, right-aligned: the last ends level with the Board.
-  // With 4 the row fills the width.
-  const BOARD_R = BOARD_X + MAT_W, AREA_W = BLOCK_W - 30;
-  const spread = players.length < 4 && 40 + 3 * BLOCK_W - 30 <= BOARD_R;
-  const step = spread ? (BOARD_R - 40 - AREA_W) / 2 : BLOCK_W;
-  const blockX = i => Math.round(spread ? BOARD_R - AREA_W - (players.length - 1 - i) * step : 40 + i * step);
-  // Clear of the board, the upright Situation card and its act tabs (up to two lines of them).
-  const PC_TOP = Math.ceil(Math.max(boardBottom + 110 + STORY_ROOM, SIT_Y + SIT_CARD.h + 12 + 90 + 60 + STORY_ROOM,
-    ...players.map((_, i) => wheelBottomOver(blockX(i), blockX(i) + BLOCK_W - 30) + 22 + 16)));
+  // ---- Bottom row: the characters ----
+  // Under the whole top row: the Elements, the
+  // Situation card's act tabs (up to two lines of them) and the wheel. A player's badge sits 42
+  // above PC_TOP, the Storyteller token above that.
+  const topBottom = Math.max(PEOPLE_Y + EL_CARD.h + 10, SIT_Y + SIT_CARD.h + 12 + 90, 12 + 18 + REL_BOARD);
+  const PC_TOP = Math.ceil(topBottom + 26);
+  // Where each player's area starts: four fill the top row's width, edge to edge, evenly
+  // spaced; two or three are centred under it with equal space between and around them.
+  const AREA_W = BLOCK_W - 30, ROW_W = TOP_R - LEFT, n = players.length;
+  const gap = n >= 4 ? Math.max(30, (ROW_W - n * AREA_W) / (n - 1)) : Math.max(30, (ROW_W - n * AREA_W) / (n + 1));
+  const rowStart = n >= 4 ? LEFT : LEFT + Math.max(0, (ROW_W - n * AREA_W - (n - 1) * gap) / 2);
+  const blockX = i => Math.round(rowStart + i * (AREA_W + gap));
+  const CHARS_R = blockX(n - 1) + AREA_W;
 
-  // The column left of the sheet (Asset over Liability) can reach lower than the sheet.
-  const CHAR_COL_H = Math.max(SHEET_H, PEEK + 2 * PC_CARD.h + 10);
+  // The cards beside the board can reach lower than the sheet.
+  const CHAR_COL_H = Math.max(SHEET_H, PEEK + PC_CARD.h + 10);
   players.forEach((p, i) => {
     const bx = blockX(i % CHAR_COLS);
     const rowTop = PC_TOP + Math.floor(i / CHAR_COLS) * CHAR_ROW_H; // this player's row of the grid
-    const sheetX = bx + PC_CARD.w + 6 + SLOT_MARK;
+    const sheetX = bx + PC_CARD.w + BOARD_EDGE;
     const sheetY = rowTop + PEEK + PC_CARD.h + 8;
 
-    // The player board, behind the sheet, with ✔️ and ✖️ down its left edge: the Asset and the
-    // Liability sit just off the board, level with them.
-    const boardX = bx + PC_CARD.w, boardY = sheetY - 10; // the Asset and Liability touch its left edge
-    // The portrait, Asset and Liability sit a little higher than the sheet's rows, so the Liability ends above
-    // the board's rounded bottom corner.
-    const CARD_LIFT = 20;
-    const boonTop = sheetY + PEEK - CARD_LIFT;
+    // The player board, behind the sheet, with a ✔️ down its left edge and a ✖️ down its right:
+    // the Asset and the Liability sit just off the board, level with them.
+    const boardX = bx + PC_CARD.w, boardY = sheetY - 10; // the Asset touches its left edge
+    const boardR = boardX + BOARD_W;                    // the Liability touches its right edge
+    // The Asset and Liability sit level with the sheet's card band (under the header).
+    const boonTop = sheetY + SHEET_CARDS_Y;
     const playerBoard = addStatic(el('div', 'player-board'), boardX, boardY);
-    playerBoard.style.width = `${sheetX + SHEET_W - boardX}px`;
-    playerBoard.style.height = `${SHEET_H + 20}px`; // hugs the sheet (the Liability may hang lower, off the board)
+    playerBoard.style.width = `${BOARD_W}px`;
+    playerBoard.style.height = `${SHEET_H + 20}px`; // hugs the sheet
     // Where the cards go: a dashed box against each card's edge. The Asset and Liability boxes run down
     // the board's left edge, as tall as the cards; the Concept and Trouble boxes are as wide as
     // their cards and run from the board's top edge (where the card ends) to the header's foot.
@@ -1413,12 +1416,15 @@ function deal(mode = 'deal') {
       box.style.height = `${h}px`;
       return box;
     };
-    const markW = sheetX - boardX - 2;
-    placeBox(boardX, boonTop, markW, PC_CARD.h, 'left', '<span class="sheet-sign">✔️</span>');                  // the Asset
-    placeBox(boardX, boonTop + PC_CARD.h + 10, markW, PC_CARD.h, 'left', '<span class="sheet-sign">✖️</span>'); // the Liability
+    // The Asset's and Liability's boxes: from the board's edge (open on the card's side) to just
+    // short of the middle, as tall as the cards, with the card's rules inside.
+    const [assetRules, liabilityRules] = sheetCardRules();
+    const halfW = BOARD_W / 2 - 4;
+    placeBox(boardX, boonTop, halfW, PC_CARD.h, 'left', `<div class="card-rules">${assetRules}</div>`);                       // the Asset
+    placeBox(boardR - halfW, boonTop, halfW, PC_CARD.h, 'right', `<div class="card-rules liability">${liabilityRules}</div>`); // the Liability
     const headH = sheetY + SHEET_PAD_TOP + SHEET_HEAD - boardY + 2; // down to just under the header text
-    placeBox(sheetX + 6, boardY, PC_CARD.w, headH, 'top');                                // the Concept
-    placeBox(sheetX + SHEET_W - PC_CARD.w - 6, boardY, PC_CARD.w, headH, 'top');          // the Trouble
+    placeBox(conceptX(sheetX), boardY, PC_CARD.w, headH, 'top');                          // the Concept
+    placeBox(troubleX(sheetX), boardY, PC_CARD.w, headH, 'top');                          // the Trouble
 
     // Portrait: a Relationship card turned portrait-side up, its bottom edge (with the
     // "Relationship" label) tucked under the Asset's name card so only the picture shows.
@@ -1434,10 +1440,10 @@ function deal(mode = 'deal') {
 
     // Concept + first name, Trouble + last name, Asset + its condition: in each slot a spare
     // card is flipped and tucked underneath so one of its names reads above the card.
-    const conceptSlot = cardSlot('concept', sheetX + 6, rowTop + PEEK);
-    // The Storyteller token's spot: centred above the Concept and Trouble name cards.
-    TABLE.players[i].obstacleHome = { x: sheetX + SHEET_W / 2, y: rowTop - 14 - STORY_SIZE / 2 };
-    const troubleSlot = cardSlot('trouble', sheetX + SHEET_W - PC_CARD.w - 6, rowTop + PEEK);
+    const conceptSlot = cardSlot('concept', conceptX(sheetX), rowTop + PEEK);
+    const troubleSlot = cardSlot('trouble', troubleX(sheetX), rowTop + PEEK);
+    // The Storyteller token's spot: right of the Trouble card, centred over the Liability's column.
+    TABLE.players[i].obstacleHome = { x: bx + PC_CARD.w + BOARD_W + PC_CARD.w / 2, y: rowTop + PEEK + PC_CARD.h / 2 };
     const boonSlot = cardSlot('boon', bx, boonTop);
     portraitSlot.under = boonSlot; // the Asset stack always sits on top of the portrait
     let dice;
@@ -1459,44 +1465,46 @@ function deal(mode = 'deal') {
     countedLabel(SIM_RULES.takeSpotlight ? 'This scene' : 'Spotlight', bx, portraitY - 52, 'pair-label stack-label', 'spotlight',
       { x: supplyX - 20, y: supplyY - SPOTLIGHT_TOKENS * SPOTLIGHT_STEP - 20, w: SPOTLIGHT_SIZE + 40, h: SPOTLIGHT_TOKENS * SPOTLIGHT_STEP + SPOTLIGHT_SIZE + 26 });
 
-    // Liability: a bad thing that has happened to the character. Just a slot for now, under the Asset.
-    const baneY = boonTop + PC_CARD.h + 10;
-    // (The Liability slot's outline shows the rules for Liabilities.)
+    // Liability: a bad thing that has happened to the character. Just off the board's right edge,
+    // level with the Asset, so both cards that can be compelled (Trouble, Liability) are on the right.
     const baneSlot = addZone({
-      accepts: 'bane', x: bx, y: baneY, w: PC_CARD.w, h: PC_CARD.h,
-      el: (() => { const z = zoneOutline(bx, baneY, PC_CARD.w, PC_CARD.h, ''); z.classList.add('hidden-zone'); return z; })(), // lined up by the ✖️ on the board
+      accepts: 'bane', x: boardR, y: boonTop, w: PC_CARD.w, h: PC_CARD.h,
+      el: (() => { const z = zoneOutline(boardR, boonTop, PC_CARD.w, PC_CARD.h, ''); z.classList.add('hidden-zone'); return z; })(), // lined up by the ✖️ on the board
     });
-    // Scored spotlight right under the board; Edge under the Liability (which hangs a little lower).
-    // Each label sits right under its card or board, with its tokens just below it (a stack
-    // rises 4 px per token, so there's room for that above the first token).
-    const scoreLabelY = sheetY + SHEET_H + 10 + 4;                 // under the player board
-    const edgeLabelY = scoreLabelY;                                // under the Liability, level with Scored
-    const scoreY = scoreLabelY + 38, edgeY = edgeLabelY + 38 - (SPOTLIGHT_SIZE - EDGE_SIZE);
-    countedLabel('Edge', bx, edgeLabelY, 'pair-label', 'edge', { x: bx - 10, w: sheetX - bx + 4, y: edgeLabelY - 4, h: SPOTLIGHT_SIZE + 60 });
-    countedLabel('Scored spotlight', sheetX, scoreLabelY, 'pair-label', 'spotlight', { x: sheetX - 6, w: SHEET_W + 44, y: scoreLabelY - 4, h: SPOTLIGHT_SIZE + 60 });
+    // Story Points under the Asset (bottom left) and Scored spotlight under the Liability (bottom
+    // right), beside the board's lower half. Each label has its tokens just below it: stacks of
+    // STORY_STACK / SCORE_STACK tokens, two side by side (a stack rises a few px per token, so
+    // there's room above the first).
+    const pileLabelY = boonTop + PC_CARD.h + 12;
+    const edgeLabelY = pileLabelY, scoreLabelY = pileLabelY;
+    const edgeY = edgeLabelY + 26 + (STORY_STACK - 1) * 3;
+    const scoreY = scoreLabelY + 26 + (SCORE_STACK - 1) * 4;
+    countedLabel('Story Points', bx + 6, edgeLabelY, 'pair-label', 'edge', { x: bx - 4, w: PC_CARD.w + 8, y: edgeLabelY - 4, h: edgeY + EDGE_SIZE - edgeLabelY + 8 });
+    countedLabel('Scored spotlight', boardR + 6, scoreLabelY, 'pair-label', 'spotlight', { x: boardR - 4, w: PC_CARD.w + 8, y: scoreLabelY - 4, h: scoreY + SPOTLIGHT_SIZE - scoreLabelY + 8 });
     Object.assign(TABLE.players[i], {
       zones: { concept: conceptSlot, trouble: troubleSlot, boon: boonSlot, bane: baneSlot },
       dice, supply, scored: [], edge: [], scene: [],
       sceneAt: { x: supplyX, y: supplyY },
-      scoreAt: { x: sheetX, y: scoreY },
-      edgeAt: { x: bx + 6, y: edgeY + (SPOTLIGHT_SIZE - EDGE_SIZE) },
+      scoreAt: { x: boardR + 6, y: scoreY },
+      edgeAt: { x: bx + 6, y: edgeY },
     });
   });
 
-  // The Storyteller token starts by the first player's pawn (they're the first Storyteller),
-  // with the Obstacle die on top of it.
+  // The Storyteller token starts by the first player's Trouble (they're the first Storyteller),
+  // with the Obstacle die in its slot.
   TABLE.obstacleDie = TABLE.storyToken = null;
   if (SIM_RULES.obstacle) {
     const home = TABLE.players[0].obstacleHome;
-    TABLE.storyToken = createToken({ className: 'storyteller', size: STORY_SIZE, html: '<span class="story-slot"></span><span class="story-name">Storyteller</span>', x: home.x - STORY_SIZE / 2, y: home.y - STORY_SIZE / 2 });
+    TABLE.storyToken = createToken({ className: 'storyteller', size: STORY_SIZE, html: STORY_FACE, x: home.x - STORY_SIZE / 2, y: home.y - STORY_SIZE / 2 });
     TABLE.obstacleDie = createDie({ className: 'die-obstacle', size: OBSTACLE_SIZE, faces: APPROACHES, value: 1, x: home.x - OBSTACLE_SIZE / 2, y: home.y - OBSTACLE_SIZE / 2 - OBSTACLE_RIDE });
   }
 
   // The shared spotlight pool, under the Fate deck, and the first stacks on the Board.
   if (SIM_RULES.takeSpotlight) {
     const n = SPOTLIGHT_TOKENS * players.length;
-    // Beside the Object (to its left, bottoms level), at the foot of the Elements column.
-    TABLE.poolAt = { x: EL_COL_R - EL_CARD.w - 2 * (SPOTLIGHT_SIZE + 10) - 24, y: OBJECT_Y + EL_CARD.h - SPOTLIGHT_SIZE - 30 };
+    // Under the Fate deck, centred in its column, with its label just above the Object's name card.
+    const cols = Math.ceil(n / POOL_COLUMN);
+    TABLE.poolAt = { x: OBJ_X + (EL_CARD.w - cols * (SPOTLIGHT_SIZE + 10) + 10) / 2, y: OBJECT_Y - PEEK - 6 - 20 - 6 - SPOTLIGHT_SIZE };
     TABLE.pool = [];
     for (let k = 0; k < n; k++) {
       const s = poolSpot(k);
@@ -1506,13 +1514,13 @@ function deal(mode = 'deal') {
       TABLE.pool.push(t);
     }
     countedLabel('Spotlight pool', TABLE.poolAt.x, TABLE.poolAt.y + SPOTLIGHT_SIZE + 6, 'pair-label', 'spotlight',
-      { x: TABLE.poolAt.x - 10, y: TABLE.poolAt.y - POOL_COLUMN * SPOTLIGHT_STEP - 10, w: 2 * (SPOTLIGHT_SIZE + 10) + 20, h: POOL_COLUMN * SPOTLIGHT_STEP + SPOTLIGHT_SIZE + 20 });
+      { x: TABLE.poolAt.x - 10, y: TABLE.poolAt.y - POOL_COLUMN * SPOTLIGHT_STEP - 10, w: cols * (SPOTLIGHT_SIZE + 10) + 20, h: POOL_COLUMN * SPOTLIGHT_STEP + SPOTLIGHT_SIZE + 20 });
     fillSuccessStacks(actTarget(SIM_RULES.acts[0], players.length));
   }
 
-  worldSize.w = Math.max(RX + RIGHT_W, CHARS_R) + 40;
+  worldSize.w = Math.max(TOP_R, CHARS_R) + 40;
   worldSize.h = Math.max(PC_TOP + (Math.ceil(players.length / CHAR_COLS) - 1) * CHAR_ROW_H + PEEK + PC_CARD.h + 8 + CHAR_COL_H + 24 + SPOTLIGHT_SIZE + 70,
-    OBJECT_Y + EL_CARD.h + 40);
+    topBottom + 40);
 
   // ---- New game: the pool of character cards to choose from ----
   if (fresh) {

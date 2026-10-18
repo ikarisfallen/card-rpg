@@ -6,37 +6,38 @@
 
 const RULES_TEXT = [
   'Three acts, one Situation each, each harder than the last (the difficulty for your player count is at the top of the Board). Each new act draws a new Location card.',
-  'Every player takes Edge as each act begins; how much depends on the act and the number of players (see the top of the Board).',
-  'Each round, in initiative order, every player bets: <b>Main</b> on a free row, <b>Help</b> a row whose approach is on one of their Relationship cards (+1), give up their bet to <b>clear a Minus die</b> (and take 1 Edge' + (SIM_RULES.clearSpotlight ? ' and bank ' + SIM_RULES.clearSpotlight + ' spotlight' : '') + '), or pass.' + (SIM_RULES.clearTiming === 'end' ? ' Clearing means putting your pawn in the <b>Clear seat</b> at the foot of the Minus box (one pawn per round): the die comes off at the <b>end of the round</b>, so this round\u2019s rolls still feel it. While you hold the seat, one failure can\u2019t lose the situation: you hold the line.' + (SIM_RULES.clearGoesFirst ? ' Whoever clears also <b>bets first next round</b>.' : '') : '') + '',
+  'Every player takes Story Points as each act begins; how much depends on the act and the number of players (see the top of the Board).',
+  'Each round, in initiative order, every player bets: <b>Main</b> on a free row, <b>Help</b> a row whose approach is on one of their Relationship cards (+1), give up their bet to <b>clear a Minus die</b> (and take 1 Story Point' + (SIM_RULES.clearSpotlight ? ' and bank ' + SIM_RULES.clearSpotlight + ' spotlight' : '') + '), or pass.' + (SIM_RULES.clearTiming === 'end' ? ' Clearing means putting your pawn in the <b>Clear seat</b> at the foot of the Minus box (one pawn per round): the die comes off at the <b>end of the round</b>, so this round\u2019s rolls still feel it. While you hold the seat, one failure can\u2019t lose the situation: you hold the line.' + (SIM_RULES.clearGoesFirst ? ' Whoever clears also <b>bets first next round</b>.' : '') : '') + '',
   ...(SIM_RULES.sceneModifier ? ['<b>Scene die:</b> each Situation\u2019s description names one Element line (like the Location\u2019s 🌉 crossing). That line\u2019s approach goes on the Scene die at the left of the Board\u2019s banner. ' + (SIM_RULES.sceneBy === 'approach' ? (SIM_RULES.sceneClaim ? 'Each round, the first Main player to go in with that approach takes the Scene die into their Main box: ' + sceneMod() + ' on their roll, and nobody else gets it that round. It goes back once everyone has gone.' : 'For the whole situation, a roll made with that approach gets ' + sceneMod() + '.') : 'For the whole situation, any character whose Concept or Asset shows that approach gets ' + sceneMod() + ' on whichever row they bet. Their badge is marked.')] : []),
   ...(SIM_RULES.freeApproach ? ['<b>Cost vs. Approaches:</b> rows have no set approach. The Main player picks the approach they go in with and sets that die in their box; Help, Concept, Asset, Trouble, Liability, the Minus dice and the Fate card all read it. Each row risks one resource (Intel, Reputation, Resources, Drive, Efficiency or Time). A failure costs 1 of it, but <b>0</b> with the approach that guards it and <b>2</b> with the one that squanders it (shown in the Risk box): 🕶️ guards Intel, 📢 guards Reputation, 🧠 Resources, 💪 Drive, 🐢 Efficiency, ⚡ Time.'] : []),
   '<b>One Fate card</b> is drawn for everyone. Each row reads its own approach\u2019s number.',
   ...(INVOKE_LINES ? ['When betting as Main, a player may <b>invoke</b> one unused line on an Element card (Location, Villain, Ally, MacGuffin) whose approach matches the row: +1. Each line can be invoked once per situation.'] : []),
-  ...(SIM_RULES.troubleInvoke ? ['<b>➖ Troubles</b> never count on their own. After the bets, before the card is turned, a Main player whose row shows one of their Trouble’s approaches may <b>invoke</b> it: −1 on the roll, and ' + SIM_RULES.troubleEdge + ' Edge from the pile goes on their Trouble card. If they don’t, any other player may <b>compel</b> it by putting ' + SIM_RULES.troubleEdge + ' of their own Edge there instead; the Main player can refuse by paying 1 Edge to the pile, and then the compeller’s Edge goes to the pile too. If the Scene die shows a Trouble approach too, take ' + SIM_RULES.sceneTroubleEdge + ' more Edge from the pile. The Edge on the Trouble card is theirs once the roll is over (not for this roll). Once per roll.'] : []),
-  ...(SIM_RULES.banes ? ['<b>✖️ Liabilities:</b> a Main player who fails draws a Liability at random (like a Broken Leg) and explains how it happened. It shows two approaches and works like a Trouble (invoke it for −1 and Edge), but anyone can compel it <b>for free</b>: the Edge comes from the pile. Refusing costs you 1 Edge to the pile. One Liability at a time: if you get another, keep either one. Get rid of it by giving up your bet for a round, or by spending ' + SIM_RULES.baneRemoveEdge + ' Edge.' + (SIM_RULES.baneClearAtActEnd === false ? ' Otherwise it stays, from act to act.' : ' All Liabilities go back in the deck at the end of each act.')] : []),
+  ...(SIM_RULES.troubleInvoke && SIM_RULES.compelOnly ? ['<b>➖ Troubles and ✖️ Liabilities</b> never count on their own, and you can’t bring up your own. After the bets, before the card is turned, when a Main player’s approach matches their Trouble or Liability, any other player may <b>compel</b> it, for free: they say how it gets in the way. The Main player takes <b>−1</b> on the roll and ' + storyPts(SIM_RULES.troubleEdge) + ' from the pile (theirs once the roll is over), or refuses by paying 1 Story Point to the pile.' + (SIM_RULES.obstacle ? ' Watching for them is part of the <b>Storyteller</b>’s job: they may compel one each round.' : '') + ' Once per card per roll.'] : []),
+  ...(SIM_RULES.troubleInvoke && !SIM_RULES.compelOnly ? ['<b>➖ Troubles</b> never count on their own. After the bets, before the card is turned, a Main player whose row shows one of their Trouble’s approaches may <b>invoke</b> it: −1 on the roll, and ' + storyPts(SIM_RULES.troubleEdge) + ' from the pile goes on their Trouble card. If they don’t, any other player may <b>compel</b> it by putting ' + SIM_RULES.troubleEdge + ' of their own Story Points there instead; the Main player can refuse by paying 1 Story Point to the pile, and then the compeller’s Story Points goes to the pile too. If the Scene die shows a Trouble approach too, take ' + SIM_RULES.sceneTroubleEdge + ' more Story Points from the pile. The Story Points on the Trouble card is theirs once the roll is over (not for this roll). Once per roll.'] : []),
+  ...(SIM_RULES.banes ? ['<b>✖️ Liabilities:</b> a Main player who fails draws a Liability at random (like a Broken Leg) and explains how it happened. It shows two approaches and works like a Trouble' + (SIM_RULES.compelOnly ? '' : ' (invoke it for −1 and Story Points), but anyone can compel it <b>for free</b>: the Story Points comes from the pile. Refusing costs you 1 Story Point to the pile') + '. One Liability at a time: if you get another, keep either one. Get rid of it by giving up your bet for a round, or by spending ' + storyPts(SIM_RULES.baneRemoveEdge) + '.' + (SIM_RULES.baneClearAtActEnd === false ? ' Otherwise it stays, from act to act.' : ' All Liabilities go back in the deck at the end of each act.')] : []),
   ...(SIM_RULES.boonUpgrades ? ['<b>✔️ Asset upgrades:</b> beat the difficulty by ' + SIM_RULES.boonMargin + ' or more as Main and draw an Asset from the ones nobody holds: keep it or your old one.'] : []),
   ...(SIM_RULES.boonShield === 'heal' ? ['<b>Burn your Asset:</b> when you fail as Main, you may discard your Asset. You still lose the resource, but you draw no Liability, and you shake off the Liability you carry. An empty Asset slot fills again with your next Asset upgrade.'] : []),
   (SIM_RULES.maxStake ? 'A Main player may <b>stake</b> up to 2 spotlight tokens from their <b>Scored</b> pile. If the bet succeeds, the stake comes back plus <b>double</b> the stake on top (stake 2, get 6). Anything less than a success and the stake is lost for good.' : null),
-  'After the card is turned, a Main player may spend up to <b>' + SIM_RULES.maxEdgePerBet + ' Edge</b> on their roll: +1 each' + (playerRule('endingEdgeCap') ? ' (up to ' + playerRule('endingEdgeCap') + ' in the Ending)' : '') + '.' + (SIM_RULES.helperEdge ? ' Helpers on the row may chip in their own Edge too (still 2 per roll in all).' : ''),
-  ...(SIM_RULES.maxEdgeHeld ? ['<b>Edge limit:</b> nobody holds more than ' + SIM_RULES.maxEdgeHeld + ' Edge. Any more you would take stays in (or goes back to) the pile.'] : []),
-  `Effort = ➕ Concept +1, ✔️ Asset +1, ${SIM_RULES.troubleInvoke ? '➖ Trouble −1 if invoked or compelled' : '➖ Trouble −1'}, ${SIM_RULES.sceneModifier ? `the Scene die ${sceneMod()} ${SIM_RULES.sceneBy === 'approach' ? 'if the roll uses its approach' : 'if their Concept or Asset shows its approach'}, ` : ''}${INVOKE_LINES ? 'invoked line +1, ' : ''}each helper +1, each Edge spent +1, each Minus die showing the row\u2019s approach −1, plus the Fate number.`,
-  ...(SIM_RULES.takeSpotlight ? ['<b>Taking spotlight:</b> spotlight tokens are neutral. Each situation starts with a stack in every row\u2019s Successes box, as many as it takes to win (the target). Scoring <b>takes</b> tokens from the row\u2019s stack into your <b>This scene</b> spot. The first row emptied completes the situation, and everyone\u2019s This scene tokens are scored. If the situation is lost, they go back to the pool unscored. Act bonuses' + (SIM_RULES.maxStake ? ', stake payouts' : '') + ' and cashed-in Edge come from the pool.'] : []),
-  'Beat the difficulty by N: the Main player puts N spotlight tokens on the row\u2019s Successes' + (SIM_RULES.maxTokensPerRoll ? ' (at most ' + SIM_RULES.maxTokensPerRoll + (SIM_RULES.overflowToEdge ? '; each point over that is 1 Edge instead' : '') + ')' : '') + (SIM_RULES.overflowAtRowLimit ? ', but never more than the row still needs to win: each point over that is 1 Edge instead (for a helper too, when the row is already full)' : '') + '; each helper adds 1.' + (SIM_RULES.endEdgePerSpotlight ? ' At the end of the game, every ' + SIM_RULES.endEdgePerSpotlight + ' leftover Edge buy 1 spotlight.' : '') + (SIM_RULES.helpTokensSafe ? ' A helper\u2019s token is <b>safe</b> (ringed): it counts toward the row like any other, and if the situation is lost it still scores.' : ''),
+  'After the card is turned, a Main player may spend up to <b>' + storyPts(SIM_RULES.maxEdgePerBet) + '</b> on their roll: +1 each' + (playerRule('endingEdgeCap') ? ' (up to ' + playerRule('endingEdgeCap') + ' in the Ending)' : '') + '.' + (SIM_RULES.helperEdge ? ' Helpers on the row may chip in their own Story Points too (still 2 per roll in all).' : ''),
+  ...(SIM_RULES.maxEdgeHeld ? ['<b>Story Points limit:</b> nobody holds more than ' + storyPts(SIM_RULES.maxEdgeHeld) + '. Any more you would take stays in (or goes back to) the pile.'] : []),
+  `Effort = ➕ Concept +1, ✔️ Asset +1, ${SIM_RULES.troubleInvoke ? '➖ Trouble −1 if invoked or compelled' : '➖ Trouble −1'}, ${SIM_RULES.sceneModifier ? `the Scene die ${sceneMod()} ${SIM_RULES.sceneBy === 'approach' ? 'if the roll uses its approach' : 'if their Concept or Asset shows its approach'}, ` : ''}${INVOKE_LINES ? 'invoked line +1, ' : ''}each helper +1, each Story Points spent +1, each Minus die showing the row\u2019s approach −1, plus the Fate number.`,
+  ...(SIM_RULES.takeSpotlight ? ['<b>Taking spotlight:</b> spotlight tokens are neutral. Each situation starts with a stack in every row\u2019s Successes box, as many as it takes to win (the target). Scoring <b>takes</b> tokens from the row\u2019s stack into your <b>This scene</b> spot. The first row emptied completes the situation, and everyone\u2019s This scene tokens are scored. If the situation is lost, they go back to the pool unscored. Act bonuses' + (SIM_RULES.maxStake ? ', stake payouts' : '') + ' and cashed-in Story Points come from the pool.'] : []),
+  'Beat the difficulty by N: the Main player puts N spotlight tokens on the row\u2019s Successes' + (SIM_RULES.maxTokensPerRoll ? ' (at most ' + SIM_RULES.maxTokensPerRoll + (SIM_RULES.overflowToEdge ? '; each point over that is 1 Story Point instead' : '') + ')' : '') + (SIM_RULES.overflowAtRowLimit ? ', but never more than the row still needs to win: each point over that is 1 Story Point instead (for a helper too, when the row is already full)' : '') + '; each helper adds 1.' + (SIM_RULES.endEdgePerSpotlight ? ' At the end of the game, every ' + SIM_RULES.endEdgePerSpotlight + ' leftover Story Points buy 1 spotlight. Why? Story Points are your pull over how the story goes. Whatever you never spent is still pull: when the story is told afterwards, it buys your character a bigger part in it.' : '') + (SIM_RULES.helpTokensSafe ? ' A helper\u2019s token is <b>safe</b> (ringed): it counts toward the row like any other, and if the situation is lost it still scores.' : ''),
   ...(SIM_RULES.pushResource ? ['<b>Succeed at a cost:</b> after the Fate card, a Main player whose roll would miss may lower their die for the row’s resource by as many points as it takes to succeed, +1 each' + (SIM_RULES.pushToSucceed ? '' : ' (1 point at most)') + ', but never below 1.'] : []),
   ...(SIM_RULES.obstacle ? ['<b>The Obstacle:</b> each round one player is the <b>Storyteller</b> (the seat passes clockwise every round). Before anyone bets, they set the Obstacle die to an approach and put it in one row’s Obstacle box, and say how the other side saw it coming: going into that row with that approach ' + (SIM_RULES.obstacleCancels ? '<b>loses its bonuses</b> (Concept, Asset, the Scene die) this round, so it only hurts a character leaning on that approach' : 'is <b>−1</b> this round') + '. The Storyteller still bets as usual.'] : []),
   ...(SIM_RULES.escalationChoice ? ['<b>Escalations:</b> when a Main player fails, they choose which of the Situation\u2019s two Escalations happens, and narrate it. The same one can happen again: that trouble just got really bad.'] : []),
-  ...(SIM_RULES.minorFailure ? ['<b>Miss by 1: a minor failure.</b> The Main player and helpers each lose the row\u2019s resource (0, 1 or 2 by the approach), but nobody draws a Liability or takes Edge, and the situation doesn\u2019t escalate.'] : []),
-  'Miss by 2 or more: the Main player and helpers each lose ' + (SIM_RULES.freeApproach ? '0, 1 or 2 (by the approach)' : '1') + ' of the row\u2019s <b>Risk</b> resource. Helpers take 1 <b>Edge</b>; the Main player takes 1 Edge' + (playerRule('failEdgePerMinus', 4) ? ' plus 1 for each Minus die already out (<b>desperation</b>, up to 3)' : '') + (SIM_RULES.banes ? ' and draws a Liability' : '') + '. The next Escalation happens and its Minus die goes in the Minus box: <b>−1 to every roll using that approach</b>, on any row' + (SIM_RULES.minusNextRound ? ', from the <b>next round</b> on (this round\u2019s other rows roll against the box as it was when they bet)' : '') + '. With 2 Minus dice out, the next failure loses the situation (unless someone holds the Clear seat), and the tokens on the board go back unscored.',
+  ...(SIM_RULES.minorFailure ? ['<b>Miss by 1: a minor failure.</b> The Main player and helpers each lose the row\u2019s resource (0, 1 or 2 by the approach), but nobody draws a Liability or takes Story Points, and the situation doesn\u2019t escalate.'] : []),
+  'Miss by 2 or more: the Main player and helpers each lose ' + (SIM_RULES.freeApproach ? '0, 1 or 2 (by the approach)' : '1') + ' of the row\u2019s <b>Risk</b> resource. Helpers take 1 <b>Story Points</b>; the Main player takes 1 Story Point' + (playerRule('failEdgePerMinus', 4) ? ' plus 1 for each Minus die already out (<b>desperation</b>, up to 3)' : '') + (SIM_RULES.banes ? ' and draws a Liability' : '') + '. The next Escalation happens and its Minus die goes in the Minus box: <b>−1 to every roll using that approach</b>, on any row' + (SIM_RULES.minusNextRound ? ', from the <b>next round</b> on (this round\u2019s other rows roll against the box as it was when they bet)' : '') + '. With 2 Minus dice out, the next failure loses the situation (unless someone holds the Clear seat), and the tokens on the board go back unscored.',
   'A resource that drops to <b>0</b> costs you your next turn: flip your initiative token to <b>OUT</b>, and flip it back at the end of the round you sit out. On the turn after, the resource comes back at 1.',
   '<b># of players</b> tokens on one row defeats the situation: every token on the board is scored.',
   (SIM_RULES.spotlightShift ? '<b>Spotlight Shift:</b> the bonus below goes to whoever on the winning row (Main or helper) has the least scored spotlight; ties go to the Main, who then takes the helper share. ' : '') + 'Finishing a situation earns a bonus for the winning row, banked straight away: the Beginning <b>2</b> for the Main player; the Middle <b>3</b> for the Main player and <b>1</b> for each helper; the Ending <b>4</b> for the Main player and <b>2</b> for each helper.',
   'After the Ending, the most scored spotlight is the star. <b>Tiebreaker:</b> whoever won the Ending.',
   SIM_RULES.initiativeBy === 'standing'
-    ? '<b>Initiative</b> is reset after every round: whoever has the least spotlight on the table (Scored plus their tokens on the Board) bets first. Ties: fewer Edge goes first, then the youngest player (the simulator: whoever went earlier).'
+    ? '<b>Initiative</b> is reset after every round: whoever has the least spotlight on the table (Scored plus their tokens on the Board) bets first. Ties: fewer Story Points goes first, then the youngest player (the simulator: whoever went earlier).'
     : '<b>Initiative</b> is reset after every round, Kingdomino-style: whoever placed the fewest spotlight tokens that round picks first. Ties: less spotlight overall goes first, then the earlier player.',
   ...(SIM_RULES.rowOrder === 'initiative' ? ['Rows roll in <b>initiative order</b>: a Main player takes their initiative token with their pawn, and the rows roll by those numbers. A helped row rolls on its Main\u2019s number.'] : []),
   ...(SIM_RULES.afterWin === 'safe' ? ['<b>The danger has passed:</b> once a row completes the situation, the rows still to roll still roll (successes place spotlight, which scores), but a miss costs nothing.'] : []),
-  'Bots bet on their best row, ' + (SIM_RULES.maxStake ? 'stake about the margin they expect (one more when they’re behind), ' : '') + 'help when they can’t do better, clear a Minus die when both are out, invoke their Trouble when the Edge is worth more than the −1, compel a rival who is ahead (or about to finish the situation) when it could cost them the roll, refuse a compel when the −1 hurts more than 1 Edge, and spend Edge (up to 2) to reach their stake, or else to dodge a failure.',
+  'Bots bet on their best row, ' + (SIM_RULES.maxStake ? 'stake about the margin they expect (one more when they’re behind), ' : '') + 'help when they can’t do better, clear a Minus die when both are out, invoke their Trouble when the Story Points is worth more than the −1, compel a rival who is ahead (or about to finish the situation) when it could cost them the roll, refuse a compel when the −1 hurts more than 1 Story Point, and spend Story Points (up to 2) to reach their stake, or else to dodge a failure.',
 ];
 
 const ROW_NAMES = ['A', 'B', 'C'];
@@ -185,7 +186,7 @@ function giveEdge(pl, token) {
     return false;
   }
   const k = pl.edge.length;
-  glide(token, pl.edgeAt.x + Math.floor(k / 6) * 56, pl.edgeAt.y - (k % 6) * 3);
+  glide(token, pl.edgeAt.x + Math.floor(k / STORY_STACK) * 56, pl.edgeAt.y - (k % STORY_STACK) * 3);
   pl.edge.push(token);
   return true;
 }
@@ -263,6 +264,7 @@ function* placeObstacle(rows, board) {
   const n = TABLE.players.length;
   const opp = TABLE.players[TABLE.oppSeat % n];
   TABLE.oppSeat++;
+  TABLE.storyteller = opp; // they also watch for Troubles and Liabilities to compel (compelOnly)
   parkObstacle(opp);
   let row, approach, target = null;
   if (opp.human) {
@@ -306,7 +308,7 @@ function clearDie(pl, rows, board, die = null) {
   const edge = gainEdge(pl);
   let banked = 0;
   for (let i = 0; i < (SIM_RULES.clearSpotlight || 0); i++) { const t = spotSupply(pl).pop(); if (t) { bankToken(pl, t); banked++; } }
-  const rewards = [edge ? '1 Edge' : '', banked ? `${banked} spotlight banked straight into their Scored row` : ''].filter(Boolean);
+  const rewards = [edge ? '1 Story Point' : '', banked ? `${banked} spotlight banked straight into their Scored row` : ''].filter(Boolean);
   return `${who(pl)} clears the ➖${face} die from the Minus box${rewards.length ? `, and takes ${rewards.join(' and ')} for it` : ''}.`;
 }
 
@@ -319,7 +321,7 @@ function bankToken(pl, token) {
   token.el.classList.remove('help-token');
   const k = pl.scored.length;
   token.home = token.home || { x: token.x, y: token.y };
-  glide(token, pl.scoreAt.x + Math.floor(k / 5) * 70, pl.scoreAt.y - (k % 5) * 4);
+  glide(token, pl.scoreAt.x + Math.floor(k / SCORE_STACK) * 70, pl.scoreAt.y - (k % SCORE_STACK) * 4);
   pl.scored.push(token);
   pl.score++;
 }
@@ -455,8 +457,8 @@ function* simGame() {
       return [pl, n];
     }).filter(([, n]) => n);
     yield {
-      title: 'Cashing in Edge',
-      html: `<p>Every ${rate} leftover Edge buy 1 spotlight. ${bought.length ? bought.map(([pl, n]) => `${who(pl)} +${n}`).join(' · ') : 'Nobody has enough left.'}</p>`,
+      title: 'Cashing in Story Points',
+      html: `<p>Every ${rate} leftover Story Points buy 1 spotlight. Why? Story Points are your pull over how the story goes. Whatever you never spent is still pull: when the story is told afterwards, it buys your character a bigger part in it.</p><p>${bought.length ? bought.map(([pl, n]) => `${who(pl)} +${n}`).join(' · ') : 'Nobody has enough left.'}</p>`,
     };
   }
 
@@ -505,7 +507,7 @@ function* playSituation(situation, act, label = act) {
   if (bonus) {
     const short = [], full = [];
     TABLE.players.forEach(pl => { for (let i = 0; i < bonus; i++) if (atEdgeLimit(pl)) full.push(pl); else if (!gainEdge(pl)) short.push(pl); });
-    edgeNote = `<p>Everyone takes <b>${bonus} Edge</b> as the act begins.${short.length ? ` The Edge pile ran out, so ${[...new Set(short)].map(who).join(', ')} got less.` : ''}${full.length ? ` ${[...new Set(full)].map(who).join(', ')} ${new Set(full).size > 1 ? 'are' : 'is'} at the Edge limit of ${SIM_RULES.maxEdgeHeld}.` : ''}</p>`;
+    edgeNote = `<p>Everyone takes <b>${storyPts(bonus)}</b> as the act begins.${short.length ? ` The Story Points pile ran out, so ${[...new Set(short)].map(who).join(', ')} got less.` : ''}${full.length ? ` ${[...new Set(full)].map(who).join(', ')} ${new Set(full).size > 1 ? 'are' : 'is'} at the Story Points limit of ${SIM_RULES.maxEdgeHeld}.` : ''}</p>`;
   }
   const actions = rowActions(situation);
   const rows = [0, 1, 2].map(i => ({
@@ -534,6 +536,8 @@ function* playSituation(situation, act, label = act) {
     board.held = false;   // whether they've already held the line against a failure
     TABLE.players.forEach(pl => { pl.roundGain = 0; });
     board.obstacle = null;
+    board.storyCompel = false; // the Storyteller's compel this round (compelOnly)
+    TABLE.storyteller = null;
     if (SIM_RULES.obstacle) yield* placeObstacle(rows, board);
     const order = [...TABLE.players].sort((a, b) => a.initToken.initiative - b.initToken.initiative);
     yield {
@@ -641,7 +645,7 @@ function* playSituation(situation, act, label = act) {
       let die = null;
       const faces = [...new Set(board.minus.map(d => d.faces[d.value - 1]))];
       if (clearer.human && faces.length > 1) {
-        const k = yield ask('Which Minus die?', '<p>You held the line this round. Pick the Minus die to remove; you take 1 Edge for it.</p>',
+        const k = yield ask('Which Minus die?', '<p>You held the line this round. Pick the Minus die to remove; you take 1 Story Point for it.</p>',
           board.minus.map((d, k) => ({ label: `Remove ➖${d.faces[d.value - 1]}`, hint: d.fresh ? 'went in this round' : `−1 to ${d.faces[d.value - 1]} rolls`, value: k })));
         die = board.minus[k];
       }
@@ -768,7 +772,7 @@ function takeClearSeat(pl, rows, board, recovered) {
   glide(pl.pawn, TABLE.clearSeat.x - pl.pawn.w / 2, TABLE.clearSeat.y - pl.pawn.h / 2);
   return {
     title: `${pl.letter} takes the Clear seat`,
-    html: `${recovered}<p>${who(pl)} gives up their bet to hold the line. This round’s rolls still feel the Minus dice, but a failure can’t lose the situation, and at the end of the round they remove one die (and take 1 Edge${SIM_RULES.clearSpotlight ? ` and ${SIM_RULES.clearSpotlight} spotlight` : ''}${SIM_RULES.clearGoesFirst ? ', and bet first next round' : ''}).</p>`,
+    html: `${recovered}<p>${who(pl)} gives up their bet to hold the line. This round’s rolls still feel the Minus dice, but a failure can’t lose the situation, and at the end of the round they remove one die (and take 1 Story Point${SIM_RULES.clearSpotlight ? ` and ${SIM_RULES.clearSpotlight} spotlight` : ''}${SIM_RULES.clearGoesFirst ? ', and bet first next round' : ''}).</p>`,
   };
 }
 
@@ -783,7 +787,7 @@ function patchUp(pl, bane, recovered) {
 function shakeOffBane(pl, bane) {
   for (let i = 0; i < SIM_RULES.baneRemoveEdge; i++) spendEdge(pl);
   returnBane(bane);
-  return `<p>${who(pl)} spends ${SIM_RULES.baneRemoveEdge} Edge to shake off their Liability ${baneName(bane)}: back into the deck.</p>`;
+  return `<p>${who(pl)} spends ${storyPts(SIM_RULES.baneRemoveEdge)} to shake off their Liability ${baneName(bane)}: back into the deck.</p>`;
 }
 
 // The Scene die, claimed for a row (SIM_RULES.sceneClaim): into the Main box beside the pawn,
@@ -875,9 +879,8 @@ function betMain(pl, row, board, difficulty, recovered, stake, approach = null) 
   if (line) html += `<p>They invoke <b>“${esc(line.text)}”</b> from the ${esc(line.from)} card (${row.approach} +1). Nobody else can use that line this situation.</p>`;
   html += '<p>' + (parts.length ? parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(', ') : 'No card bonuses for this approach');
   html += ` → <b>${signed(total(parts))}</b> before the spin. If it fails, they lose ${lossWords(row)}.</p>`;
-  html += n
-    ? `<p>They <b>stake ${n}</b> of their scored spotlight: ${SIM_RULES.stakeNeedsMargin ? `beat the difficulty by ${n}+` : 'succeed'} and they bank ${n * (1 + SIM_RULES.stakePayout)}; anything less and the stake is gone.</p>`
-    : `<p>${pl.scored.length || pl.score ? 'They stake nothing.' : 'Nothing scored yet, so nothing to stake.'}</p>`;
+  if (n) html += `<p>They <b>stake ${n}</b> of their scored spotlight: ${SIM_RULES.stakeNeedsMargin ? `beat the difficulty by ${n}+` : 'succeed'} and they bank ${n * (1 + SIM_RULES.stakePayout)}; anything less and the stake is gone.</p>`;
+  else if (SIM_RULES.maxStake) html += `<p>${pl.scored.length || pl.score ? 'They stake nothing.' : 'Nothing scored yet, so nothing to stake.'}</p>`;
   return { title: `${pl.letter} bets`, html };
 }
 
@@ -985,12 +988,12 @@ function* humanBet(pl, rows, board, difficulty) {
         value: ['main', r.index],
       })),
       ...helpable.map(r => ({ label: `Help ${rowTag(r)}`, hint: `back up ${r.main.letter}: +1 to their roll, 1 token if it works · risks ${r.risk}`, value: ['help', r.index] })),
-      ...(seatFree ? [{ label: 'Clear box', hint: 'hold the line, and remove a Minus die at the end of the round (+1 Edge)', value: ['clear'] }] : []),
-      ...(bane && pl.edge.length >= SIM_RULES.baneRemoveEdge ? [{ label: `Shake off your Liability (${SIM_RULES.baneRemoveEdge} Edge)`, hint: `discard ${bane.card.text}, then bet`, value: ['shake'] }] : []),
+      ...(seatFree ? [{ label: 'Clear box', hint: 'hold the line, and remove a Minus die at the end of the round (+1 Story Point)', value: ['clear'] }] : []),
+      ...(bane && pl.edge.length >= SIM_RULES.baneRemoveEdge ? [{ label: `Shake off your Liability (${storyPts(SIM_RULES.baneRemoveEdge)})`, hint: `discard ${bane.card.text}, then bet`, value: ['shake'] }] : []),
       ...(bane ? [{ label: 'Patch yourself up', hint: `give up your bet to discard ${bane.card.text}`, value: ['patch'] }] : []),
       { label: 'Pass', hint: 'sit this round out', value: ['pass'] },
     ];
-    const status = `<p>You have <b>${pl.edge.length}</b> Edge and <b>${pl.score}</b> scored spotlight${bane ? `, and you carry the Liability ${baneName(bane)}` : ''}. Difficulty <b>${difficulty}</b>.</p>`;
+    const status = `<p>You have <b>${pl.edge.length}</b> Story Points and <b>${pl.score}</b> scored spotlight${bane ? `, and you carry the Liability ${baneName(bane)}` : ''}. Difficulty <b>${difficulty}</b>.</p>`;
     const [what, i] = yield ask(`Your bet, ${pl.info.name}`, `${recovered}${status}<p>Where does your pawn go?</p>`, opts);
     const row = rows[i];
     if (what === 'shake') { recovered += shakeOffBane(pl, bane); continue; }
@@ -1075,9 +1078,9 @@ function* humanEdgePlan(row, fate, difficulty, board) {
   let k = 0;
   if (max > 0) {
     const sum = parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(' · ');
-    k = yield ask(`Spend Edge on ${rowLabel(row)}?`,
-      `<p>${sum} = ${before + difficulty} vs difficulty ${difficulty}${used ? `, and ${who(row.main)} spends ${used} Edge` : ''}: right now that’s <b>${outcome(before + used)}</b>.</p><p>You have ${human.edge.length} banked Edge (at most ${cap} per roll in all).</p>`,
-      Array.from({ length: max + 1 }, (_, i) => ({ label: i ? `Spend ${i} Edge` : 'Spend none', hint: outcome(before + used + i), value: i })));
+    k = yield ask(`Spend Story Points on ${rowLabel(row)}?`,
+      `<p>${sum} = ${before + difficulty} vs difficulty ${difficulty}${used ? `, and ${who(row.main)} spends ${storyPts(used)}` : ''}: right now that’s <b>${outcome(before + used)}</b>.</p><p>You have ${human.edge.length} banked Story Points (at most ${cap} per roll in all).</p>`,
+      Array.from({ length: max + 1 }, (_, i) => ({ label: i ? `Spend ${storyPts(i)}` : 'Spend none', hint: outcome(before + used + i), value: i })));
   }
   if (k) plan.push([human, k]);
   if (human === row.main) plan.push(...botEdgePlan(row, before + k, bots, cap - k)); // bot helpers top up
@@ -1121,7 +1124,7 @@ function resolveRow(row, fate, difficulty, target, board) {
     while (k < n && spent < edgeCap() && spendEdge(p)) { k++; spent++; }
     if (k) paid.push([p, k]);
   }
-  if (spent) parts.push([`Edge ×${spent}`, spent]);
+  if (spent) parts.push([`Story Points ×${spent}`, spent]);
 
   // Succeed at a cost (SIM_RULES.pushResource): lower the row's resource die, +1 per point.
   let pushNote = '';
@@ -1140,14 +1143,14 @@ function resolveRow(row, fate, difficulty, target, board) {
     const n = row.troubleEdge.length;
     const kept = row.troubleEdge.filter(t => giveEdge(main, t)).length;
     row.troubleEdge = [];
-    troubleNote = `<p>The roll is over, so the ${n} Edge waiting on ${who(main)}’s card${n > 1 ? 's go' : ' goes'} into their bank${kept < n ? `; ${n - kept} back to the pile (Edge limit ${SIM_RULES.maxEdgeHeld})` : ''}.</p>`;
+    troubleNote = `<p>The roll is over, so the ${storyPts(n)} waiting on ${who(main)}’s card${n > 1 ? 's go' : ' goes'} into their bank${kept < n ? `; ${n - kept} back to the pile (Story Points limit ${SIM_RULES.maxEdgeHeld})` : ''}.</p>`;
   }
 
   const effort = total(parts);
   const margin = effort - difficulty;
   const sum = `${parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(' · ')} = <b>${effort}</b> vs difficulty ${difficulty}`;
   const attempt = `<p>${who(main)} tries to <i>${row.action}</i>${row.helpers.length ? `, with help from ${row.helpers.map(who).join(' and ')}` : ''}.</p>`
-    + (spent ? `<p>Seeing the card, ${paid.map(([p, k], i) => `${who(p)} ${i ? 'adds' : 'spends'} ${k} banked Edge`).join(' and ')} (+${spent}).</p>` : '') + pushNote + troubleNote;
+    + (spent ? `<p>Seeing the card, ${paid.map(([p, k], i) => `${who(p)} ${i ? 'adds' : 'spends'} ${k} banked Story Point${k === 1 ? '' : 's'}`).join(' and ')} (+${spent}).</p>` : '') + pushNote + troubleNote;
   const team = [main, ...row.helpers];
 
   // The stake: doubled into Scored spotlight on a success, lost on a failure, else returned.
@@ -1195,7 +1198,7 @@ function resolveRow(row, fate, difficulty, target, board) {
         if (SIM_RULES.overflowAtRowLimit && row.tokens.length >= target) e += gainEdge(h) ? 1 : 0; // row full: Edge instead
         else n += placeToken(h, row, true) ? 1 : 0;
       }
-      return [n ? `${who(h)} adds ${n}` : '', e ? `${who(h)} takes ${e} Edge (the row is full)` : ''].filter(Boolean).join(' and ');
+      return [n ? `${who(h)} adds ${n}` : '', e ? `${who(h)} takes ${storyPts(e)} (the row is full)` : ''].filter(Boolean).join(' and ');
     }).filter(Boolean);
     // A narrow success (SIM_RULES.narrowCost) still costs the row's resource, as a failure would.
     let narrowNote = '';
@@ -1210,7 +1213,7 @@ function resolveRow(row, fate, difficulty, target, board) {
     return {
       title: `${rowLabel(row)}: success`,
       html: `${attempt}<p>${sum}. <b>Beats it by ${margin}.</b></p>
-        <p>${who(main)} places ${placed} spotlight token${placed === 1 ? '' : 's'}${overflow ? ` (${SIM_RULES.overflowAtRowLimit && placed >= room ? 'all the row can take' : 'the most for one roll'}) and takes the ${overflow} left over as Edge` : ''}${helped.length ? `; ${helped.join(', ')}` : ''}. That row is at ${row.tokens.length}/${target}.</p>${narrowNote}${boonNote}${stakeNote}`,
+        <p>${who(main)} places ${placed} spotlight token${placed === 1 ? '' : 's'}${overflow ? ` (${SIM_RULES.overflowAtRowLimit && placed >= room ? 'all the row can take' : 'the most for one roll'}) and takes the ${overflow} left over as Story Points` : ''}${helped.length ? `; ${helped.join(', ')}` : ''}. That row is at ${row.tokens.length}/${target}.</p>${narrowNote}${boonNote}${stakeNote}`,
     };
   }
 
@@ -1263,7 +1266,7 @@ function resolveRow(row, fate, difficulty, target, board) {
     const baneNote = SIM_RULES.banes && mainTakesBane ? giveBane(main, board.rows || []) : ''; // only the Main player
     const guarded = SIM_RULES.freeApproach && !cost ? `Going in ${row.approach} guarded their ${riskName(row.risk)}: nobody loses any. ` : '';
     const lossText = shieldText + (guarded || (losers.length ? `${losers.map(who).join(' and ')} ${losers.length > 1 ? 'each lose' : 'loses'} ${cost} ${row.risk} ${riskName(row.risk)}${cost > 1 ? ` (${row.approach} squanders it)` : ''}. ` : shield ? '' : `${who(main)} keeps their ${row.risk} and takes a Liability instead. `));
-    const edgeText = [got ? `${who(main)} takes ${got} Edge${board.minus.length && playerRule('failEdgePerMinus') ? ' (desperation: the Minus box is filling up)' : ''}` : '', ...helpersEdged.map(h => `${who(h)} takes 1 Edge`)].filter(Boolean).join(', ');
+    const edgeText = [got ? `${who(main)} takes ${storyPts(got)}${board.minus.length && playerRule('failEdgePerMinus') ? ' (desperation: the Minus box is filling up)' : ''}` : '', ...helpersEdged.map(h => `${who(h)} takes 1 Story Point`)].filter(Boolean).join(', ');
     return {
       failed: true,
       title: `${rowLabel(row)}: failure`,
@@ -1379,16 +1382,18 @@ function* invokeOrCompel(pl, row, { kind, sign, piece }, order, rows, board, dif
   const reward = SIM_RULES.troubleEdge + extra;
   const worth = Math.min(reward, edgeRoom(pl) + 1) * EDGE_WORTH; // past the Edge limit it's wasted (+1: they'll often spend one)
   const fromPile = n => { let got = 0; for (let i = 0; i < n; i++) { const t = TABLE.edge.supply.pop(); if (t) { parkEdge(row, t, piece); got++; } } return got; };
-  const sceneNote = scene ? ` The Scene die shows ${TABLE.scene.approach} too: ${extra} more Edge from the pile.` : '';
+  const sceneNote = scene ? ` The Scene die shows ${TABLE.scene.approach} too: ${extra} more Story Point${extra === 1 ? '' : 's'} from the pile.` : '';
   const what = `${kind} “${esc(piece.card.text.replace(/\.\.\.|…/g, '').trim())}” (${sign}${row.approach})`;
   const now = rollValue(row, 0, pl.edge.length, board, difficulty, target);
   const hit = rollValue(row, -1, pl.edge.length, board, difficulty, target);
   pulse(piece);
 
-  const invoke = pl.human
+  // With compelOnly a card can't be invoked by its owner: only the others bring it up.
+  const free = bane || SIM_RULES.compelOnly; // the pile pays the Edge, not the compeller
+  const invoke = SIM_RULES.compelOnly ? false : pl.human
     ? yield ask(`Invoke your ${kind}?`,
-      `<p>${rowTag(row)} matches your ${what}. Invoke it: <b>−1</b> on this roll, and ${reward} Edge from the pile (yours once the roll is over). If you don\u2019t, the others may compel it${bane ? ' (for free)' : ''}.</p>`,
-      [{ label: 'Invoke it', hint: `−1 now, +${reward} Edge after the roll`, value: true }, { label: 'Not now', hint: 'keep your roll clean', value: false }])
+      `<p>${rowTag(row)} matches your ${what}. Invoke it: <b>−1</b> on this roll, and ${storyPts(reward)} from the pile (yours once the roll is over). If you don\u2019t, the others may compel it${bane ? ' (for free)' : ''}.</p>`,
+      [{ label: 'Invoke it', hint: `−1 now, +${storyPts(reward)} after the roll`, value: true }, { label: 'Not now', hint: 'keep your roll clean', value: false }])
     : hit + worth >= now;
   if (invoke) {
     row.hits.push(`${sign} ${kind} (invoked)`);
@@ -1396,7 +1401,7 @@ function* invokeOrCompel(pl, row, { kind, sign, piece }, order, rows, board, dif
     yield {
       title: `${pl.letter} invokes their ${kind}`,
       html: `<p>${who(pl)} brings their ${what} into it: <b>−1</b> on this roll.</p>
-        <p>${got} Edge from the pile ${got === 1 ? 'goes' : 'go'} on the card, theirs once the roll is over.${sceneNote}</p>`,
+        <p>${storyPts(got)} from the pile ${got === 1 ? 'goes' : 'go'} on the card, theirs once the roll is over.${sceneNote}</p>`,
     };
     return;
   }
@@ -1404,45 +1409,50 @@ function* invokeOrCompel(pl, row, { kind, sign, piece }, order, rows, board, dif
   // A refused compel costs the Main player 1 Edge (and a Trouble's compeller 1 too), so bots
   // only compel when they expect it to stick.
   let refuses = !pl.human && pl.edge.length > 0 && rollValue(row, 0, pl.edge.length - 1, board, difficulty, target) > hit + worth;
-  // In initiative order, the human player is asked; bots compel when it's worth it.
+  // In initiative order (the Storyteller first, with compelOnly), the human player is asked;
+  // bots compel when it's worth it. The Storyteller compels once a round whenever it hurts the roll.
   let by = null;
-  for (const p of order) {
-    if (p === pl || row.helpers.includes(p) || (!bane && p.edge.length < SIM_RULES.troubleEdge)) continue;
+  const story = SIM_RULES.compelOnly && TABLE.storyteller && !board.storyCompel ? TABLE.storyteller : null;
+  const askers = story ? [story, ...order.filter(p => p !== story)] : order;
+  for (const p of askers) {
+    if (p === pl || row.helpers.includes(p) || (!free && p.edge.length < SIM_RULES.troubleEdge)) continue;
+    const asStory = p === story;
     if (p.human) {
       const yes = yield ask(`Compel ${pl.letter}\u2019s ${kind}?`,
-        `<p>${who(pl)} bets on ${rowTag(row)}, which matches their ${what}. Compel it: they take <b>−1</b> on this roll${bane ? '; it costs you nothing (the pile pays them 1 Edge)' : ', and you pay them 1 of your Edge'}. They may refuse by paying 1 Edge to the pile${bane ? '' : ' (and then your Edge goes to the pile too)'}.</p>`,
-        [{ label: 'Compel', hint: bane ? 'free' : 'costs you 1 Edge', value: true }, { label: 'Leave it', value: false }]);
+        `<p>${asStory ? 'You’re the Storyteller: watching for this is part of your job. ' : ''}${who(pl)} bets on ${rowTag(row)}, which matches their ${what}. Compel it, and say how it gets in the way: they take <b>−1</b> on this roll${free ? '; it costs you nothing (the pile pays them 1 Story Point)' : ', and you pay them 1 of your Story Points'}. They may refuse by paying 1 Story Point to the pile${free ? '' : ' (and then your Story Points goes to the pile too)'}.</p>`,
+        [{ label: 'Compel', hint: free ? 'free' : 'costs you 1 Story Point', value: true }, { label: 'Leave it', value: false }]);
       if (yes) { by = p; break; }
-    } else if (wantsCompel(p, row, rows, board, now - hit, target, bane) && (!refuses || SIM_RULES.compelIntoRefusal)) { by = p; break; }
+    } else if ((asStory ? now - hit > 0 : wantsCompel(p, row, rows, board, now - hit, target, free)) && (!refuses || SIM_RULES.compelIntoRefusal)) { by = p; break; }
   }
+  if (by && by === story) board.storyCompel = true;
   if (!by) return;
   if (pl.human && pl.edge.length > 0) {
     refuses = yield ask(`${by.letter} compels your ${kind}`,
-      `<p>${who(by)} compels your ${what}: <b>−1</b> on this roll, and you take the Edge once the roll is over. Or refuse, by paying 1 Edge to the pile.</p>`,
-      [{ label: 'Accept', hint: '−1 now, +Edge after the roll', value: false }, { label: 'Refuse', hint: 'pay 1 Edge to the pile', value: true }]);
+      `<p>${who(by)} compels your ${what}: <b>−1</b> on this roll, and you take the Story Points once the roll is over. Or refuse, by paying 1 Story Point to the pile.</p>`,
+      [{ label: 'Accept', hint: '−1 now, +Story Points after the roll', value: false }, { label: 'Refuse', hint: 'pay 1 Story Point to the pile', value: true }]);
   }
   if (refuses) {
-    if (!bane) spendEdge(by);
+    if (!free) spendEdge(by);
     spendEdge(pl);
     yield {
       title: `${pl.letter} refuses a compel`,
       html: `<p>${who(by)} tries to compel ${who(pl)}’s ${what}.</p>
-        <p>${who(pl)} refuses, and pays 1 Edge to the pile to keep their roll clean.${bane ? '' : ` ${who(by)}’s Edge goes to the pile too.`}</p>`,
+        <p>${who(pl)} refuses, and pays 1 Story Point to the pile to keep their roll clean.${free ? '' : ` ${who(by)}’s Story Point goes to the pile too.`}</p>`,
     };
     return;
   }
   row.hits.push(`${sign} ${kind} (compelled)`);
   let paid;
-  if (bane) paid = `The ${fromPile(SIM_RULES.troubleEdge)} Edge comes from the pile: compelling a Liability is free.`;
+  if (free) paid = `The ${storyPts(fromPile(reward))} comes from the pile: compelling is free.`;
   else {
     for (let i = 0; i < SIM_RULES.troubleEdge; i++) parkEdge(row, by.edge.pop(), piece);
     const got = fromPile(extra);
-    paid = `${who(by)} pays ${SIM_RULES.troubleEdge} of their own Edge onto the card.${scene ? ` The Scene die shows ${TABLE.scene.approach} too: ${got} more Edge from the pile.` : ''}`;
+    paid = `${who(by)} pays ${SIM_RULES.troubleEdge} of their own Story Points onto the card.${scene ? ` The Scene die shows ${TABLE.scene.approach} too: ${got} more Story Points from the pile.` : ''}`;
   }
   yield {
     title: `${by.letter} compels ${pl.letter}`,
-    html: `<p>${who(by)} compels ${who(pl)}’s ${what}. ${paid}</p>
-      <p>${who(pl)} accepts: <b>−1</b> on this roll, and the Edge is theirs once the roll is over.</p>`,
+    html: `<p>${who(by)}${by === story ? ', the Storyteller,' : ''} compels ${who(pl)}’s ${what}, and says how it gets in the way. ${paid}</p>
+      <p>${who(pl)} accepts: <b>−1</b> on this roll, and the Story Points are theirs once the roll is over.</p>`,
   };
 }
 
@@ -1630,7 +1640,7 @@ function reorderInitiative(rows) {
     pulse(pl.initToken);
   });
   const gains = standing
-    ? order.map(pl => `${who(pl)} ${overall(pl)} (${pl.edge.length} Edge)`).join(' · ')
+    ? order.map(pl => `${who(pl)} ${overall(pl)} (${storyPts(pl.edge.length)})`).join(' · ')
     : order.map(pl => `${who(pl)} ${pl.roundGain || 0}`).join(' · ');
   return `<p>${standing ? 'Spotlight on the table (Scored + on the Board)' : 'Spotlight placed this round'}: ${gains}.</p>
     ${first ? `<p>${who(first)} cleared a Minus die, so they bet first.</p>` : ''}<p>Lowest picks first, so the next order is: ${next.map((pl, i) => `<b>${i + 1}</b> ${who(pl)}`).join(', ')}.</p>`;

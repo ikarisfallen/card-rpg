@@ -89,6 +89,11 @@ const SIM_RULES = {
   sceneTroubleEdge: 1, // extra Edge from the pile when the Scene die shows a Trouble approach too
   // A refused compel: the Main player pays 1 Edge to the pile, and so does the compeller.
   compelIntoRefusal: false, // bots: true = compel even when they expect a refusal
+  // Compels only (2026-10-18, so the table watches each other's Troubles and Liabilities): you
+  // can't invoke your own; when your roll's approach matches one, any other player may compel it
+  // for free (the pile pays the Edge), and the Storyteller compels one each round as part of
+  // their job. You take -1 and the Edge, or refuse by paying 1 Edge to the pile.
+  compelOnly: true,
   // Cost vs. Approaches. true: rows have no set approach; the Main player picks one, and it sets
   // what a failure costs: 0 of the row's resource with the approach that guards it, 2 with the
   // one that squanders it, 1 otherwise (see RISKS in deal.js). false: each row has a fixed
@@ -157,6 +162,9 @@ const PLAYER_COUNT_RULES = {
   },
   4: { target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 1 } },
 };
+
+// Story Points (called Edge in the code): "1 Story Point", "2 Story Points".
+const storyPts = n => `${n} Story Point${n === 1 ? '' : 's'}`;
 
 // ---- Game length (the two pickers by the Players menu) ----
 // How many Middle acts (0-3) between the Beginning and the Ending, and how much the spotlight
