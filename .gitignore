@@ -1,0 +1,12 @@
+# OS and editor clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+
+# Python
+__pycache__/
+*.pyc
+
+# Local-only Claude Code settings (launch.json is shared, it just starts the local server)
+.claude/settings.local.json

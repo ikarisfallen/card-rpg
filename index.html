@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Card RPG – Playtest Table</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="table"><div id="world"></div></div>
+
+  <div id="theme-hud">
+    <select id="theme-select" aria-label="Card set"></select>
+    <select id="players-select" aria-label="Number of players"></select>
+    <select id="middles-select" aria-label="Number of Middle acts"></select>
+    <select id="extra-select" aria-label="How much the spotlight stacks grow each act"></select>
+  </div>
+
+  <div id="hud">
+    <button id="zoom-out-btn" type="button" aria-label="Zoom out">−</button>
+    <button id="zoom-in-btn" type="button" aria-label="Zoom in">+</button>
+    <button id="fit-btn" type="button">⤢ Fit</button>
+    <button id="sim-btn" type="button">▶ Simulate</button>
+    <button id="new-game-btn" type="button">✦ New game</button>
+    <button id="reset-btn" type="button">🎲 New deal</button>
+  </div>
+
+  <div id="sim-panel" hidden>
+    <div class="sim-head">
+      <span>Gameplay simulator</span>
+      <button id="sim-close" type="button" aria-label="Close simulator">✕</button>
+    </div>
+    <!-- Buttons stay put at the top while the step text below changes length. -->
+    <div class="sim-buttons">
+      <button id="sim-step" type="button">Step ▶</button>
+      <button id="sim-auto" type="button">Auto ⏵</button>
+      <button id="sim-restart" type="button">↺ New game</button>
+    </div>
+    <div class="sim-current">
+      <div class="sim-title"></div>
+      <div class="sim-text"></div>
+    </div>
+    <details class="sim-rules"><summary>Rules used</summary><ol></ol></details>
+    <ol class="sim-log"></ol>
+  </div>
+
+  <div id="menu-backdrop" hidden></div>
+  <div id="die-menu" hidden>
+    <button class="roll-btn" type="button">🎲 Roll</button>
+    <div class="menu-label">or set face</div>
+    <div class="faces"></div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="noir-situations.js"></script>
+  <script src="noir-locations.js"></script>
+  <script src="noir-banes.js"></script>
+  <script src="space-opera.js"></script>
+  <script src="table.js"></script>
+  <script src="portraits.js"></script>
+  <script src="rules.js"></script>
+  <script src="deal.js"></script>
+  <script src="sim.js"></script>
+</body>
+</html>

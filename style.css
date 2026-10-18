@@ -1,0 +1,1498 @@
+:root {
+  --shadow-rest: 0 2px 3px rgba(0, 0, 0, 0.35), 0 4px 10px rgba(0, 0, 0, 0.2);
+  --shadow-held: 0 26px 34px rgba(0, 0, 0, 0.45), 0 12px 14px rgba(0, 0, 0, 0.3);
+  --lift-ease: cubic-bezier(0.2, 0.8, 0.3, 1.35);
+  --cream: #f7efd9;
+  --ink: #2a2016;
+  --emoji: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #123824;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  /* We handle every gesture ourselves: no scrolling, zooming, text selection or callouts. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* ---------- Table + world ---------- */
+
+#table {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center, #2b7b4e 0%, #1f5d3a 55%, #123824 100%);
+}
+
+#table::before {
+  /* faint felt texture */
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image:
+    repeating-linear-gradient(45deg, #000 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(-45deg, #fff 0 1px, transparent 1px 5px);
+}
+
+#world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.static { position: absolute; z-index: 1; }
+
+.section-label {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+
+.pair-label {
+  font-size: 17px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+}
+
+.player-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--player);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- Generic piece ---------- */
+
+.piece {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+  cursor: grab;
+}
+
+.piece.held { cursor: grabbing; }
+
+/* Used only for programmatic moves/rotations; dragging must track the finger exactly. */
+.piece.animating { transition: transform 450ms cubic-bezier(0.3, 0.8, 0.3, 1); }
+
+/* .lift is the visual body; it scales/tilts/shadows independently of the position transform. */
+.lift {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  box-shadow: var(--shadow-rest);
+  transition: transform 170ms var(--lift-ease), box-shadow 170ms ease, filter 170ms ease;
+}
+
+.piece.held .lift {
+  transform: translateY(-8px) scale(1.1) rotate(var(--tilt, 0deg));
+  box-shadow: var(--shadow-held);
+}
+
+@media (hover: hover) {
+  .piece:not(.held):hover .lift { transform: scale(1.03); }
+}
+
+.piece.dealing .lift { animation: deal-in 380ms var(--deal-delay, 0ms) both cubic-bezier(0.2, 0.8, 0.3, 1.2); }
+
+@keyframes deal-in {
+  from { opacity: 0; transform: translateY(-30px) scale(0.85); }
+}
+
+.pulse .lift { animation: pulse 260ms ease; }
+
+@keyframes pulse {
+  50% { transform: scale(1.12); }
+}
+
+/* ---------- Cards ---------- */
+
+.card .lift {
+  border-radius: 12px;
+  perspective: 1100px;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 380ms cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+
+.card.face-down .card-inner { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.card-front {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  gap: 8px;
+  color: var(--ink);
+  background: linear-gradient(160deg, #fbf3df, #ead9b4);
+  border: 5px solid var(--accent);
+}
+
+.card-back {
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  border: 5px solid #c9a646;
+  background:
+    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.18) 0 10px, transparent 10px 20px),
+    var(--back);
+}
+
+.back-emblem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #e3c565;
+}
+
+.back-emblem span { font-size: 40px; line-height: 1; text-shadow: 0 0 10px rgba(227, 197, 101, 0.6); }
+.back-emblem small { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85; }
+
+/* A name at each end of a card back; whichever end is up reads upright. */
+.name-end {
+  flex: none;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0 6px;
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 19px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Relationship card backs: a character portrait with its trope underneath. */
+.portrait {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.portrait svg { display: block; width: 100%; height: 100%; }
+
+/* Card-back label along the bottom edge, in the same style as the other backs. When the
+   card is used as a portrait, this strip is what slides under the Boon's name card. */
+.back-strip {
+  flex: none;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  background: var(--back);
+  color: #e3c565;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.name-end.long { font-size: 15px; letter-spacing: -0.01em; }
+.name-end.upside-down { transform: rotate(180deg); }
+
+.kind-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 75%, #000);
+}
+
+/* Per-kind colours: front accent + back colour. */
+.kind-concept      { --accent: #2e86c1; --back: #1d3f66; }
+.kind-trouble      { --accent: #b03a2e; --back: #5a1a1a; }
+.kind-boon         { --accent: #b7950b; --back: #4d4013; }
+.kind-bane         { --accent: #4a4e57; --back: #1e2026; }
+.kind-relationship { --accent: #7d3c98; --back: #3b1d4a; }
+.kind-macguffin    { --accent: #17806d; --back: #0f3d36; }
+.kind-ally         { --accent: #0070c0; --back: #123a5c; }
+.kind-villain      { --accent: #d68910; --back: #5a3a08; }
+.kind-location     { --accent: #c00000; --back: #4a0f0f; }
+.situation-card { --accent: #34495e; --back: #1c2530; }
+
+/* PC cards (Concept / Trouble / Boon / Relationship): small squares */
+.pc-card .card-front { padding: 8px 9px; gap: 4px; }
+
+.pc-text {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow: hidden;
+}
+
+.approach-row {
+  font-family: var(--emoji);
+  font-size: 21px;
+  line-height: 1;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.approach-row .sign { font-size: 16px; margin-right: 1px; }
+
+/* The resource a Concept/Trouble raises or lowers, set apart on the right. */
+.approach-row .resource {
+  margin-left: auto;
+  padding-left: 4px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* Element cards (MacGuffin / Ally / Villain / Location) */
+.el-card .card-front { gap: 8px; padding: 10px 12px; }
+
+.el-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.el-head .el-icon { font-size: 30px; }
+.el-name { font-size: 22px; font-weight: 800; line-height: 1.1; }
+
+.el-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  font-size: 20px; /* as large as the Situation card; shrinks to fit (fitElementCard) */
+}
+
+/* The Location's nine lines: two columns, filled top to bottom. */
+.el-card.kind-location .el-lines {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(5, 1fr);
+  column-gap: 22px;
+}
+
+.el-lines li {
+  display: grid;
+  grid-template-columns: 1.4em 1fr 1.5em;
+  align-items: center;
+  gap: 6px;
+  font-size: 1em;
+  line-height: 1.2;
+}
+
+/* Tap a line to invoke it (+1 once per situation); used lines are struck through. */
+.el-lines li { position: relative; border-radius: 6px; }
+.el-lines li.used { opacity: 0.4; text-decoration: line-through; }
+.el-lines li.used::after {
+  content: "✓";
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 900;
+  color: #1f7a45;
+  text-decoration: none;
+}
+
+.el-icon, .el-approach { font-family: var(--emoji); font-size: 1.1em; text-align: center; }
+.el-approach { font-size: 1.2em; }
+
+/* Situation: opening text, then a band per choice level with its Board row (its shape on the
+   left, the text right-aligned toward the Board, on a subtly alternating background), then the
+   escalations. Band heights are set in deal.js; long text shrinks to fit (fitSituationCard). */
+.situation-card .card-front { padding: 0; gap: 0; }
+
+.sit-intro {
+  flex: none;
+  box-sizing: border-box;
+  padding: 8px 14px 6px;
+  font-size: 20px;
+  overflow: hidden;
+}
+
+.sit-intro .sit-text { font-size: 1em; }
+
+.sit-choice {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: 6px 16px 6px 12px;
+  font-size: 21px;
+  line-height: 1.25;
+  font-family: "Segoe UI", var(--emoji);
+  overflow: hidden;
+}
+.sit-choice:nth-of-type(odd) { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.sit-choice-text { flex: 1; text-align: right; }
+
+/* A, B and C: triangle, square, circle (see rowShape), on the card and on the Board. */
+.row-shape { flex: none; display: block; }
+.row-shape polygon, .row-shape rect, .row-shape circle { fill: var(--accent, #34495e); }
+.row-shape text { fill: #fff; font: 800 44px "Segoe UI", system-ui, sans-serif; }
+.mat-letter .row-shape polygon, .mat-letter .row-shape rect, .mat-letter .row-shape circle { fill: rgba(255, 255, 255, 0.9); }
+.mat-letter .row-shape text { fill: #1c2530; }
+
+.sit-escs {
+  flex: none;
+  box-sizing: border-box;
+  font-size: 17px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  overflow: hidden;
+}
+
+.sit-name {
+  font-size: 1.1em;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--accent) 80%, #000);
+}
+
+.sit-text {
+  line-height: 1.3;
+  white-space: pre-line;
+  overflow: hidden;
+}
+
+.sit-esc { font-size: 1em; line-height: 1.3; }
+
+/* Who won it: a stamp in the winning row's band. */
+.sit-choice.won { background: color-mix(in srgb, var(--c, #ffd25e) 10%, transparent); }
+
+.sit-stamp {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--c);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transform: rotate(-4deg);
+}
+
+.sit-intro { position: relative; }
+
+.sit-lost {
+  position: absolute;
+  right: 14px;
+  top: 10px;
+  padding: 4px 14px;
+  border: 4px solid #b03a2e;
+  border-radius: 8px;
+  color: #b03a2e;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transform: rotate(-8deg);
+  opacity: 0.85;
+}
+
+/* "Situation" title with a button per act played. */
+.sit-header { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.act-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.act-tab {
+  min-width: 96px;
+  height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  font: 700 18px "Segoe UI", system-ui, sans-serif;
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+
+.act-tab.won::after { content: " ★"; color: #ffd25e; }
+.act-tab.lost::after { content: " ✕"; color: #ff8a80; }
+.act-tab.active { background: #ffd25e; color: #2a1c00; box-shadow: none; }
+.act-tab.active.won::after { color: #2a1c00; }
+
+.sit-esc b { color: #8e2b1f; }
+
+/* ---------- Fate cards ---------- */
+
+.fate-card { --accent: #3a3a3a; --back: #233b3b; }
+
+.fate-card .card-front { padding: 0; }
+
+/* Six cells (one per approach) separated by grey bars. */
+.fate-grid {
+  height: 100%;
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(2, 1fr);
+  gap: 6px;
+  background: #8a8a8a;
+}
+
+.fate-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: var(--cream);
+}
+
+.fate-approach { font-family: var(--emoji); font-size: 28px; line-height: 1; }
+.fate-value { font-size: 26px; font-weight: 800; line-height: 1; }
+.fate-value.up { color: #1f7a45; }
+.fate-value.down { color: #b03a2e; }
+
+/* ---------- Snap zones ---------- */
+
+.zone {
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: 3px dashed rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.zone.name-zone {
+  border-radius: 12px 12px 0 0;
+  border-bottom: 0;
+  font-size: 11px;
+}
+
+/* The slot a dragged card will land in. */
+.zone.hot {
+  border: 3px solid #ffd25e;
+  background: rgba(255, 210, 94, 0.22);
+  color: #ffd25e;
+}
+
+.zone.name-zone.hot { border-bottom: 0; }
+
+/* ---------- Relationship board ---------- */
+
+.section-label.centered { transform: translateX(-50%); }
+
+.rel-board {
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.token.spotlight .lift {
+  padding: 3px;
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  box-shadow: var(--shadow-rest), inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+}
+
+.token.spotlight.held .lift { box-shadow: var(--shadow-held), inset 0 0 0 2px rgba(0, 0, 0, 0.25); }
+.token.spotlight svg { display: block; width: 100%; height: 100%; }
+
+.token.initiative .lift {
+  font-family: inherit;
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  background: radial-gradient(circle at 35% 30%, #b57edc, #6c3483 75%);
+}
+
+/* ---------- Dice ---------- */
+
+.die-face {
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  padding: 13%;
+  border-radius: 18%;
+  background: linear-gradient(145deg, var(--die-hi), var(--die-lo));
+  box-shadow: inset -3px -4px 6px rgba(0, 0, 0, 0.15), inset 3px 3px 5px rgba(255, 255, 255, 0.4);
+}
+
+.die .lift.die-face { box-shadow: var(--shadow-rest), inset -3px -4px 6px rgba(0, 0, 0, 0.15), inset 3px 3px 5px rgba(255, 255, 255, 0.4); }
+.die.held .lift.die-face { box-shadow: var(--shadow-held), inset -3px -4px 6px rgba(0, 0, 0, 0.15), inset 3px 3px 5px rgba(255, 255, 255, 0.4); }
+
+.pip {
+  place-self: center;
+  width: 72%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--pip) 60%, #fff), var(--pip) 60%);
+  visibility: hidden;
+}
+
+.pip.on { visibility: visible; }
+
+.die-symbol {
+  grid-area: 1 / 1 / -1 / -1;
+  place-self: center;
+  font-family: var(--emoji);
+  font-size: 42px;
+  line-height: 1;
+}
+
+.die-face { --die-hi: #ffffff; --die-lo: #e2ddd0; --pip: #1a1a1a; }
+.die-approach { --die-hi: #fffaf0; --die-lo: #ddd3bd; }
+.die-minus    { --die-hi: #8a2234; --die-lo: #45101b; }
+.die-scene    { --die-hi: #2f9e5b; --die-lo: #145a33; } /* the Situation's Scene die (a bonus) */
+
+.die.rolling .lift { animation: tumble 720ms cubic-bezier(0.25, 0.6, 0.35, 1); }
+
+@keyframes tumble {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: translateY(-14px) rotate(-110deg) scale(1.18); box-shadow: var(--shadow-held); }
+  50%  { transform: translateY(-8px) rotate(150deg) scale(1.12); box-shadow: var(--shadow-held); }
+  80%  { transform: translateY(-2px) rotate(320deg) scale(1.04); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* ---------- Tokens ---------- */
+
+.token .lift {
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--emoji);
+  font-size: 26px;
+  color: #fff;
+  border: 4px solid rgba(255, 255, 255, 0.35);
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--tok, #888) 55%, #fff), var(--tok, #888) 70%);
+}
+
+.token.success .lift { font-family: inherit; font-weight: 900; font-size: 26px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }
+
+/* ---------- Pawns (non-rectangular, so use drop-shadow instead of box-shadow) ---------- */
+
+.pawn .lift {
+  box-shadow: none;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45));
+}
+
+.pawn.held .lift {
+  box-shadow: none;
+  filter: drop-shadow(0 22px 14px rgba(0, 0, 0, 0.45));
+}
+
+.pawn svg { display: block; width: 100%; height: 100%; }
+.pawn text { font: 800 15px "Segoe UI", system-ui, sans-serif; fill: rgba(0, 0, 0, 0.65); }
+
+/* ---------- Board mat ---------- */
+
+.mat {
+  display: grid;
+  padding: 8px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
+  color: #e9f1ea;
+}
+
+/* Banner: what wins a situation on the left, the per-act numbers table on the right. */
+.mat-banner {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 6px 0 12px;
+}
+
+.mat-goal { min-width: 0; font-size: 17px; line-height: 1.3; padding-left: 70px; /* room for the Scene die */ white-space: nowrap; }
+/* What the Scene die is, under the goal: "🌉 switching track bridge  −1 to 🧠". */
+.mat-scene { display: flex; gap: 6px; font-family: "Segoe UI", var(--emoji); font-size: 13px; color: #c9f2d6; }
+.mat-scene-what { overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+.mat-scene em { font-style: normal; font-weight: 800; color: #8ff0a4; }
+.mat-scene:empty { display: none; }
+.mat-goal b { color: #ffd25e; font-size: 24px; }
+.mat-sub { font-size: 13px; opacity: 0.7; }
+
+.mat-rules { border-collapse: collapse; font-size: 14px; line-height: 1.25; }
+.mat-rules th, .mat-rules td { padding: 1px 8px; text-align: center; white-space: nowrap; }
+.mat-rules tr > th:first-child { text-align: right; font-weight: 600; opacity: 0.75; }
+.mat-rules tr:first-child th { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.75; }
+.mat-rules td { font-weight: 800; font-size: 16px; }
+.mat-rules small { font-weight: 600; font-size: 12px; opacity: 0.75; }
+.mat-rules .now { background: rgba(255, 210, 94, 0.22); color: #ffd25e; opacity: 1; }
+
+.mat-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.mat-letter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* A character the Scene die favours: a green ring and a "+1" tag on their badge. */
+.player-badge.scene-boost { box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.35), 0 0 0 4px #2f9e5b; }
+.player-badge.scene-boost::after {
+  content: attr(data-scene);
+  position: absolute;
+  left: 44px;
+  top: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #2f9e5b;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.mat-cell {
+  position: relative;
+  margin: 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: 2px dashed rgba(255, 255, 255, 0.22);
+}
+
+.mat-cell.help { background: rgba(255, 255, 255, 0.04); }
+
+/* One Minus box for all three rows: its dice hit every roll. */
+.mat-cell.minus {
+  grid-row: span 3;
+  align-items: end;
+  padding-bottom: 8px;
+  border-color: rgba(255, 120, 120, 0.4);
+  background: rgba(140, 20, 40, 0.18);
+}
+
+
+
+/* The Clear box under the Minus box: one pawn gives up its bet to remove a die. */
+.mat-cell.clear {
+  align-items: end;
+  padding-bottom: 5px;
+  border-color: rgba(255, 120, 120, 0.4);
+}
+.mat-cell.clear span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 200, 200, 0.7);
+}
+
+.mat-cell.minus span {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+  color: rgba(255, 200, 200, 0.7);
+}
+
+/* Edge tokens: a steel +1. */
+.token.edge .lift {
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  background: radial-gradient(circle at 35% 30%, #c9d3dc, #5d6b78 70%);
+}
+
+.edge-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  color: #10161c;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.edge-face b { font: 900 19px "Segoe UI", system-ui, sans-serif; }
+.edge-face small { font: 800 8px "Segoe UI", system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; }
+.mat-cell.risk { font-family: var(--emoji); font-size: 40px; border-style: solid; }
+
+/* ---------- Character sheet ---------- */
+
+.sheet {
+  display: grid;
+  padding: 10px;
+  border-radius: 16px;
+  background: #9a9a9a;
+  box-shadow: var(--shadow-rest), inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.sheet-head {
+  grid-column: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.sheet-sign { font-family: var(--emoji); font-size: 26px; }
+.sheet-note { font-size: 10.5px; font-weight: 700; line-height: 1.15; color: #2b2b2b; max-width: 104px; }
+.sheet-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #2b2b2b;
+  border-top: 2px solid rgba(255, 255, 255, 0.35);
+}
+.sheet-foot b { font-weight: 800; }
+
+.sheet-icon {
+  display: grid;
+  place-items: center;
+  font-family: var(--emoji);
+  font-size: 34px;
+}
+
+.sheet-box {
+  margin: 6px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+
+/* Read-aloud situation: the card's text with the dealt cards' words filled in. */
+.narration {
+  padding: 14px 18px 16px;
+  border-radius: 16px;
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: var(--shadow-rest);
+  font-family: "Segoe UI", var(--emoji);
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.narr-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.narr-title { font-size: 20px; font-weight: 800; color: #34495e; }
+
+.narr-speak {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 26px;
+  background: rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.narr-speak:active { background: rgba(0, 0, 0, 0.16); }
+
+.narr-body p { margin: 0 0 8px; white-space: pre-line; }
+.narr-body b { color: #7a1f14; }
+.narr-esc { font-size: 16px; padding-top: 6px; border-top: 1px solid rgba(0, 0, 0, 0.12); }
+.narr-esc span { font-weight: 800; color: #8e2b1f; }
+.narr-scene { font-size: 16px; padding: 6px 10px; border-radius: 10px; background: rgba(31, 122, 69, 0.1); }
+.narr-scene span { font-weight: 800; color: #1f7a45; }
+.narr-result { font-size: 19px; padding-top: 8px; border-top: 2px solid rgba(0, 0, 0, 0.12); }
+
+/* ---------- HUD ---------- */
+
+#hud {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 50000;
+  display: flex;
+  gap: 10px;
+}
+
+#hud button {
+  min-width: 60px;
+  min-height: 60px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 14px;
+  font: 600 20px "Segoe UI", system-ui, sans-serif;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+#theme-hud {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 50000;
+  display: flex;
+  gap: 10px;
+}
+
+#theme-select, #players-select, #middles-select, #extra-select {
+  min-height: 60px;
+  padding: 0 48px 0 20px;
+  border: 0;
+  border-radius: 14px;
+  font: 600 20px "Segoe UI", system-ui, sans-serif;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M1 1l7 7 7-7' stroke='white' stroke-width='2.5' fill='none'/%3E%3C/svg%3E") no-repeat right 18px center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  appearance: none;
+  cursor: pointer;
+}
+
+#theme-select option, #players-select option, #middles-select option, #extra-select option { color: #111; background: #fff; }
+
+/* On narrow screens the button bar drops below the pickers instead of overlapping them. */
+@media (max-width: 1120px) {
+  #hud { top: 88px; }
+}
+
+/* Space Opera plays on a deep-space table instead of green felt. */
+body[data-theme="space"] #table {
+  background: radial-gradient(ellipse at center, #2a3566 0%, #1a2048 55%, #0b0f26 100%);
+}
+
+#hud #zoom-in-btn, #hud #zoom-out-btn { padding: 0; font-size: 30px; }
+#hud button:active { background: rgba(0, 0, 0, 0.7); transform: scale(0.97); }
+
+/* ---------- Gameplay simulator panel ---------- */
+
+/* A sidebar on the right; Fit leaves room for it so the board stays visible. */
+#sim-panel {
+  position: fixed;
+  top: 92px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 60000;
+  width: min(440px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  background: rgba(20, 24, 32, 0.96);
+  color: #e8ecf2;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+  font-size: 16px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+.sim-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 0 18px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9aa6b8;
+}
+
+.sim-current { padding: 6px 18px 4px; }
+.sim-title { font-size: 21px; font-weight: 800; color: #ffd25e; }
+.sim-text p, .sim-log p { margin: 6px 0; }
+.sim-text ul { margin: 6px 0; padding-left: 20px; }
+
+.sim-quote {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  font-style: italic;
+}
+
+.sim-quote b { color: #ffcf9a; font-style: normal; }
+.sim-fate { font-size: 20px; font-family: "Segoe UI", var(--emoji); }
+.sim-star { font-size: 20px; font-weight: 800; color: #ffd25e; }
+
+.chip {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--c);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  vertical-align: 1px;
+}
+
+.sim-buttons {
+  display: flex;
+  gap: 10px;
+  padding: 10px 18px;
+}
+
+.sim-buttons button, .sim-head button {
+  min-height: 56px;
+  border: 0;
+  border-radius: 14px;
+  font: 700 18px "Segoe UI", system-ui, sans-serif;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+
+.sim-head button { min-width: 48px; min-height: 48px; font-size: 20px; background: transparent; }
+#sim-step { flex: 1; color: #2a1c00; background: linear-gradient(#ffd25e, #f0a919); font-size: 22px; }
+#sim-step:disabled { opacity: 0.4; cursor: default; }
+.sim-buttons button:active { transform: scale(0.97); }
+
+.sim-rules { padding: 0 18px 6px; color: #b8c2d0; font-size: 14px; }
+.sim-rules summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+.sim-rules ol { margin: 4px 0; padding-left: 20px; }
+
+.sim-log {
+  list-style: none;
+  margin: 0;
+  padding: 0 18px 14px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  font-size: 14px;
+  color: #aeb8c6;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sim-log li { padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+.sim-log-title { font-weight: 800; color: #d6dce6; }
+
+/* A resource at 0: the die stays on its box but fades out. */
+.die.depleted .lift { opacity: 0.3; }
+
+/* ---------- Die menu ---------- */
+
+#menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+#die-menu {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100001;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 22px;
+  background: rgba(22, 26, 34, 0.96);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+  animation: menu-pop 160ms cubic-bezier(0.2, 0.8, 0.3, 1.3);
+}
+
+@keyframes menu-pop {
+  from { opacity: 0; transform: scale(0.85); }
+}
+
+#die-menu button {
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#die-menu .roll-btn {
+  height: 80px;
+  border-radius: 16px;
+  font: 700 28px "Segoe UI", system-ui, sans-serif;
+  color: #2a1c00;
+  background: linear-gradient(#ffd25e, #f0a919);
+}
+
+#die-menu .roll-btn:active { transform: scale(0.97); filter: brightness(0.92); }
+
+.menu-label {
+  color: #aab3c2;
+  font-size: 15px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+#die-menu .faces {
+  display: grid;
+  grid-template-columns: repeat(3, 84px);
+  gap: 12px;
+}
+
+#die-menu .face-btn {
+  width: 84px;
+  height: 84px;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#die-menu .face-btn:active { transform: scale(0.94); }
+
+#die-menu .face-btn.current {
+  background: rgba(255, 210, 94, 0.25);
+  box-shadow: inset 0 0 0 4px #ffd25e;
+}
+
+#die-menu .face-btn .die-face {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+#die-menu .face-btn .die-symbol { font-size: 36px; }
+
+/* How many tokens a pile holds, after its label: "Edge (3)". */
+.pile-count { font-weight: 600; opacity: 0.75; }
+
+/* Boon art: a small line drawing between the name and the approach row. */
+/* The name keeps its full size; the art shrinks to fit (a two-line name leaves ~30px). */
+.pc-text:has(+ .pc-art) { flex: none; }
+.pc-art {
+  flex: 1 1 0;
+  min-height: 26px;
+  max-height: 44px;
+  width: 100%;
+  align-self: center;
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 80%, #000);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pc-art .art-thin { stroke-width: 1.5; }
+.pc-art .art-fill { fill: color-mix(in srgb, var(--accent) 45%, #fff); }
+.pc-art .art-dark { fill: color-mix(in srgb, var(--accent) 60%, #000); }
+.pc-art .art-thick { stroke-width: 5; }
+.pc-art .art-glow { stroke: color-mix(in srgb, var(--accent) 35%, #fff); stroke-width: 8; }
+
+/* The label beside a player's spotlight stack: name and count on two lines. */
+.stack-label { width: 78px; white-space: normal; line-height: 1.25; }
+.stack-label .pile-count { display: block; }
+
+/* Initiative token: the turn-order number, or flipped to OUT for a player losing their turn. */
+.token.initiative .init-out { display: none; font-size: 15px; font-weight: 800; letter-spacing: 0.06em; }
+.token.initiative.is-out .init-num { display: none; }
+.token.initiative.is-out .init-out { display: block; }
+.token.initiative.is-out .lift { background: radial-gradient(circle at 35% 30%, #f1948a, #b03a2e 75%); color: #fff; }
+.token.initiative.flipping .lift { animation: token-flip 0.45s ease; }
+@keyframes token-flip { 0% { transform: scaleX(1); } 50% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+
+
+/* A helper's safe spotlight token on the board: it scores even if the situation is lost. */
+.token.spotlight.help-token .lift { box-shadow: var(--shadow-rest), 0 0 0 4px #fff, 0 0 0 7px rgba(0, 0, 0, 0.35); }
+
+/* Your choices in the Simulate panel when it's your turn. */
+.sim-choices { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 4px; }
+.sim-choice {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  padding: 10px 14px; border: 0; border-radius: 12px; cursor: pointer; text-align: left;
+  font: 700 17px "Segoe UI", system-ui, sans-serif; color: #2a1c00; background: #ffd25e;
+}
+.sim-choice:hover { background: #ffe08a; }
+.sim-choice small { font-weight: 500; font-size: 13px; color: #5a4a20; }
+.sim-chose { color: #ffd25e; }
+
+/* A Minus die that went in this round: it only counts from the next round. */
+.die.die-minus.fresh .lift { opacity: 0.55; }
+
+/* Rule reminders inside the Board's boxes. */
+.cell-note {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  text-align: center;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
+.cell-note.bottom { bottom: 3px; }
+.cell-note.top { top: 3px; }
+.mat-cell.minus span { font-size: 11px; }
+
+/* Tiny drawings of the table's tokens, for the notes. */
+.mini-tok {
+  display: inline-grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  margin: 0 1px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 900;
+  color: #222;
+  vertical-align: -4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.mini-tok.edge { background: radial-gradient(circle at 35% 30%, #f2f4f5, #8d99a1); }
+.mini-tok.init { background: radial-gradient(circle at 35% 30%, #b57edc, #6c3483); color: #fff !important; }
+.mini-tok.spot { background: radial-gradient(circle at 35% 30%, #ffe9a6, #c99a1c); }
+.mat-cell.clear .cell-note.top { top: 6px; font-size: 13px; color: rgba(255, 220, 220, 0.85); }
+.mat-cell.clear .cell-note.top .mini-tok { width: 26px; height: 26px; font-size: 12px; vertical-align: -8px; }
+.mat-cell.clear .cell-note.bottom { color: rgba(255, 200, 200, 0.75); }
+.mat-cell .cell-note .mini-tok { color: #222; font-size: 9px; font-weight: 900; letter-spacing: 0; text-transform: none; }
+.mat-cell.clear .cell-note.top .mini-tok { font-size: 12px; }
+
+/* An initiative token riding with its Main pawn on the Board: smaller, in the box's corner. */
+.token.initiative.on-board .lift { transform: scale(0.7); }
+.cell-note.main-note { font-size: 9.5px; white-space: nowrap; }
+
+/* How a character card is used, just above its approach row. */
+.pc-hint {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: color-mix(in srgb, var(--accent) 70%, #000);
+  opacity: 0.85;
+}
+.pc-text.long { font-size: 14.5px; }
+
+/* A column's rule reminder, under its title on the Board. */
+.mat-foot {
+  padding: 6px 2px 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  opacity: 0.85;
+}
+.mat-foot .mini-tok { width: 15px; height: 15px; font-size: 8px; vertical-align: -3px; color: #222; }
+.mat-foot .mini-tok.init { color: #fff; }
+.mat-head .head-note {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.15;
+  opacity: 0.85;
+}
+.mat-head .mini-tok { width: 15px; height: 15px; font-size: 8px; vertical-align: -3px; color: #222; }
+
+/* The resource's name under its icon on the character sheet. */
+.sheet-icon { grid-auto-flow: row; align-content: center; gap: 2px; }
+.sheet-res-name { font-family: "Segoe UI", system-ui, sans-serif; font-size: 10px; font-weight: 800; color: #2b2b2b; letter-spacing: 0.02em; }
+
+/* A Risk box: the resource ("Lost Time") and the approaches that guard (✔) or squander (✖) it. */
+.mat-cell.risk .risk-body { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.mat-cell.risk .risk-name { font-family: "Segoe UI", system-ui, sans-serif; font-size: 13px; font-weight: 800; }
+.mat-cell.risk .risk-vs { display: flex; gap: 10px; font-size: 18px; }
+.mat-cell.risk .risk-good, .mat-cell.risk .risk-bad { font-family: var(--emoji); }
+.mat-cell.risk .risk-good { color: #7ddc8f; }
+.mat-cell.risk .risk-bad { color: #ff8a8a; }
+.mat-cell.risk:has(.risk-name) .risk-icon { font-size: 30px; line-height: 1; }
+/* ✓ / ✗ marks in plain text, so they keep their colours. */
+.mat-cell.risk .risk-vs b, .mat-foot .mk-good, .mat-foot .mk-bad { font-family: "Segoe UI", system-ui, sans-serif; font-size: 13px; font-weight: 900; margin-right: 2px; vertical-align: 2px; }
+.mat-foot .mk-good { color: #7ddc8f; }
+.mat-foot .mk-bad { color: #ff8a8a; }
+
+/* Relationship cards: larger text (they're short). */
+.pc-card.kind-relationship .pc-text { font-size: 20px; line-height: 1.12; }
+
+/* The Risk die: the resource in the middle; left, a green ✓ over the approach that guards it;
+   right, a red ✗ over the one that squanders it. */
+.die-risk { --die-hi: #fbf3df; --die-lo: #e3d2ad; }
+.die-risk .die-symbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  line-height: 1;
+}
+.die-risk .risk-face-icon { font-size: 30px; }
+.die-risk .risk-face-side { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 17px; }
+.die-risk .risk-face-side b { font: 900 16px "Segoe UI", system-ui, sans-serif; }
+.die-risk .risk-face-side b.good { color: #1f7a45; }
+.die-risk .risk-face-side b.bad { color: #b03a2e; }
+/* The Risk box is just big enough for its die. */
+.mat-cell.risk { margin: 6px; border-style: dashed; }
+
+/* Situation card, index-card layout: the description over the escalations on the left, the
+   three choices stacked on the right, each a section of its own. Sizes shrink to fit
+   (fitSituationCard). */
+.situation-card .card-front {
+  display: grid;
+  grid-template-columns: 1fr 350px; /* SIT_CHOICES_W in deal.js */
+  padding: 0;
+  gap: 0;
+}
+.sit-left {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  font-size: 17px;
+  border-right: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.situation-card .sit-intro { flex: 1 1 auto; height: auto; padding: 8px 12px 6px; font-size: 1em; overflow: visible; }
+.situation-card .sit-escs { flex: none; height: auto; margin-top: auto; padding: 6px 12px 8px; font-size: 0.85em; }
+.sit-choices { display: flex; flex-direction: column; min-height: 0; }
+.situation-card .sit-choice {
+  position: relative;
+  flex: 1 1 0;
+  height: auto;
+  min-height: 0;
+  padding: 6px 10px;
+  gap: 8px;
+  font-size: 18px;
+  line-height: 1.2;
+  border-bottom: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.situation-card .sit-choice:last-child { border-bottom: none; }
+.situation-card .sit-choice-text { text-align: left; }
+.situation-card .sit-stamp { position: absolute; right: 6px; bottom: 4px; padding: 3px 9px; font-size: 13px; }
+
+/* Concept, Trouble, Boon and Bane: Fate-card sized, with larger text. */
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .card-front { padding: 10px 10px 9px; gap: 6px; }
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .kind-label { font-size: 13px; }
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .pc-text { font-size: 21px; line-height: 1.15; }
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .pc-text.long { font-size: 19px; }
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .approach-row { font-size: 25px; gap: 4px; }
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .approach-row .sign { font-size: 19px; }
+.pc-text:has(+ .pc-art) { padding-bottom: 3px; } /* room for descenders above a Bane's drawing */
+
+/* One text size, not bold, on every card's text: Concept, Trouble, Boon, Bane, Relationship,
+   Situation and the Elements (long text may still shrink to fit its card). */
+:root { --card-text: 17px; }
+.pc-card .pc-text, .pc-card .pc-text.long,
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane, .kind-relationship) .pc-text,
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .pc-text.long { font-size: var(--card-text); font-weight: 400; line-height: 1.2; }
+.el-lines { font-size: var(--card-text); }
+.sit-left, .situation-card .sit-choice { font-size: var(--card-text); font-weight: 400; }
+.situation-card .sit-escs { font-size: 1em; }
+/* The card's sign (➕ ➖ ✔️ ✖️) sits beside its type, at the top. */
+.kind-label { display: flex; align-items: center; gap: 5px; }
+.kind-label .sign { font-family: var(--emoji); font-size: 1.35em; letter-spacing: 0; }
+
+/* Everything on the cards 1.5x larger (long text still shrinks to fit its card). */
+:root { --card-text: 25.5px; }
+.el-head .el-icon { font-size: 45px; }
+.situation-card .sit-stamp { font-size: 19.5px; }
+.pc-card .kind-label { white-space: nowrap; overflow: hidden; letter-spacing: 0.06em; }
+.el-name, .situation-card .sit-name { white-space: nowrap; overflow: hidden; min-width: 0; }
+.el-head .el-name { flex: 1; }
+
+/* Every card title is one size: the type at the top of character cards ("👥 Relationship"),
+   the Element names and the Situation's name. Sized so the longest fits on one line. */
+:root { --card-title: 15px; }
+.pc-card .kind-label, .pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .kind-label,
+.el-name, .situation-card .sit-name {
+  font-size: var(--card-title);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+/* Types in normal case ("Relationship", not "RELATIONSHIP") so the longest fits at this size. */
+.pc-card .kind-label { text-transform: none; gap: 4px; }
+.pc-card .kind-label .sign { font-size: 1.1em; }
+/* The Situation's left side (description and escalations) is smaller, to fit. */
+.sit-left { font-size: 18px; }
+
+/* One text size on every card, never shrunk: body text, choices, escalations and titles. */
+:root { --card-text: 15px; --card-title: 15px; }
+.sit-left, .situation-card .sit-choice, .el-lines,
+.pc-card .pc-text, .pc-card .pc-text.long,
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane, .kind-relationship) .pc-text,
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .pc-text.long { font-size: var(--card-text); }
+
+/* An Element card's type ("Object", "Ally", "Villain", "Location") above its name. */
+.el-type {
+  font-size: var(--card-title);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  color: color-mix(in srgb, var(--accent) 75%, #000);
+}
+/* Card text (not emoji) 1.5x: 15px -> 22.5px. Card backs are unchanged. */
+:root { --card-text: 22.5px; --card-title: 22.5px; }
+/* Emoji keep their size when the text grows. */
+.el-lines .el-icon { font-size: 16.5px; }
+.el-lines .el-approach { font-size: 18px; }
+.el-lines li { grid-template-columns: 24px 1fr 26px; }
+.pc-card .kind-label .sign { font-size: 16.5px; }
+
+/* Element header: the icon on the left, its name and (under it) its type to the right of it. */
+.el-head .el-title { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 1px; }
+.el-head .el-title .el-type, .el-head .el-title .el-name { display: block; }
+
+/* Each choice is exactly a Board row tall (MAT_ROW in deal.js), centred in its column, so the
+   choices line up with rows A, B and C beside them. */
+.sit-choices { justify-content: center; }
+.situation-card .sit-choice { flex: none; height: 104px; }
+
+/* Risk die: ✓ + guarding approach in a row on top, the resource in the middle, ✗ + squandering
+   approach in a row at the bottom. */
+.die-risk .die-symbol { flex-direction: column; gap: 1px; }
+.die-risk .risk-face-side { flex-direction: row; gap: 3px; font-size: 17px; }
+.die-risk .risk-face-icon { font-size: 28px; }
+
+/* The Situation card's left side (title, description, escalations) at 75% of the card text. */
+.sit-left { font-size: calc(var(--card-text) * 0.75); }
+.situation-card .sit-left .sit-name { font-size: calc(var(--card-title) * 0.75); }
+
+/* The approach icons (and a Concept/Trouble's resource) centred along the bottom of the card. */
+.pc-card .approach-row { justify-content: center; }
+.pc-card .approach-row .resource { margin-left: 4px; }
+
+/* Larger emoji on the Element cards' lines (the line icon and its approach). */
+.el-lines .el-icon { font-size: 24px; }
+.el-lines .el-approach { font-size: 26px; }
+.el-lines li { grid-template-columns: 30px 1fr 32px; }
+
+/* The act names (Beginning / Middle / Ending) are longer than "Act I": a tighter rules table. */
+.mat-rules tr:first-child th { letter-spacing: 0.02em; font-size: 11px; }
+.mat-rules th, .mat-rules td { padding: 1px 5px; }
+.mat-goal { flex: 1; min-width: 0; padding-right: 10px; }
+
+/* The Board's slot: a recess the Situation card slides into, its choices level with the rows. */
+.mat-slot {
+  grid-row: span 3;
+  margin: 0 6px 0 0;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.55), inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+.mat-foot.foot-slot { padding-top: 18px; } /* clear of the card's bottom edge */
+
+/* A choice's risk, where the Risk die used to be: the resource, ✓ guarding approach above it,
+   ✗ squandering approach below. */
+.sit-risk {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  margin-left: auto;
+  padding-left: 6px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  font-family: var(--emoji);
+  line-height: 1;
+}
+.sit-risk-icon { font-size: 26px; }
+.sit-risk-side { display: flex; align-items: center; gap: 2px; font-size: 15px; }
+.sit-risk-side b { font: 900 14px "Segoe UI", system-ui, sans-serif; }
+.sit-risk-side b.good { color: #1f7a45; }
+.sit-risk-side b.bad { color: #b03a2e; }
+
+/* Rules printed inside the Boon and Bane slots. */
+.zone.rules-zone {
+  place-items: start;
+  padding: 10px 10px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  color: rgba(255, 255, 255, 0.6);
+}
+.zone.rules-zone b { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 800; letter-spacing: 0.04em; color: rgba(255, 255, 255, 0.75); }
+.zone.rules-zone p { margin: 0 0 5px; }
+
+/* The player board: a grey panel behind the character sheet, reaching left under the edges of
+   the Boon and Bane, which sit off the board. Each tucks into a slot whose visible strip is
+   marked ✔️ / ✖️. The sheet itself sits on the board, unframed. */
+.player-board {
+  border-radius: 16px;
+  background: #9a9a9a;
+  box-shadow: var(--shadow-rest), inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+.sheet { background: transparent; box-shadow: none; }
+/* The ✔️ / ✖️ down the board's left edge that the Boon and Bane line up with. */
+.player-board-mark { width: 34px; text-align: center; font-family: var(--emoji); font-size: 24px; line-height: 32px; }
+/* The Boon and Bane slots have no outline (the board's marks line them up). */
+.zone.hidden-zone { border-color: transparent; color: transparent; background: none; }
+.zone.rules-zone { background: rgba(0, 0, 0, 0.35); border-color: rgba(255, 255, 255, 0.45); color: rgba(255, 255, 255, 0.8); }
+
+/* Read aloud: a small button at the top right of each boxed bit of story. */
+.sim-quote { position: relative; }
+.sim-speak {
+  float: right;
+  margin: -2px -4px 4px 8px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 999px;
+  font: 600 13px "Segoe UI", var(--emoji);
+  font-style: normal;
+  color: #2a1c00;
+  background: #ffd25e;
+  cursor: pointer;
+}
+.sim-speak:hover { background: #ffe08a; }
+
+/* In a Main box the Scene die shows at 70% so it fits beside the pawn; a stake is stacked
+   under the pawn, at 80% so the pawn's base still reads. */
+.die.die-scene.in-box .lift { transform: scale(0.7); }
+.token.spotlight.staked .lift { transform: scale(0.8); }
