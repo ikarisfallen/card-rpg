@@ -82,7 +82,7 @@ window.GAME_DATA.situations = [
   {
     name: 'Beginning: Body in the rain',
     key: '🕳️',
-    description: 'A body turns up near the 🕳️ at 🏠, clutching a clue to 🛠️. The cops are five minutes out. Do you try to:\nA) find out who the victim was 🧠 (📦)\nB) find whatever the killer missed 💪 (🔥)\nC) get away with the clue without the cops placing you at the scene 🕶️ (ℹ️)',
+    description: 'A body turns up near the 🕳️ at 🏠, clutching a clue to 🛠️. The cops are five minutes out. Do you try to:\nA) find out who the victim was 🧠 (📦)\nB) find whatever the killer missed 💪 (🔥)\nC) get away with the clue without the cops seeing you 🕶️ (ℹ️)',
     escalations: [
       'Sirens. The cops arrive early, flashlights sweeping the scene ➖🕶️',
       'The 💀 get there first ➖💪',

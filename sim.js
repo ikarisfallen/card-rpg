@@ -12,13 +12,13 @@ const RULES_TEXT = [
   ...(SIM_RULES.freeApproach ? ['<b>Cost vs. Approaches:</b> rows have no set approach. The Main player picks the approach they go in with and sets that die in their box; Help, Concept, Asset, Trouble, Liability, the Minus dice and the Fate card all read it. Each row risks one resource (Intel, Reputation, Resources, Drive, Efficiency or Time). A failure costs 1 of it, but <b>0</b> with the approach that guards it and <b>2</b> with the one that squanders it (shown in the Risk box): 🕶️ guards Intel, 📢 guards Reputation, 🧠 Resources, 💪 Drive, 🐢 Efficiency, ⚡ Time.'] : []),
   '<b>One Fate card</b> is drawn for everyone. Each row reads its own approach\u2019s number.',
   ...(INVOKE_LINES ? ['When betting as Main, a player may <b>invoke</b> one unused line on an Element card (Location, Villain, Ally, MacGuffin) whose approach matches the row: +1. Each line can be invoked once per situation.'] : []),
-  ...(SIM_RULES.troubleInvoke && SIM_RULES.compelOnly ? ['<b>➖ Troubles and ✖️ Liabilities</b> never count on their own, and you can’t bring up your own. After the bets, before the card is turned, when a Main player’s approach matches their Trouble or Liability, any other player may <b>compel</b> it, for free: they say how it gets in the way. The Main player takes <b>−1</b> on the roll and ' + storyPts(SIM_RULES.troubleEdge) + ' from the pile (theirs once the roll is over), or refuses by paying 1 Story Point to the pile.' + (SIM_RULES.obstacle ? ' Watching for them is part of the <b>Storyteller</b>’s job: they may compel one each round.' : '') + ' Once per card per roll.'] : []),
+  ...(SIM_RULES.troubleInvoke && SIM_RULES.compelOnly ? ['<b>➖ Troubles and ✖️ Liabilities</b> never count on their own, and you can’t bring up your own. After the bets, before the card is turned, when a Main player’s approach matches their Trouble or Liability' + (SIM_RULES.compelRiskMatch ? ', or their row risks the resource shown on their Trouble' : '') + ', ' + (SIM_RULES.compelByStoryteller && SIM_RULES.obstacle ? 'the <b>Storyteller</b> may <b>compel</b> it (once per round, for free)' : 'any other player may <b>compel</b> it, for free') + ': they say how it gets in the way. The Main player takes <b>−1</b> on the roll and ' + storyPts(SIM_RULES.troubleEdge) + ' from the pile (theirs once the roll is over), or refuses by paying 1 Story Point to the pile.' + (SIM_RULES.obstacle && !SIM_RULES.compelByStoryteller ? ' Watching for them is part of the <b>Storyteller</b>’s job: they may compel one each round.' : '') + ' Once per card per roll.'] : []),
   ...(SIM_RULES.troubleInvoke && !SIM_RULES.compelOnly ? ['<b>➖ Troubles</b> never count on their own. After the bets, before the card is turned, a Main player whose row shows one of their Trouble’s approaches may <b>invoke</b> it: −1 on the roll, and ' + storyPts(SIM_RULES.troubleEdge) + ' from the pile goes on their Trouble card. If they don’t, any other player may <b>compel</b> it by putting ' + SIM_RULES.troubleEdge + ' of their own Story Points there instead; the Main player can refuse by paying 1 Story Point to the pile, and then the compeller’s Story Points goes to the pile too. If the Scene die shows a Trouble approach too, take ' + SIM_RULES.sceneTroubleEdge + ' more Story Points from the pile. The Story Points on the Trouble card is theirs once the roll is over (not for this roll). Once per roll.'] : []),
   ...(SIM_RULES.banes ? ['<b>✖️ Liabilities:</b> a Main player who fails draws a Liability at random (like a Broken Leg) and explains how it happened. It shows two approaches and works like a Trouble' + (SIM_RULES.compelOnly ? '' : ' (invoke it for −1 and Story Points), but anyone can compel it <b>for free</b>: the Story Points comes from the pile. Refusing costs you 1 Story Point to the pile') + '. One Liability at a time: if you get another, keep either one. Get rid of it by giving up your bet for a round, or by spending ' + storyPts(SIM_RULES.baneRemoveEdge) + '.' + (SIM_RULES.baneClearAtActEnd === false ? ' Otherwise it stays, from act to act.' : ' All Liabilities go back in the deck at the end of each act.')] : []),
   ...(SIM_RULES.boonUpgrades ? ['<b>✔️ Asset upgrades:</b> beat the difficulty by ' + SIM_RULES.boonMargin + ' or more as Main and draw an Asset from the ones nobody holds: keep it or your old one.'] : []),
   ...(SIM_RULES.boonShield === 'heal' ? ['<b>Burn your Asset:</b> when you fail as Main, you may discard your Asset. You still lose the resource, but you draw no Liability, and you shake off the Liability you carry. An empty Asset slot fills again with your next Asset upgrade.'] : []),
   (SIM_RULES.maxStake ? 'A Main player may <b>stake</b> up to 2 spotlight tokens from their <b>Scored</b> pile. If the bet succeeds, the stake comes back plus <b>double</b> the stake on top (stake 2, get 6). Anything less than a success and the stake is lost for good.' : null),
-  'After the card is turned, a Main player may spend up to <b>' + storyPts(SIM_RULES.maxEdgePerBet) + '</b> on their roll: +1 each' + (playerRule('endingEdgeCap') ? ' (up to ' + playerRule('endingEdgeCap') + ' in the Ending)' : '') + '.' + (SIM_RULES.helperEdge ? ' Helpers on the row may chip in their own Story Points too (still 2 per roll in all).' : ''),
+  'After the card is turned, a Main player may spend ' + (SIM_RULES.maxEdgePerBet ? 'up to <b>' + storyPts(SIM_RULES.maxEdgePerBet) + '</b>' : 'any of their <b>Story Points</b>') + ' on their roll: +1 each' + (playerRule('endingEdgeCap') ? ' (up to ' + playerRule('endingEdgeCap') + ' in the Ending)' : '') + '.' + (SIM_RULES.helperEdge ? ' Helpers on the row may chip in their own Story Points too (still 2 per roll in all).' : ''),
   ...(SIM_RULES.maxEdgeHeld ? ['<b>Story Points limit:</b> nobody holds more than ' + storyPts(SIM_RULES.maxEdgeHeld) + '. Any more you would take stays in (or goes back to) the pile.'] : []),
   `Effort = ➕ Concept +1, ✔️ Asset +1, ${SIM_RULES.troubleInvoke ? '➖ Trouble −1 if invoked or compelled' : '➖ Trouble −1'}, ${SIM_RULES.sceneModifier ? `the Scene die ${sceneMod()} ${SIM_RULES.sceneBy === 'approach' ? 'if the roll uses its approach' : 'if their Concept or Asset shows its approach'}, ` : ''}${INVOKE_LINES ? 'invoked line +1, ' : ''}each helper +1, each Story Points spent +1, each Minus die showing the row\u2019s approach −1, plus the Fate number.`,
   ...(SIM_RULES.takeSpotlight ? ['<b>Taking spotlight:</b> spotlight tokens are neutral. Each situation starts with a stack in every row\u2019s Successes box, as many as it takes to win (the target). Scoring <b>takes</b> tokens from the row\u2019s stack into your <b>This scene</b> spot. The first row emptied completes the situation, and everyone\u2019s This scene tokens are scored. If the situation is lost, they go back to the pool unscored. Act bonuses' + (SIM_RULES.maxStake ? ', stake payouts' : '') + ' and cashed-in Story Points come from the pool.'] : []),
@@ -27,7 +27,7 @@ const RULES_TEXT = [
   ...(SIM_RULES.obstacle ? ['<b>The Obstacle:</b> each round one player is the <b>Storyteller</b> (the seat passes clockwise every round). Before anyone bets, they set the Obstacle die to an approach and put it in one row’s Obstacle box, and say how the other side saw it coming: going into that row with that approach ' + (SIM_RULES.obstacleCancels ? '<b>loses its bonuses</b> (Concept, Asset, the Scene die) this round, so it only hurts a character leaning on that approach' : 'is <b>−1</b> this round') + '. The Storyteller still bets as usual.'] : []),
   ...(SIM_RULES.escalationChoice ? ['<b>Escalations:</b> when a Main player fails, they choose which of the Situation\u2019s two Escalations happens, and narrate it. The same one can happen again: that trouble just got really bad.'] : []),
   ...(SIM_RULES.minorFailure ? ['<b>Miss by 1: a minor failure.</b> The Main player and helpers each lose the row\u2019s resource (0, 1 or 2 by the approach), but nobody draws a Liability or takes Story Points, and the situation doesn\u2019t escalate.'] : []),
-  'Miss by 2 or more: the Main player and helpers each lose ' + (SIM_RULES.freeApproach ? '0, 1 or 2 (by the approach)' : '1') + ' of the row\u2019s <b>Risk</b> resource. Helpers take 1 <b>Story Points</b>; the Main player takes 1 Story Point' + (playerRule('failEdgePerMinus', 4) ? ' plus 1 for each Minus die already out (<b>desperation</b>, up to 3)' : '') + (SIM_RULES.banes ? ' and draws a Liability' : '') + '. The next Escalation happens and its Minus die goes in the Minus box: <b>−1 to every roll using that approach</b>, on any row' + (SIM_RULES.minusNextRound ? ', from the <b>next round</b> on (this round\u2019s other rows roll against the box as it was when they bet)' : '') + '. With 2 Minus dice out, the next failure loses the situation (unless someone holds the Clear seat), and the tokens on the board go back unscored.',
+  (SIM_RULES.riskModifier ? 'On each row, the approach marked <b>✓</b> beside it is <b>+1</b> on the roll and the one marked <b>✗</b> is <b>\u22121</b>. ' : '') + (SIM_RULES.minorFailure ? 'Miss by 2 or more' : 'Miss by 2 or more (a miss by 1 costs nothing)') + (SIM_RULES.failLiabilityOnly ? ': the Main player takes a <b>Liability</b> (nobody loses any resources: those are only spent to succeed at a cost)' : ': the Main player and helpers each lose ' + (SIM_RULES.freeApproach && !SIM_RULES.riskModifier ? '0, 1 or 2 (by the approach)' : '1') + ' of the row\u2019s <b>Risk</b> resource' + (SIM_RULES.failPickLoss && SIM_RULES.banes ? ', except the Main player, who chooses: lose it, <b>or</b> take a Liability (only if they don’t already hold one)' : (SIM_RULES.banes ? ', and the Main player draws a Liability' : ''))) + '.' + (SIM_RULES.failEdgeMain || SIM_RULES.failEdgeHelpers !== false ? ' Helpers take 1 <b>Story Point</b>; the Main player takes ' + storyPts(SIM_RULES.failEdgeMain ?? 1) + '.' : '') + ' The next Escalation happens and its Minus die goes in the Minus box: <b>−1 to every roll using that approach</b>, on any row' + (SIM_RULES.minusNextRound ? ', from the <b>next round</b> on (this round\u2019s other rows roll against the box as it was when they bet)' : '') + '. With 2 Minus dice out, the next failure loses the situation (unless someone holds the Clear seat), and the tokens on the board go back unscored.',
   'A resource that drops to <b>0</b> costs you your next turn: flip your initiative token to <b>OUT</b>, and flip it back at the end of the round you sit out. On the turn after, the resource comes back at 1.',
   '<b># of players</b> tokens on one row defeats the situation: every token on the board is scored.',
   (SIM_RULES.spotlightShift ? '<b>Spotlight Shift:</b> the bonus below goes to whoever on the winning row (Main or helper) has the least scored spotlight; ties go to the Main, who then takes the helper share. ' : '') + 'Finishing a situation earns a bonus for the winning row, banked straight away: the Beginning <b>2</b> for the Main player; the Middle <b>3</b> for the Main player and <b>1</b> for each helper; the Ending <b>4</b> for the Main player and <b>2</b> for each helper.',
@@ -78,6 +78,8 @@ const rowLabel = row => {
 };
 const rowTag = row => `<b>${rowLabel(row)}</b>${row.approach ? ` ${row.approach}` : ''}`;
 // What a failure on `row` costs, in words: "1 Time", "2 Resources", "nothing".
+// What a failure costs (the Main player): a Liability with failLiabilityOnly, else the resource.
+const failWords = row => (SIM_RULES.failLiabilityOnly ? 'a Liability' : lossWords(row));
 const lossWords = (row, approach = row.approach) => { const n = riskCost(row.risk, approach); return n ? `${n} ${riskName(row.risk)}` : 'nothing'; };
 
 // "Jax Starling, the Smuggler with a Fast Ship, with a price on their head, carrying a
@@ -119,6 +121,14 @@ function bonusParts(pl, approach, row = null) {
 }
 
 const total = parts => parts.reduce((s, [, v]) => s + v, 0);
+// The row's risk as a bonus (SIM_RULES.riskModifier): +1 with the approach that guards its
+// resource (✓ on the Situation card), -1 with the one that squanders it (✗), else 0.
+function riskMod(row, approach) {
+  const r = row && SIM_RULES.riskModifier && SIM_RULES.freeApproach && RISKS[row.risk];
+  if (!r) return 0;
+  return same(approach, r.good) ? 1 : same(approach, r.bad) ? -1 : 0;
+}
+const riskPart = (row, approach) => { const v = riskMod(row, approach); return v ? [[`${v > 0 ? '✓' : '✗'} ${riskName(row.risk)}`, v]] : []; };
 const relFor = (pl, approach) => pl.info.rels.find(r => has(r.approaches, approach));
 
 function setResource(pl, res, value) {
@@ -221,7 +231,7 @@ function spendEdge(pl) {
 // A die that went in this round (`fresh`) only counts from the next round.
 const minusFor = (board, approach) => board.minus.filter(d => !d.fresh && same(d.faces[d.value - 1], approach)).length;
 // The most Edge a Main player may spend on one roll (more in the Ending at some player counts).
-const edgeCap = () => (TABLE.currentAct === 'Ending' && playerRule('endingEdgeCap')) || SIM_RULES.maxEdgePerBet;
+const edgeCap = () => (TABLE.currentAct === 'Ending' && playerRule('endingEdgeCap')) || SIM_RULES.maxEdgePerBet || Infinity;
 
 const minusList = board => board.minus.map(d => `➖${d.faces[d.value - 1]}`).join(' ');
 
@@ -253,7 +263,7 @@ function obstacleBotPick(opp, rows, board) {
   TABLE.players.filter(p => p !== opp && !(p.out && p.out.skip)).forEach(p => {
     rows.forEach(r => APPROACHES.forEach(a => {
       const habit = Math.min((p.approachUses || {})[a] || 0, 4) * 0.5;
-      const v = total(bonusParts(p, a)) - minusFor(board, a) - (riskCost(r.risk, a) - 1) * 0.5 + habit + Math.random() * 0.01;
+      const v = total(bonusParts(p, a)) + riskMod(r, a) - minusFor(board, a) - (riskCost(r.risk, a) - 1) * 0.5 + habit + Math.random() * 0.01;
       if (!best || v > best.v) best = { v, row: r, approach: a, target: p };
     }));
   });
@@ -586,8 +596,16 @@ function* playSituation(situation, act, label = act) {
           if (row.plan.push) row.plan.margin += pushN;
         }
         const boon = row.main.zones.boon.occupant;
-        if (row.main.human && !board.over && row.plan && row.plan.margin <= -SIM_RULES.failBy && SIM_RULES.boonShield && boon) {
-          const carried = row.main.zones.bane && row.main.zones.bane.occupant;
+        const carried = row.main.zones.bane && row.main.zones.bane.occupant;
+        // Pick your loss (failPickLoss): lose 1 of the row's resource, or take a Liability.
+        if (row.main.human && !board.over && row.plan && row.plan.margin <= -SIM_RULES.failBy && SIM_RULES.failPickLoss && !SIM_RULES.failLiabilityOnly && SIM_RULES.banes && TABLE.bane.deck.length && !(SIM_RULES.failPickLossNoBane && carried)) {
+          row.plan.pickBane = yield ask('What does it cost you?',
+            `<p>The roll misses by ${-row.plan.margin}: a failure. The situation escalates either way. Choose what it costs you, and say how: lose 1 ${riskName(row.risk)} (you have ${row.main.res[row.risk]}), or take a Liability.</p>`,
+            [{ label: `Lose 1 ${riskName(row.risk)}`, hint: row.main.res[row.risk] <= 1 ? 'that takes you to 0: you lose your next turn' : `down to ${row.main.res[row.risk] - 1}`, value: false },
+             { label: 'Take a Liability', hint: 'drawn at random', value: true }]);
+        }
+        // With pick-your-loss, the Asset only matters for shaking off a Liability you carry.
+        if (row.main.human && !board.over && row.plan && row.plan.margin <= -SIM_RULES.failBy && SIM_RULES.boonShield && boon && (!SIM_RULES.failPickLoss || carried)) {
           row.plan.burn = yield ask('Burn your Asset?',
             `<p>The roll misses by ${-row.plan.margin}: a failure. You can discard your Asset, <b>${esc(boon.card.text)}</b>, to shrug it off. You still lose ${lossWords(row)}, but you draw no Liability${carried ? ` and you shake off ${baneName(carried)}` : ''}.</p>`,
             [{ label: 'Burn it', hint: carried ? 'no Liability, and heal' : 'no Liability', value: true }, { label: 'Keep it', hint: 'take the Liability', value: false }]);
@@ -841,7 +859,7 @@ function betMain(pl, row, board, difficulty, recovered, stake, approach = null) 
   if (SIM_RULES.sceneBy === 'approach' && SIM_RULES.sceneClaim && TABLE.scene && !TABLE.sceneRow && same(row.approach, TABLE.scene.approach)) {
     claimSceneDie(row);
   }
-  const parts = bonusParts(pl, row.approach, row);
+  const parts = [...bonusParts(pl, row.approach, row), ...riskPart(row, row.approach)];
   const minus = minusFor(board, row.approach);
   if (minus) parts.push([`Minus ➖${row.approach} ×${minus}`, -minus]);
   { const ob = obstacleFor(board, row, row.approach, pl); if (ob) parts.push([`Obstacle ➖${row.approach}`, -ob]); }
@@ -878,7 +896,7 @@ function betMain(pl, row, board, difficulty, recovered, stake, approach = null) 
   if (row.sceneDie) html += `<p>They’re the first this round to go in ${row.approach}, the Scene’s approach: they take the Scene die (${sceneMod()}).</p>`;
   if (line) html += `<p>They invoke <b>“${esc(line.text)}”</b> from the ${esc(line.from)} card (${row.approach} +1). Nobody else can use that line this situation.</p>`;
   html += '<p>' + (parts.length ? parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(', ') : 'No card bonuses for this approach');
-  html += ` → <b>${signed(total(parts))}</b> before the spin. If it fails, they lose ${lossWords(row)}.</p>`;
+  html += ` → <b>${signed(total(parts))}</b> before the spin. If it fails, they take ${failWords(row)}.</p>`;
   if (n) html += `<p>They <b>stake ${n}</b> of their scored spotlight: ${SIM_RULES.stakeNeedsMargin ? `beat the difficulty by ${n}+` : 'succeed'} and they bank ${n * (1 + SIM_RULES.stakePayout)}; anything less and the stake is gone.</p>`;
   else if (SIM_RULES.maxStake) html += `<p>${pl.scored.length || pl.score ? 'They stake nothing.' : 'Nothing scored yet, so nothing to stake.'}</p>`;
   return { title: `${pl.letter} bets`, html };
@@ -892,7 +910,7 @@ function betHelp(pl, row, recovered) {
   return {
     title: `${pl.letter} helps`,
     html: `${recovered}<p>${who(pl)} helps ${who(row.main)} <i>${row.action}</i> (${rowTag(row)} as <b>Help</b>).</p>
-      <p>Their Relationship “${esc(rel.text)}” has ${row.approach}: +1 to the bet, and a share of the spotlight if it pays off. They’re also on the hook for ${lossWords(row)} if it fails.</p>`,
+      <p>Their Relationship “${esc(rel.text)}” has ${row.approach}: +1 to the bet, and a share of the spotlight if it pays off. ${SIM_RULES.failLiabilityOnly ? '' : `They’re also on the hook for ${lossWords(row)} if it fails.`}</p>`,
   };
 }
 
@@ -912,7 +930,7 @@ function bet(pl, rows, board, difficulty, isLast = false) {
   // The value is the roll's bonuses, less half a point for each extra resource a failure would
   // cost, and a point more if it could knock them out.
   const options = free.flatMap(r => (SIM_RULES.freeApproach ? APPROACHES : [r.approach]).map(approach => ({ row: r, approach })));
-  const rollScore = o => total(bonusParts(pl, o.approach)) - minusFor(board, o.approach) - obstacleFor(board, o.row, o.approach, pl) + (freeLine(o.approach) ? 1 : 0);
+  const rollScore = o => total(bonusParts(pl, o.approach)) + riskMod(o.row, o.approach) - minusFor(board, o.approach) - obstacleFor(board, o.row, o.approach, pl) + (freeLine(o.approach) ? 1 : 0);
   const value = o => {
     const cost = riskCost(o.row.risk, o.approach);
     return rollScore(o) - (cost - 1) * (SIM_RULES.narrowCost ? 1 : 0.5) - (cost && pl.res[o.row.risk] <= cost ? 1 : 0);
@@ -983,7 +1001,7 @@ function* humanBet(pl, rows, board, difficulty) {
       ...free.map(r => ({
         label: `Main ${rowTag(r)}`,
         hint: SIM_RULES.freeApproach
-          ? `${r.action} · risks ${riskName(r.risk)}: ${RISKS[r.risk] ? `${RISKS[r.risk].good} costs nothing, ${RISKS[r.risk].bad} costs 2` : ''}`
+          ? `${r.action} · risks ${riskName(r.risk)}: ${RISKS[r.risk] ? (SIM_RULES.riskModifier ? `${RISKS[r.risk].good} +1, ${RISKS[r.risk].bad} −1` : `${RISKS[r.risk].good} costs nothing, ${RISKS[r.risk].bad} costs 2`) : ''}`
           : `${r.action} · your cards ${signed(cards(r))} · risks ${r.risk}${has(pl.info.trouble.approaches, r.approach) ? ' · matches your Trouble' : ''}${bane && has(bane.card.approaches, r.approach) ? ' · matches your Liability' : ''}`,
         value: ['main', r.index],
       })),
@@ -1000,11 +1018,11 @@ function* humanBet(pl, rows, board, difficulty) {
     if (what === 'main') {
       let approach = null;
       if (SIM_RULES.freeApproach) {
-        const score = a => total(bonusParts(pl, a)) - minusFor(board, a) - obstacleFor(board, row, a, pl);
+        const score = a => total(bonusParts(pl, a)) + riskMod(row, a) - minusFor(board, a) - obstacleFor(board, row, a, pl);
         approach = yield ask('Which approach?', `<p>How do you <i>${row.action}</i>? ${rowTag(row)} risks <b>${riskName(row.risk)}</b>: the approach you pick sets what a failure costs.</p>`,
           APPROACHES.map(a => ({
             label: a,
-            hint: `your cards ${signed(score(a))}${obstacleFor(board, row, a, pl) ? ` (Obstacle −${obstacleFor(board, row, a, pl)})` : ''} · a failure costs ${lossWords(row, a)}${has(pl.info.trouble.approaches, a) ? ' · matches your Trouble' : ''}${bane && has(bane.card.approaches, a) ? ' · matches your Liability' : ''}`,
+            hint: `your cards ${signed(score(a))}${obstacleFor(board, row, a, pl) ? ` (Obstacle −${obstacleFor(board, row, a, pl)})` : ''}${SIM_RULES.failLiabilityOnly ? '' : ` · a failure costs ${lossWords(row, a)}`}${has(pl.info.trouble.approaches, a) ? ' · matches your Trouble' : ''}${bane && has(bane.card.approaches, a) ? ' · matches your Liability' : ''}`,
             value: a,
           })));
       }
@@ -1030,7 +1048,7 @@ function* humanBet(pl, rows, board, difficulty) {
 // The effort parts of a row's roll before any Edge: cards, help, Minus dice, invoked lines,
 // Trouble / Liability hits and the Fate number.
 function rowParts(row, fate, board) {
-  const parts = [...bonusParts(row.main, row.approach, row)];
+  const parts = [...bonusParts(row.main, row.approach, row), ...riskPart(row, row.approach)];
   if (row.helpers.length) parts.push([`Help ×${row.helpers.length}`, row.helpers.length]);
   const minus = minusFor(board, row.approach);
   if (minus) parts.push([`Minus ➖${row.approach} ×${minus}`, -minus]);
@@ -1253,8 +1271,9 @@ function resolveRow(row, fate, difficulty, target, board) {
     const banesOn = SIM_RULES.banes && TABLE.bane && TABLE.bane.deck.length;
     // With failPickLossNoBane, the choice is only open to someone who doesn't already have a Liability.
     const mayPick = !SIM_RULES.failPickLossNoBane || !(main.zones.bane && main.zones.bane.occupant);
-    const mainTakesBane = !shield && (!SIM_RULES.failPickLoss || (banesOn && mayPick && main.res[row.risk] <= 1));
-    const losers = (shield && !healMode) || (SIM_RULES.failPickLoss && mainTakesBane && banesOn) ? row.helpers : team;
+    const picksBane = main.human && row.plan && 'pickBane' in row.plan ? row.plan.pickBane : main.res[row.risk] <= 1;
+    const mainTakesBane = !shield && (SIM_RULES.failLiabilityOnly || !SIM_RULES.failPickLoss || (banesOn && mayPick && picksBane));
+    const losers = SIM_RULES.failLiabilityOnly ? [] : (shield && !healMode) || (SIM_RULES.failPickLoss && mainTakesBane && banesOn) ? row.helpers : team;
     const cost = riskCost(row.risk, row.approach);
     if (cost) losers.forEach(pl => setResource(pl, row.risk, pl.res[row.risk] - cost));
     // Edge for failing: the Main player takes failEdgeMain, plus failEdgePerMinus for each Minus
@@ -1262,7 +1281,7 @@ function resolveRow(row, fate, difficulty, target, board) {
     const mainEdge = (SIM_RULES.failEdgeMain ?? 1) + (playerRule('failEdgePerMinus') || 0) * board.minus.length;
     let got = 0;
     for (let i = 0; i < mainEdge; i++) got += gainEdge(main) ? 1 : 0;
-    const helpersEdged = row.helpers.filter(gainEdge);
+    const helpersEdged = SIM_RULES.failEdgeHelpers === false ? [] : row.helpers.filter(gainEdge);
     const baneNote = SIM_RULES.banes && mainTakesBane ? giveBane(main, board.rows || []) : ''; // only the Main player
     const guarded = SIM_RULES.freeApproach && !cost ? `Going in ${row.approach} guarded their ${riskName(row.risk)}: nobody loses any. ` : '';
     const lossText = shieldText + (guarded || (losers.length ? `${losers.map(who).join(' and ')} ${losers.length > 1 ? 'each lose' : 'loses'} ${cost} ${row.risk} ${riskName(row.risk)}${cost > 1 ? ` (${row.approach} squanders it)` : ''}. ` : shield ? '' : `${who(main)} keeps their ${row.risk} and takes a Liability instead. `));
@@ -1327,7 +1346,7 @@ function botWantsPush(row, margin, board) {
 // A bot's guess at what a Main player's roll is worth, averaged over the Fate card (-2..+2),
 // with `delta` added to the roll and `edge` Edge in hand to spend the way resolveRow does.
 function rollValue(row, delta, edge, board, difficulty, target) {
-  const parts = bonusParts(row.main, row.approach, row);
+  const parts = [...bonusParts(row.main, row.approach, row), ...riskPart(row, row.approach)];
   const base = total(parts) + row.helpers.length - minusFor(board, row.approach) - obstacleFor(board, row, row.approach, row.main) + (row.invoke ? 1 : 0) - (row.hits || []).length + delta - difficulty;
   const can = Math.min(edge, edgeCap());
   const stake = (row.stake || []).length;
@@ -1370,7 +1389,10 @@ function* troublePhase(rows, order, board, difficulty, target) {
     const cards = [{ kind: 'Trouble', sign: '➖', piece: pl.zones.trouble.occupant }];
     if (pl.zones.bane && pl.zones.bane.occupant) cards.push({ kind: 'Liability', sign: '✖️', piece: pl.zones.bane.occupant });
     for (const c of cards) {
-      if (has(c.piece.card.approaches, row.approach)) yield* invokeOrCompel(pl, row, c, order, rows, board, difficulty, target);
+      // A match: the roll's approach is on the card, or (compelRiskMatch) the row risks the
+      // resource shown on the card (Troubles show one).
+      const byRisk = SIM_RULES.compelRiskMatch && c.piece.card.resource && same(c.piece.card.resource, row.risk);
+      if (has(c.piece.card.approaches, row.approach) || byRisk) yield* invokeOrCompel(pl, row, c, order, rows, board, difficulty, target);
     }
   }
 }
@@ -1383,7 +1405,8 @@ function* invokeOrCompel(pl, row, { kind, sign, piece }, order, rows, board, dif
   const worth = Math.min(reward, edgeRoom(pl) + 1) * EDGE_WORTH; // past the Edge limit it's wasted (+1: they'll often spend one)
   const fromPile = n => { let got = 0; for (let i = 0; i < n; i++) { const t = TABLE.edge.supply.pop(); if (t) { parkEdge(row, t, piece); got++; } } return got; };
   const sceneNote = scene ? ` The Scene die shows ${TABLE.scene.approach} too: ${extra} more Story Point${extra === 1 ? '' : 's'} from the pile.` : '';
-  const what = `${kind} “${esc(piece.card.text.replace(/\.\.\.|…/g, '').trim())}” (${sign}${row.approach})`;
+  const viaRisk = !has(piece.card.approaches, row.approach); // it matched on the row's risk instead
+  const what = `${kind} “${esc(piece.card.text.replace(/\.\.\.|…/g, '').trim())}” (${viaRisk ? `${row.risk}, the row’s risk` : `${sign}${row.approach}`})`;
   const now = rollValue(row, 0, pl.edge.length, board, difficulty, target);
   const hit = rollValue(row, -1, pl.edge.length, board, difficulty, target);
   pulse(piece);
@@ -1413,7 +1436,9 @@ function* invokeOrCompel(pl, row, { kind, sign, piece }, order, rows, board, dif
   // bots compel when it's worth it. The Storyteller compels once a round whenever it hurts the roll.
   let by = null;
   const story = SIM_RULES.compelOnly && TABLE.storyteller && !board.storyCompel ? TABLE.storyteller : null;
-  const askers = story ? [story, ...order.filter(p => p !== story)] : order;
+  // With compelByStoryteller only the Storyteller may compel (once a round, so `story` is null after).
+  const storyOnly = SIM_RULES.compelByStoryteller && SIM_RULES.obstacle;
+  const askers = storyOnly ? (story ? [story] : []) : story ? [story, ...order.filter(p => p !== story)] : order;
   for (const p of askers) {
     if (p === pl || row.helpers.includes(p) || (!free && p.edge.length < SIM_RULES.troubleEdge)) continue;
     const asStory = p === story;
@@ -1422,7 +1447,7 @@ function* invokeOrCompel(pl, row, { kind, sign, piece }, order, rows, board, dif
         `<p>${asStory ? 'You’re the Storyteller: watching for this is part of your job. ' : ''}${who(pl)} bets on ${rowTag(row)}, which matches their ${what}. Compel it, and say how it gets in the way: they take <b>−1</b> on this roll${free ? '; it costs you nothing (the pile pays them 1 Story Point)' : ', and you pay them 1 of your Story Points'}. They may refuse by paying 1 Story Point to the pile${free ? '' : ' (and then your Story Points goes to the pile too)'}.</p>`,
         [{ label: 'Compel', hint: free ? 'free' : 'costs you 1 Story Point', value: true }, { label: 'Leave it', value: false }]);
       if (yes) { by = p; break; }
-    } else if ((asStory ? now - hit > 0 : wantsCompel(p, row, rows, board, now - hit, target, free)) && (!refuses || SIM_RULES.compelIntoRefusal)) { by = p; break; }
+    } else if ((asStory ? SIM_RULES.storytellerAlwaysCompels || now - hit > 0 : wantsCompel(p, row, rows, board, now - hit, target, free)) && (!refuses || SIM_RULES.compelIntoRefusal)) { by = p; break; }
   }
   if (by && by === story) board.storyCompel = true;
   if (!by) return;

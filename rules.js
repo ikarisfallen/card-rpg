@@ -5,7 +5,7 @@
 
 const SIM_RULES = {
   acts: ['Beginning', 'Middle', 'Ending'],
-  difficulty: { 'Beginning': 1, 'Middle': 2, 'Ending': 3 },
+  difficulty: { 'Beginning': 2, 'Middle': 3, 'Ending': 4 }, // +1 each 2026-10-18 (risks as +1/-1, no Story Point cap, no minor failure)
   failBy: 2,          // missing the difficulty by this much or more is a failure
   maxEscalations: 2,  // the failure after the last Escalation loses the situation
   helperShare: 1,     // spotlight tokens each helper places when the Main player succeeds
@@ -13,10 +13,15 @@ const SIM_RULES = {
   overflowToEdge: true,  // ...and each point of margin above it is 1 Edge from the pile instead
   // Failing (the Main player): Edge taken = failEdgeMain + failEdgePerMinus per Minus die already
   // out; helpers always take 1. failPickLoss: lose the resource OR take a Liability, not both.
-  failEdgeMain: 1,
+  failEdgeMain: 0,      // was 1 until 2026-10-18: a failure gives no Story Point
+  failEdgeHelpers: false, // ...nor to the helpers (was 1 each)
   failEdgePerMinus: 0,   // desperation (removed 2026-10-18): +1 Edge per Minus die already out
-  failPickLoss: false,
-  failPickLossNoBane: true, // ...but only while you don't already have a Liability (else: lose the resource)
+  failPickLoss: true,   // ON 2026-10-18: the failing Main player chooses: lose the resource, or take a Liability
+  // ON 2026-10-18: a failure only gives the Main player a Liability (plus the Escalation); nobody
+  // loses resources, which are only spent to succeed at a cost.
+  failLiabilityOnly: true,
+  resourceStart: 4, // each resource die's starting value (+1 Concept, -1 Trouble); was 2 until 2026-10-18
+  failPickLossNoBane: true, // the choice only while you don't already have a Liability (else: lose the resource)
   overflowAtRowLimit: true,  // a row takes only the tokens it needs to win; the rest of the margin is Edge
   endEdgePerSpotlight: 2, // at the end of the game, this many leftover Edge buy 1 spotlight (0 = off)
   helpTokensSafe: false, // true: helpers' tokens score even if the situation is lost (tried; felt passive)
@@ -32,7 +37,7 @@ const SIM_RULES = {
   rowOrder: 'initiative', // rows roll in their Main's initiative order ('abc': A, B, C)
   afterWin: 'safe',       // once a row completes the situation, the other rows still roll but a miss costs nothing
   minusNextRound: true, // a new Minus die only counts from the next round (all rows roll against the same box) // true: several failures on one Fate card only escalate once
-  maxEdgePerBet: 2,   // Edge a Main player may spend on one roll
+  maxEdgePerBet: 0,   // Edge a Main player may spend on one roll (0 = no limit; was 2 until 2026-10-18)
   maxEdgeHeld: 0,     // the most Edge one player may hold (0 = no limit)
   clearSpotlight: 0,  // spotlight banked for clearing a Minus die, as well as 1 Edge (the Clear seat's
                       // "holding the line" is reward enough: with 1, clearers ended ~1.4 above average)
@@ -94,6 +99,14 @@ const SIM_RULES = {
   // for free (the pile pays the Edge), and the Storyteller compels one each round as part of
   // their job. You take -1 and the Edge, or refuse by paying 1 Edge to the pile.
   compelOnly: true,
+  // ...true (2026-10-18): only the Storyteller compels, once per round (the others don't).
+  compelByStoryteller: true,
+  // A Trouble also matches a roll whose row risks the resource shown on the Trouble (ON
+  // 2026-10-18: your approach alone no longer keeps you clear of it).
+  compelRiskMatch: true,
+  // Bots: the Storyteller compels every match it gets (a human probably would), not only when
+  // the -1 could change the roll.
+  storytellerAlwaysCompels: true, // ON 2026-10-18
   // Cost vs. Approaches. true: rows have no set approach; the Main player picks one, and it sets
   // what a failure costs: 0 of the row's resource with the approach that guards it, 2 with the
   // one that squanders it, 1 otherwise (see RISKS in deal.js). false: each row has a fixed
@@ -105,7 +118,7 @@ const SIM_RULES = {
   closeMissBane: false, // test: missing by less than failBy draws a Liability (but isn't a failure)
   // Minor failures (ON 2026-10-17): missing by less than failBy (by 1) costs the row's resource,
   // by the approach (0 / 1 / 2), but draws no Liability, gives no Edge and adds no Tension die.
-  minorFailure: true,
+  minorFailure: false, // off 2026-10-18 (succeed at a cost stays): a miss by 1 costs nothing
   // Succeed at a cost (called "pushing" in the code): after the Fate card, a Main player whose roll would miss may lower
   // their die for the row's resource (never below 1) for +1 per point.
   pushResource: true, // ON 2026-10-18
@@ -124,6 +137,10 @@ const SIM_RULES = {
   // are then scored; if it's lost they go back to the pool. Bonuses and stake payouts come from
   // the pool. false: each player places their own coloured tokens on the rows.
   takeSpotlight: true,
+  // Risks as bonuses (2026-10-18): on a row, the approach that guards its resource (✓) is +1 on
+  // the roll and the one that squanders it (✗) is -1, and any failure costs 1 of the resource.
+  // false: the ✓ / ✗ only change what a failure costs (0 / 2).
+  riskModifier: true,
   // The Obstacle (2026-10-18, against spamming one approach): each round one player is the
   // Storyteller (the seat passes clockwise every round). Before anyone bets, they set the
   // Obstacle die to an approach and put it in one row's Obstacle box: going into that row with
@@ -149,18 +166,17 @@ const PLAYER_COUNT_RULES = {
   // 2 players: a tougher finale (difficulty 4) softened by 2 Edge, since there was no Edge left to cut.
   2: {
     target: { 'Beginning': 2, 'Middle': 3, 'Ending': 3 },
-    difficulty: { 'Beginning': 1, 'Middle': 2, 'Ending': 4 },
-    edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 4 },
+    difficulty: { 'Beginning': 2, 'Middle': 3, 'Ending': 5 },
+    edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 4 }, // fewer Story Points (2026-10-18): more succeeding at a cost
     // In the Ending a Main player may spend up to 3 Edge on a roll, not 2 (2026-10-18, for the
     // Obstacle: two players start the Ending with plenty of Edge the 2-per-roll limit kept unused).
-    endingEdgeCap: 3,
   },
   3: {
     target: { 'Beginning': 3, 'Middle': 4, 'Ending': 5 },
-    edgeAtActStart: { 'Beginning': 2, 'Middle': 1, 'Ending': 3 },
+    edgeAtActStart: { 'Beginning': 0, 'Middle': 1, 'Ending': 3 }, // fewer Story Points (2026-10-18)
     actWinBonus: { 'Beginning': { main: 2, helper: 0 }, 'Middle': { main: 2, helper: 0 }, 'Ending': { main: 4, helper: 0 } },
   },
-  4: { target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 1 } },
+  4: { target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 1 } }, // fewer Story Points (2026-10-18)
 };
 
 // Story Points (called Edge in the code): "1 Story Point", "2 Story Points".
@@ -178,8 +194,11 @@ const LENGTH_BASE = {
   // endingEdge +1 each (2026-10-18) to make up for the Storyteller's Obstacle.
   // endingStack: added to the Ending's stacks (−1 at 3 players, 2026-10-18, for the Obstacle; at 2
   // players −1 left a 1-success Ending, won 87%).
-  2: { stack: 2, endingSteps: 0, endingEdge: 2, edgePerExtra: 2 }, // no +1 here: 2 players get up to 3 Edge per Ending roll instead
-  3: { stack: 3, endingSteps: 1, endingEdge: 1, edgePerExtra: 2, endingStack: -1 }, // Ending Edge back to 1 (with the smaller stack)
+  // 2026-10-18: difficulty +1 in every act, the 3-player Middle a stack smaller, failures give only a
+  // Liability, resources start at 4 and Story Points are 2 lower each act (Ending 2 / 3 / 2 at +1
+  // stacks), so players succeed at a cost more (sim: Middle ~83 / 87 / 95%, Ending ~58 / 57 / 47%).
+  2: { stack: 2, endingSteps: 0, endingEdge: 0, edgePerExtra: 2 },
+  3: { stack: 3, endingSteps: 1, endingEdge: 1, edgePerExtra: 2, endingStack: -1, middleStack: -1 },
   4: { stack: 4, endingSteps: 1, endingEdge: 2, edgePerExtra: 0 },
 };
 function setGameLength(middles, extra) {
@@ -188,7 +207,7 @@ function setGameLength(middles, extra) {
   SIM_RULES.acts = ['Beginning', ...Array(middles).fill('Middle'), 'Ending'];
   for (const [n, b] of Object.entries(LENGTH_BASE)) {
     const r = PLAYER_COUNT_RULES[n];
-    r.target = { Beginning: b.stack, Middle: b.stack + extra, Ending: Math.max(1, b.stack + extra * b.endingSteps + (b.endingStack || 0)) };
+    r.target = { Beginning: b.stack, Middle: b.stack + extra + (b.middleStack || 0), Ending: Math.max(1, b.stack + extra * b.endingSteps + (b.endingStack || 0)) };
     r.edgeAtActStart = { ...r.edgeAtActStart, Ending: b.endingEdge + b.edgePerExtra * extra };
   }
 }

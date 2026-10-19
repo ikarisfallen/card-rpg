@@ -1611,3 +1611,47 @@ body[data-theme="space"] #table {
 
 /* The Asset's and Liability's rules fill their narrower, card-tall boxes. */
 .place-box .card-rules { padding: 10px 12px; font-size: 12.5px; line-height: 1.4; }
+.sheet .sheet-heads .sheet-note { line-height: 1.05; } /* three short lines fit the header */
+
+/* A choice's risk as bonuses: +1 / −1 approaches on the left, the resource with what a failure
+   costs on the right. */
+.sit-risk.mod { flex-direction: row; align-items: center; gap: 8px; padding-left: 8px; }
+.sit-risk.mod .sit-risk-mods { display: flex; flex-direction: column; gap: 6px; }
+.sit-risk.mod .sit-risk-mods span { display: flex; align-items: center; gap: 4px; font-size: 22px; }
+.sit-risk.mod .sit-risk-mods b { font: 800 17px "Segoe UI", system-ui, sans-serif; color: #2b2b2b; min-width: 20px; text-align: right; }
+.sit-risk.mod .sit-risk-res { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.sit-risk.mod .sit-risk-icon { font-size: 30px; }
+.sit-risk.mod .sit-risk-loss { font: 700 11px "Segoe UI", system-ui, sans-serif; color: #2b2b2b; white-space: nowrap; }
+/* Fixed-width columns, so the +1 / −1 approaches and the resource icons line up down the card;
+   what a failure costs is "−1" over the resource's name, centred under its icon. */
+.sit-risk.mod .sit-risk-mods { width: 52px; flex: none; }
+.sit-risk.mod .sit-risk-res { width: 78px; flex: none; gap: 2px; }
+.sit-risk.mod .sit-risk-loss { font-size: 12px; line-height: 1.15; text-align: center; white-space: normal; }
+.sit-risk.mod { border-left: 0; } /* no divider beside the choice text */
+.sit-risk.mod .sit-risk-fail { font-family: var(--emoji); font-size: 10px; margin-right: 3px; vertical-align: 1px; } /* a failed roll costs... */
+.sit-risk.mod .sit-risk-fail { font-family: inherit; font-size: inherit; margin-right: 0; vertical-align: 0; } /* "Fail: −1" */
+.sit-risk.mod { gap: 4px; padding-left: 4px; }
+.sit-risk.mod .sit-risk-mods { width: 46px; }
+.sit-risk.mod .sit-risk-res { width: 72px; }
+.situation-card .sit-choice { padding-right: 6px; }
+
+/* A choice's risk in one fixed-width column: the resource (icon and name), then +1 / −1 with the
+   approaches; every emoji the same size, so the columns line up down the card. */
+.sit-risk.mod.stack { flex: none; width: 104px; flex-direction: column; align-items: flex-start; gap: 4px; padding-left: 6px; border-left: 0; }
+.sit-risk.mod.stack .sit-risk-line { display: flex; align-items: center; gap: 5px; line-height: 1; }
+.sit-risk.mod.stack .sit-risk-emoji { font-family: var(--emoji); font-size: 22px; width: 26px; text-align: center; }
+.sit-risk.mod.stack .sit-risk-line b { font: 800 17px "Segoe UI", system-ui, sans-serif; color: #2b2b2b; width: 22px; text-align: right; }
+.sit-risk.mod.stack .sit-risk-name { font: 700 12px "Segoe UI", system-ui, sans-serif; color: #2b2b2b; white-space: nowrap; }
+.sit-risk.mod.stack .sit-risk-line.res { margin-bottom: 2px; }
+.sit-risk.mod.stack { width: 124px; }
+.sit-risk.mod.stack { box-sizing: border-box; width: 132px; padding-left: 4px; gap: 3px; }
+.sit-risk.mod.stack .sit-risk-line.res { margin-bottom: 1px; }
+.sit-risk.mod.stack .sit-risk-line { line-height: 1.15; }
+.sit-risk.mod.stack { gap: 1px; }
+/* Right-aligned and only as wide as it needs: more room for the choice's text. */
+.sit-risk.mod.stack { width: auto; align-items: flex-end; margin-left: auto; padding-left: 6px; }
+.sit-risk.mod.stack .sit-risk-line { justify-content: flex-end; }
+.sit-risk.mod.stack .sit-risk-line b { width: auto; }
+.sit-risk.mod.stack { flex: none; }
+.sit-risk.mod.stack .sit-risk-emoji { width: auto; min-width: 26px; }
+.situation-card .sit-choice-text { min-width: 0; }

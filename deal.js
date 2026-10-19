@@ -28,14 +28,14 @@ const noVS16 = s => (s || '').replace(/️/g, ''); // emoji variation selectors 
 // rows have a fixed approach).
 function riskCost(risk, approach) {
   const r = RISKS[risk];
-  if (!SIM_RULES.freeApproach || !r) return 1;
+  if (!SIM_RULES.freeApproach || !r || SIM_RULES.riskModifier) return 1;
   if (noVS16(approach) === noVS16(r.good)) return 0;
   if (noVS16(approach) === noVS16(r.bad)) return 2;
   return 1;
 }
 const riskName = risk => (RISKS[risk] ? RISKS[risk].name : risk);
 const PLAYER_COLORS = ['#e0aa1b', '#3a7bd5', '#d64545', '#3fa66b'];
-const RESOURCE_START = 2; // +1 if the Concept names the resource, -1 if the Trouble does
+const RESOURCE_START = 2; // +1 if the Concept names the resource, -1 if the Trouble does (SIM_RULES.resourceStart overrides)
 
 // Character cards (Concept, Trouble, Asset, Liability, Relationship) are the size of a Fate card.
 const PC_CARD = { w: 150, h: 210 };
@@ -557,7 +557,7 @@ const SHEET_COLS = [SHEET_COL, SHEET_COL, SHEET_COL];
 // for the Asset (off the board's left edge) and the Liability (off its right edge), each with its
 // rules in a dashed box running in from that edge, then the two rows of resources. Each resource
 // cell is its label plus a box just taller than the die; equal gaps between them all.
-const SHEET_HEAD = 40, SHEET_LABEL = 20, SHEET_ROW = 80, SHEET_GAP = 14, SHEET_PAD = 10, SHEET_PAD_TOP = 0;
+const SHEET_HEAD = 48, SHEET_LABEL = 20, SHEET_ROW = 80, SHEET_GAP = 14, SHEET_PAD = 10, SHEET_PAD_TOP = 0;
 const SHEET_CARDS = PC_CARD.h; // the Asset / Liability band
 const SHEET_CELL = SHEET_LABEL + SHEET_ROW;
 const SHEET_W = SHEET_COLS.reduce((a, b) => a + b, 0) + SHEET_PAD * 2;
@@ -568,7 +568,7 @@ const SHEET_CARDS_Y = SHEET_PAD_TOP + SHEET_HEAD + SHEET_GAP;
 function sheetCardRules() {
   return [
     `✔️ <b>Asset:</b> +1 on its approach${SIM_RULES.boonUpgrades ? ` · beat the difficulty by ${SIM_RULES.boonMargin}+ as Main: draw an Asset, keep one` : ''}${SIM_RULES.boonShield === 'heal' ? ' · fail as Main: you may discard it to draw no Liability and shake off your Liability' : ''}`,
-    SIM_RULES.banes ? `✖️ <b>Liability:</b> miss by ${SIM_RULES.failBy}+ as Main: draw one at random (hold one: keep or swap) · ${SIM_RULES.compelOnly ? 'others compel it (free): −1, +Story Points' : 'invoke / compel: −1, +Story Points (compelling is free)'} · lose it: ${storyPts(SIM_RULES.baneRemoveEdge)} or give up a bet` : '✖️',
+    SIM_RULES.banes ? `✖️ <b>Liability:</b> miss by ${SIM_RULES.failBy}+ as Main: ${SIM_RULES.failLiabilityOnly ? 'draw one' : SIM_RULES.failPickLoss ? 'take one instead of losing the resource (not if you hold one)' : 'draw one at random'} (hold one: keep or swap) · ${SIM_RULES.compelOnly ? (SIM_RULES.compelByStoryteller ? 'the Storyteller compels it' : 'others compel it') + ' (free): −1, +Story Points' : 'invoke / compel: −1, +Story Points (compelling is free)'} · lose it: ${storyPts(SIM_RULES.baneRemoveEdge)} or give up a bet` : '✖️',
   ];
 }
 const SHEET_LAYOUT = [['ℹ️', '⭐', '📦'], ['🔥', '📏', '⌛']]; // three per row
@@ -588,7 +588,7 @@ function buildSheet(x, y, concept, trouble) {
   // Asset's and Liability's rules go in the band under them (dashed boxes, see the player area).
   const head = (sign, text) => `<div class="sheet-head" style="width:${PC_CARD.w}px"><span class="sheet-sign">${sign}</span><span class="sheet-note">${text}</span></div>`;
   sheet.append(el('div', 'sheet-heads', head('➕', 'Concept: +1 on its approaches')
-    + head('➖', SIM_RULES.troubleInvoke ? (SIM_RULES.compelOnly ? 'Trouble: others compel it: −1, +Story Points' : 'Trouble: invoke / compel: −1, +Story Points') : 'Trouble: −1 on its approaches')));
+    + head('➖', SIM_RULES.troubleInvoke ? (SIM_RULES.compelOnly ? `Trouble${SIM_RULES.compelRiskMatch ? ' (approach or risk)' : ''}: ${SIM_RULES.compelByStoryteller ? 'Storyteller' : 'others'} compel${SIM_RULES.compelByStoryteller ? 's' : ''} −1, +1 Story Pt` : 'Trouble: invoke / compel: −1, +Story Points') : 'Trouble: −1 on its approaches')));
   sheet.append(el('div', 'sheet-cards')); // the Asset / Liability band
   SHEET_LAYOUT.forEach(trio => trio.forEach(res => sheet.append(el('div', 'sheet-cell',
     `<div class="sheet-label"><span class="sheet-ico">${res}</span><span class="sheet-res-name">${riskName(res)}</span></div><div class="sheet-box"></div>`))));
@@ -602,7 +602,7 @@ function buildSheet(x, y, concept, trouble) {
   const DIE = 72;
   const dice = {};
   SHEET_LAYOUT.forEach((trio, row) => trio.forEach((res, k) => {
-    const value = RESOURCE_START + (concept?.resource === res) - (trouble?.resource === res);
+    const value = (SIM_RULES.resourceStart ?? RESOURCE_START) + (concept?.resource === res) - (trouble?.resource === res);
     const c = boxCenter(row, k);
     dice[res] = createDie({ className: 'die-sheet', size: DIE, value: Math.max(1, Math.min(6, value)), x: c.x - DIE / 2, y: c.y - DIE / 2 });
   }));
@@ -667,7 +667,7 @@ function buildMat(x, y, situation) {
   const miniSpot = '<span class="mini-tok spot" title="spotlight">★</span>';
   const miniFirst = '<span class="mini-tok init" title="initiative">1</span>';
   const heads = {
-    main: ['Main', `${SIM_RULES.rowOrder === 'initiative' ? 'rolls in initiative order<br>' : ''}${SIM_RULES.maxStake ? `stake up to ${SIM_RULES.maxStake} ${miniSpot} · ` : ''}Story Points up to ${SIM_RULES.maxEdgePerBet}${(PLAYER_COUNT_RULES[players] || {}).endingEdgeCap ? ` (Ending ${PLAYER_COUNT_RULES[players].endingEdgeCap})` : ''} ${miniEdge}`],
+    main: ['Main', `${SIM_RULES.rowOrder === 'initiative' ? 'rolls in initiative order<br>' : ''}${SIM_RULES.maxStake ? `stake up to ${SIM_RULES.maxStake} ${miniSpot} · ` : ''}${SIM_RULES.maxEdgePerBet ? `Story Points: up to ${SIM_RULES.maxEdgePerBet}` : 'spend any Story Points'}${(PLAYER_COUNT_RULES[players] || {}).endingEdgeCap ? ` (Ending ${PLAYER_COUNT_RULES[players].endingEdgeCap})` : ''} ${miniEdge}`],
     help: ['Help', '+1 each · needs a matching Relationship'],
     approach: ['Approach', 'read it on the Fate card'],
     minus: ['Tension', `−1 to its approach${SIM_RULES.minusNextRound ? '<br>from next round' : ''}<br>2 out: a fail loses${SIM_RULES.clearTiming === 'end' ? `<br>Clear: ${miniEdge}${SIM_RULES.clearGoesFirst ? ` ${miniFirst}st` : ''}` : ''}`],
@@ -725,6 +725,17 @@ const APPROACH_AND_RISK = new RegExp(`\\s*(?:(?:${APPROACHES.map(a => noVS16(a) 
 function choiceRiskHtml(risk) {
   const r = RISKS[risk];
   if (!r) return '';
+  // Risks as bonuses: +1 / −1 approaches on the left, the resource and what a failure costs right.
+  if (SIM_RULES.riskModifier && SIM_RULES.freeApproach) {
+    // One right-aligned column: the row's resource (icon, then name, as on the character sheets), then +1 with the approach that
+    // guards it and −1 with the one that squanders it; the emoji line up down the right edge.
+    const res = SIM_RULES.failLiabilityOnly ? esc(r.name) : `${esc(r.name)} <span class="sit-risk-fail">(fail: −1)</span>`;
+    return `<span class="sit-risk mod stack" title="${esc(r.name)}">`
+      + `<span class="sit-risk-line res"><span class="sit-risk-emoji">${risk}</span><span class="sit-risk-name">${res}</span></span>`
+      + `<span class="sit-risk-line"><b>+1</b><span class="sit-risk-emoji">${r.good}</span></span>`
+      + `<span class="sit-risk-line"><b>−1</b><span class="sit-risk-emoji">${r.bad}</span></span>`
+      + '</span>';
+  }
   return `<span class="sit-risk" title="Lost ${esc(r.name)}">`
     + (SIM_RULES.freeApproach ? `<span class="sit-risk-side"><b class="good">✓</b>${r.good}</span>` : '')
     + `<span class="sit-risk-icon">${risk}</span>`
