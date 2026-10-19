@@ -1670,3 +1670,6 @@ body[data-theme="space"] #table {
 .pc-card.kind-boon .approach-row { justify-content: flex-start; padding-left: 4px; }
 .pc-card.kind-bane .approach-row { justify-content: flex-end; padding-right: 4px; }
 .pc-card:is(.kind-boon, .kind-bane) .approach-row { margin-top: auto; } /* always at the bottom, where a stacked card peeks out */
+
+/* A Location's place adjective, tucked above it, reads just above the card's name (not centred). */
+.el-card.kind-location .name-end { place-items: center start; padding-left: 80px; }

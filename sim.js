@@ -109,7 +109,7 @@ function banesOf(pl) {
   return [top, ...(SIM_RULES.stackCards ? (pl.moreBanes || []).map(card => ({ card, extra: true, el: top.el, x: top.x, y: top.y, w: top.w, h: top.h, children: [] })) : [])];
 }
 // Show a player's extra Assets / Liabilities as cards peeking out under the slot's card, each lower
-// by STACK_PEEK, so every card's approach icon (bottom left / bottom right) shows.
+// right under the slot's card (STACK_STEP).
 function renderStacks(pl) {
   (pl.stackPieces || []).forEach(removePiece);
   pl.stackPieces = [];
@@ -117,7 +117,7 @@ function renderStacks(pl) {
   const show = (zone, cards) => {
     const top = zone.occupant;
     if (!top) return;
-    cards.forEach((card, i) => { const piece = placePcCard(card, zone.x, zone.y + STACK_PEEK * (i + 1), true); pl.stackPieces.push(piece); });
+    cards.forEach((card, i) => { const piece = placePcCard(card, zone.x, zone.y + STACK_STEP * (i + 1), true); pl.stackPieces.push(piece); });
     raise(top); // the slot's card stays on top
   };
   show(pl.zones.boon, pl.moreBoons || []);
@@ -1734,20 +1734,12 @@ function giveBoon(pl, rows) {
   return `<p>${who(pl)} earns the Asset ${name(card)}${old ? `, swapping out ${name(old.card)}` : ''}.</p>`;
 }
 
-// An Asset drawn mid-game slides into the slot, and like at the start, a random spare Asset is
-// flipped face down and tucked under it so one of its conditions ("Borrowed...") names it.
+// An Asset drawn mid-game slides into the slot.
 function placeBoon(pl, card) {
   const zone = pl.zones.boon;
-  const stale = zone.nameZone.occupant; // the old Asset's name card, if it left the table
-  if (stale && !stale.el.isConnected) zone.nameZone.occupant = null;
   const piece = placePcCard(card, zone.x, zone.y - 60, false);
   snapTo(piece, zone); // slides in and turns face up
   raise(piece);
-  const spares = shuffle(buildPcDeck('boon', DATA.boons, DATA.boonStates, '✔️', 1));
-  const { card: nameCard, rot } = drawNameCard(spares);
-  const name = placePcCard(nameCard, zone.x, zone.y - PEEK - 60, false);
-  name.rot = rot;
-  snapTo(name, zone.nameZone); // tucked under the new Asset
   updateSceneBoard(); // the Scene die may favour them now
   return piece;
 }

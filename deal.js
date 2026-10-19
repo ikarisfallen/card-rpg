@@ -47,8 +47,8 @@ const EL_GAP = 20;
 const LOC_CARD = { w: 620, h: 336 }; // the Location card: an index card (5 x 3), landscape
 const elSize = kind => (kind === 'location' ? LOC_CARD : EL_CARD);
 const PEEK = 44; // how much of a tucked name card shows above the card it's under
-const STACK_PEEK = 46; // a second Asset / Liability shows this much below the first: its approach icon
-const PORTRAIT_TUCK = 30; // how much of a portrait card slides under the Asset's name card
+const STACK_STEP = PC_CARD.h + 8; // a second Asset / Liability sits right under the first
+const PORTRAIT_TUCK = 30; // how much of a portrait card slides under the Asset
 
 // ---------------------------------------------------------------------------
 // Decks
@@ -515,7 +515,7 @@ function tuckNameCard(main, deck, place) {
 
 // ---- Snap zones ----
 
-const NAME_LABEL = { concept: 'First name', trouble: 'Last name', boon: 'Condition' };
+const NAME_LABEL = { concept: 'First name', trouble: 'Last name' };
 
 function zoneOutline(x, y, w, h, text, rot = 0, extra = '') {
   const node = el('div', `zone ${extra}`, text ? `<span>${esc(text)}</span>` : '');
@@ -529,7 +529,7 @@ function zoneOutline(x, y, w, h, text, rot = 0, extra = '') {
 function cardSlot(kind, x, y) {
   const { w, h } = PC_CARD;
   const main = addZone({ accepts: kind, x, y, w, h });
-  main.nameZone = addZone({
+  if (NAME_LABEL[kind]) main.nameZone = addZone({
     accepts: kind, tucked: true, parentZone: main, x, y: y - PEEK, w, h,
     el: zoneOutline(x, y - PEEK, w, PEEK, NAME_LABEL[kind], 0, 'name-zone'),
   });
@@ -1273,11 +1273,11 @@ function deal(mode = 'deal') {
   narration = null; // no read-aloud panel: the simulator panel tells the story
 
   const ELY = 30; // the top of the first card's name card
-  // Name cards tucked above each element: an Asset's descriptor ("Brand new..."), a person's
+  // Name cards tucked above each element (none on the Object): a person's
   // first and last name from a spare Concept and Trouble side by side (like the characters'),
   // and a place adjective from a spare Location.
   const elementSlots = [
-    [macguffins, [[boons, placePcCard]]],
+    [macguffins, []],
     [allies, [[concepts, placePcCard], [troubles, placePcCard]]],
     [villains, [[concepts, placePcCard], [troubles, placePcCard]]],
     [locations, [[locations, placeElementCard]]],
@@ -1442,7 +1442,7 @@ function deal(mode = 'deal') {
 
     // Portrait: a Relationship card turned portrait-side up, its bottom edge (with the
     // "Relationship" label) tucked under the Asset's name card so only the picture shows.
-    const portraitY = boonTop - PEEK + PORTRAIT_TUCK - PC_CARD.h;
+    const portraitY = boonTop + PORTRAIT_TUCK - PC_CARD.h;
     const badge = label(p, bx, portraitY - 104, 'player-badge');
     TABLE.players[i].badgeEl = badge;
     badge.style.setProperty('--player', PLAYER_COLORS[i % PLAYER_COLORS.length]);
@@ -1456,8 +1456,8 @@ function deal(mode = 'deal') {
     // card is flipped and tucked underneath so one of its names reads above the card.
     const conceptSlot = cardSlot('concept', conceptX(sheetX), rowTop + PEEK);
     const troubleSlot = cardSlot('trouble', troubleX(sheetX), rowTop + PEEK);
-    // The Storyteller token's spot: right of the Trouble card, centred over the Liability's column.
-    TABLE.players[i].obstacleHome = { x: bx + PC_CARD.w + BOARD_W + PC_CARD.w / 2, y: rowTop + PEEK + PC_CARD.h / 2 };
+    // The Storyteller token's spot: just overlapping the portrait's left edge.
+    TABLE.players[i].obstacleHome = { x: bx + 10, y: portraitY + (PC_CARD.h - PORTRAIT_TUCK) / 2 };
     const boonSlot = cardSlot('boon', bx, boonTop);
     portraitSlot.under = boonSlot; // the Asset stack always sits on top of the portrait
     let dice;
@@ -1466,7 +1466,7 @@ function deal(mode = 'deal') {
     } else {
       const concept = dealIntoSlot(conceptSlot, concepts);
       const trouble = dealIntoSlot(troubleSlot, troubles);
-      dealIntoSlot(boonSlot, boons);
+      snapTo(placePcCard(boons.pop(), boonSlot.x, boonSlot.y), boonSlot, false); // no name card: an Asset is just what it is
       dice = buildSheet(sheetX, sheetY, concept.card, trouble.card);
     }
 
@@ -1490,9 +1490,9 @@ function deal(mode = 'deal') {
     // STORY_STACK / SCORE_STACK tokens, two side by side (a stack rises a few px per token, so
     // there's room above the first).
     // Room for a second Asset / Liability peeking out under the first (SIM_RULES.stackCards).
-    const stackRoom = SIM_RULES.stackCards ? Math.max(0, (SIM_RULES.stackMax || 2) - 1) * STACK_PEEK : 0;
+    const stackRoom = SIM_RULES.stackCards ? Math.max(0, (SIM_RULES.stackMax || 2) - 1) * STACK_STEP : 0;
     const pileLabelY = boonTop + PC_CARD.h + stackRoom + 12;
-    const edgeLabelY = pileLabelY, scoreLabelY = pileLabelY;
+    const edgeLabelY = pileLabelY, scoreLabelY = rowTop + PEEK; // Scored spotlight: right of the Trouble card
     const edgeY = edgeLabelY + 26 + (STORY_STACK - 1) * 3;
     const scoreY = scoreLabelY + 26 + (SCORE_STACK - 1) * 4;
     countedLabel('Story Points', bx + 6, edgeLabelY, 'pair-label', 'edge', { x: bx - 4, w: PC_CARD.w + 8, y: edgeLabelY - 4, h: edgeY + EDGE_SIZE - edgeLabelY + 8 });
