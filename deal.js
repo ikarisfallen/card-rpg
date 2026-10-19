@@ -10,6 +10,39 @@ const THEMES = {
 };
 let DATA = THEMES.noir.data;
 const APPROACHES = window.GAME_DATA.approaches;
+// Each approach is shown as a coloured tag with its name, not its emoji (the data keeps the
+// emoji). Every text node that lands in the page gets its approach emoji swapped for a tag.
+const APPROACH_NAMES = ['Bold', 'Smart', 'Patient', 'Proud', 'Swift', 'Subtle']; // in APPROACHES order
+const APPROACH_RE = new RegExp(APPROACHES.map(a => a.replace(/\uFE0F/g, '') + '\uFE0F?').join('|'), 'g');
+const approachIndex = e => APPROACHES.findIndex(a => a.replace(/\uFE0F/g, '') === e.replace(/\uFE0F/g, ''));
+function tagApproaches(root) {
+  const skip = n => n.parentElement && n.parentElement.closest('option, script, style, textarea, .ap');
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const hits = [];
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    APPROACH_RE.lastIndex = 0;
+    if (APPROACH_RE.test(n.nodeValue) && !skip(n)) hits.push(n);
+  }
+  hits.forEach(n => {
+    const frag = document.createDocumentFragment();
+    let last = 0;
+    n.nodeValue.replace(APPROACH_RE, (m, at) => {
+      if (at > last) frag.append(n.nodeValue.slice(last, at));
+      const i = approachIndex(m);
+      const tag = document.createElement('span');
+      tag.className = `ap ap-${i}`;
+      tag.textContent = APPROACH_NAMES[i];
+      frag.append(tag);
+      last = at + m.length;
+    });
+    if (last < n.nodeValue.length) frag.append(n.nodeValue.slice(last));
+    n.replaceWith(frag);
+  });
+}
+new MutationObserver(list => list.forEach(m => m.addedNodes.forEach(n => {
+  if (n.nodeType === 3) { if (n.parentNode) tagApproaches(n.parentNode); } else if (n.nodeType === 1) tagApproaches(n);
+}))).observe(document.documentElement, { childList: true, subtree: true });
+document.addEventListener('DOMContentLoaded', () => tagApproaches(document.body));
 // The six resources on the character sheet. A failure costs the row's resource ("Lost Time"),
 // and the approach used changes how much (Cost vs. Approaches): `good` guards it, `bad`
 // squanders it. Intel/Reputation are a pair (🕶️ vs 📢); the other four go round a loop where

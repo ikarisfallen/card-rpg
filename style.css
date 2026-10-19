@@ -1673,3 +1673,34 @@ body[data-theme="space"] #table {
 
 /* A Location's place adjective, tucked above it, reads just above the card's name (not centred). */
 .el-card.kind-location .name-end { place-items: center start; padding-left: 80px; }
+
+/* Approach tags: each approach's name in its own colour, in place of its emoji. */
+.ap {
+  display: inline-block;
+  padding: 0.12em 0.45em;
+  border-radius: 0.45em;
+  background: var(--ap);
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  font-size: 0.62em;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  vertical-align: 0.12em;
+  white-space: nowrap;
+  text-shadow: none;
+}
+.ap-0 { --ap: #c62828; } /* Bold: red */
+.ap-1 { --ap: #1565c0; } /* Smart: blue */
+.ap-2 { --ap: #2e7d32; } /* Patient: green */
+.ap-3 { --ap: #ef6c00; } /* Proud: orange */
+.ap-4 { --ap: #7b1fa2; } /* Swift: purple */
+.ap-5 { --ap: #455a64; } /* Subtle: slate */
+/* Fixed sizes where an approach tag replaces an emoji in a tight spot. */
+.pc-card .approach-row .ap { font-size: 11px; padding: 2px 4px; vertical-align: middle; }
+.pc-card .approach-row { gap: 3px; }
+.el-lines .el-approach .ap { font-size: 11px; padding: 2px 4px; vertical-align: middle; }
+.el-lines li { grid-template-columns: 30px 1fr auto; }
+.el-card.kind-location .el-lines li { grid-template-columns: 24px 1fr auto; }
+.die-symbol .ap { font-size: 11px; padding: 3px 4px; vertical-align: middle; }
+.fate-approach .ap { font-size: 12px; padding: 2px 5px; vertical-align: middle; }
