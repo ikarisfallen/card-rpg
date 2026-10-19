@@ -646,7 +646,7 @@ function boardRulesHtml(players) {
       <tr><th></th>${acts.map(a => `<th data-act="${a}">${a}</th>`).join('')}</tr>
       ${perAct ? row('Successes', a => actTarget(a, players)) : ''}
       ${row('Difficulty', a => playerRule('difficulty', players)[a])}
-      ${row('Story Points at start', a => edge[a] || 0)}
+      ${acts.some(a => edge[a]) ? row('Story Points at start', a => edge[a] || 0) : ''}
       ${row(acts.some(a => bonus[a].helper) ? 'Win bonus <small>(helper)</small>' : 'Win bonus', a => `${bonus[a].main}${bonus[a].helper ? ` <small>(${bonus[a].helper})</small>` : ''}`)}
     </table>`;
 }

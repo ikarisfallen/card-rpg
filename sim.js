@@ -22,9 +22,9 @@ const RULES_TEXT = [
   ...(SIM_RULES.maxEdgeHeld ? ['<b>Story Points limit:</b> nobody holds more than ' + storyPts(SIM_RULES.maxEdgeHeld) + '. Any more you would take stays in (or goes back to) the pile.'] : []),
   `Effort = ➕ Concept +1, ✔️ Asset +1, ${SIM_RULES.troubleInvoke ? '➖ Trouble −1 if invoked or compelled' : '➖ Trouble −1'}, ${SIM_RULES.sceneModifier ? `the Scene die ${sceneMod()} ${SIM_RULES.sceneBy === 'approach' ? 'if the roll uses its approach' : 'if their Concept or Asset shows its approach'}, ` : ''}${INVOKE_LINES ? 'invoked line +1, ' : ''}each helper +1, each Story Points spent +1, each Minus die showing the row\u2019s approach −1, plus the Fate number.`,
   ...(SIM_RULES.takeSpotlight ? ['<b>Taking spotlight:</b> spotlight tokens are neutral. Each situation starts with a stack in every row\u2019s Successes box, as many as it takes to win (the target). Scoring <b>takes</b> tokens from the row\u2019s stack into your <b>This scene</b> spot. The first row emptied completes the situation, and everyone\u2019s This scene tokens are scored. If the situation is lost, they go back to the pool unscored. Act bonuses' + (SIM_RULES.maxStake ? ', stake payouts' : '') + ' and cashed-in Story Points come from the pool.'] : []),
-  'Beat the difficulty by N: the Main player puts N spotlight tokens on the row\u2019s Successes' + (SIM_RULES.maxTokensPerRoll ? ' (at most ' + SIM_RULES.maxTokensPerRoll + (SIM_RULES.overflowToEdge ? '; each point over that is 1 Story Point instead' : '') + ')' : '') + (SIM_RULES.overflowAtRowLimit ? ', but never more than the row still needs to win: each point over that is 1 Story Point instead (for a helper too, when the row is already full)' : '') + '; each helper adds 1.' + (SIM_RULES.endEdgePerSpotlight ? ' At the end of the game, every ' + SIM_RULES.endEdgePerSpotlight + ' leftover Story Points buy 1 spotlight. Why? Story Points are your pull over how the story goes. Whatever you never spent is still pull: when the story is told afterwards, it buys your character a bigger part in it.' : '') + (SIM_RULES.helpTokensSafe ? ' A helper\u2019s token is <b>safe</b> (ringed): it counts toward the row like any other, and if the situation is lost it still scores.' : ''),
-  ...(SIM_RULES.pushResource ? ['<b>Succeed at a cost:</b> after the Fate card, a Main player whose roll would miss may lower their die for the row’s resource by as many points as it takes to succeed, +1 each' + (SIM_RULES.pushToSucceed ? '' : ' (1 point at most)') + (SIM_RULES.pushToZero ? '. A die spent down to 0 leaves the sheet: that resource is used up.' : ', but never below 1.')] : []),
-  ...(SIM_RULES.obstacle ? ['<b>The Obstacle:</b> each round one player is the <b>Storyteller</b> (the seat passes clockwise every round). Before anyone bets, they set the Obstacle die to an approach and put it in one row’s Obstacle box, and say how the other side saw it coming: going into that row with that approach ' + (SIM_RULES.obstacleCancels ? '<b>loses its bonuses</b> (Concept, Asset, the Scene die) this round, so it only hurts a character leaning on that approach' : 'is <b>−1</b> this round') + '. The Storyteller still bets as usual.'] : []),
+  'Beat the difficulty by N: the Main player ' + (SIM_RULES.takeSpotlight ? 'takes N spotlight tokens from the row\u2019s stack' : 'puts N spotlight tokens on the row\u2019s Successes') + (SIM_RULES.maxTokensPerRoll ? ' (at most ' + SIM_RULES.maxTokensPerRoll + (SIM_RULES.overflowToEdge ? '; each point over that is 1 Story Point instead' : '') + ')' : '') + (SIM_RULES.overflowAtRowLimit ? ', but never more than the row still needs to win: each point over that is 1 Story Point instead (for a helper too, when the row is already full)' : '') + '; each helper adds 1.' + (SIM_RULES.endEdgePerSpotlight ? ' At the end of the game, every ' + SIM_RULES.endEdgePerSpotlight + ' leftover Story Points buy 1 spotlight. Why? Story Points are your pull over how the story goes. Whatever you never spent is still pull: when the story is told afterwards, it buys your character a bigger part in it.' : '') + (SIM_RULES.helpTokensSafe ? ' A helper\u2019s token is <b>safe</b> (ringed): it counts toward the row like any other, and if the situation is lost it still scores.' : ''),
+  ...(SIM_RULES.pushResource ? ['<b>Succeed at a cost:</b> after the Fate card, a Main player whose roll would miss may lower their die for the row’s resource ' + (SIM_RULES.maxPushPerRoll ? 'by ' + (SIM_RULES.maxPushPerRoll === 1 ? '1 point' : 'up to ' + SIM_RULES.maxPushPerRoll + ' points') + ', for +1 each' : 'by as many points as they like, +1 each') + '' + (SIM_RULES.pushToSucceed ? '' : ' (1 point at most)') + (SIM_RULES.pushToZero ? '. A die spent down to 0 leaves the sheet: that resource is used up.' : ', but never below 1.')] : []),
+  ...(SIM_RULES.obstacle ? ['<b>The Obstacle:</b> each round one player is the <b>Storyteller</b> (the seat passes clockwise every round). Before anyone bets, they set the Obstacle die to an approach and put it in one row’s Obstacle box, and say how the other side saw it coming: going into that row with that approach ' + (SIM_RULES.obstacleCancels ? '<b>loses its bonuses</b> (Concept, Asset, Scene die and the row’s ✓) this round, so it only hurts a character leaning on that approach' : 'is <b>−1</b> this round') + '. The Storyteller still bets as usual.'] : []),
   ...(SIM_RULES.escalationChoice ? ['<b>Escalations:</b> when a Main player fails, they choose which of the Situation\u2019s two Escalations happens, and narrate it. The same one can happen again: that trouble just got really bad.'] : []),
   ...(SIM_RULES.minorFailure ? ['<b>Miss by 1: a minor failure.</b> The Main player and helpers each lose the row\u2019s resource (0, 1 or 2 by the approach), but nobody draws a Liability or takes Story Points, and the situation doesn\u2019t escalate.'] : []),
   (SIM_RULES.riskModifier ? 'On each row, the approach marked <b>✓</b> beside it is <b>+1</b> on the roll and the one marked <b>✗</b> is <b>\u22121</b>. ' : '') + (SIM_RULES.minorFailure ? 'Miss by 2 or more' : 'Miss by 2 or more (a miss by 1 costs nothing)') + (SIM_RULES.failLiabilityOnly ? ': the Main player takes a <b>Liability</b> (nobody loses any resources: those are only spent to succeed at a cost)' : ': the Main player and helpers each lose ' + (SIM_RULES.freeApproach && !SIM_RULES.riskModifier ? '0, 1 or 2 (by the approach)' : '1') + ' of the row\u2019s <b>Risk</b> resource' + (SIM_RULES.failPickLoss && SIM_RULES.banes ? ', except the Main player, who chooses: lose it, <b>or</b> take a Liability (only if they don’t already hold one)' : (SIM_RULES.banes ? ', and the Main player draws a Liability' : ''))) + '.' + (SIM_RULES.failEdgeMain || SIM_RULES.failEdgeHelpers !== false ? ' Helpers take 1 <b>Story Point</b>; the Main player takes ' + storyPts(SIM_RULES.failEdgeMain ?? 1) + '.' : '') + ' The next Escalation happens and its Minus die goes in the Minus box: <b>−1 to every roll using that approach</b>, on any row' + (SIM_RULES.minusNextRound ? ', from the <b>next round</b> on (this round\u2019s other rows roll against the box as it was when they bet)' : '') + '. With 2 Minus dice out, the next failure loses the situation (unless someone holds the Clear seat), and the tokens on the board go back unscored.',
@@ -36,7 +36,7 @@ const RULES_TEXT = [
     ? '<b>Initiative</b> is reset after every round: whoever has the least spotlight on the table (Scored plus their tokens on the Board) bets first. Ties: fewer Story Points goes first, then the youngest player (the simulator: whoever went earlier).'
     : '<b>Initiative</b> is reset after every round, Kingdomino-style: whoever placed the fewest spotlight tokens that round picks first. Ties: less spotlight overall goes first, then the earlier player.',
   ...(SIM_RULES.rowOrder === 'initiative' ? ['Rows roll in <b>initiative order</b>: a Main player takes their initiative token with their pawn, and the rows roll by those numbers. A helped row rolls on its Main\u2019s number.'] : []),
-  ...(SIM_RULES.afterWin === 'safe' ? ['<b>The danger has passed:</b> once a row completes the situation, the rows still to roll still roll (successes place spotlight, which scores), but a miss costs nothing.'] : []),
+  ...(SIM_RULES.afterWin === 'safe' ? ['<b>The danger has passed:</b> once a row completes the situation, the rows still to roll still roll (successes ' + (SIM_RULES.takeSpotlight ? 'take' : 'place') + ' spotlight, which scores), but a miss costs nothing.'] : []),
   'Bots bet on their best row, ' + (SIM_RULES.maxStake ? 'stake about the margin they expect (one more when they’re behind), ' : '') + 'help when they can’t do better, clear a Minus die when both are out, invoke their Trouble when the Story Points is worth more than the −1, compel a rival who is ahead (or about to finish the situation) when it could cost them the roll, refuse a compel when the −1 hurts more than 1 Story Point, and spend Story Points (up to 2) to reach their stake, or else to dodge a failure.',
 ];
 
@@ -243,11 +243,12 @@ const minusList = board => board.minus.map(d => `➖${d.faces[d.value - 1]}`).jo
 // into that row with that approach is −1 (just that row). The Storyteller token sits by their
 // pawn, with the Obstacle die on top of it while it isn't on the Board.
 // What it costs `pl` going into `row` with `approach` (0 if it isn't there): 1, or with
-// obstacleCancels, their bonuses for that approach (Concept, Asset, the Scene die).
+// obstacleCancels, all their bonuses for that approach there (Concept, Asset, the Scene die, the ✓).
 function obstacleFor(board, row, approach, pl) {
   if (!(board.obstacle && row && board.obstacle.row === row.index && same(approach, board.obstacle.approach))) return 0;
   if (!SIM_RULES.obstacleCancels) return 1;
-  return bonusParts(pl, approach, row).reduce((sum, [, v]) => sum + Math.max(0, v), 0);
+  // Every bonus for that approach on that row: Concept, Asset, the Scene die and the row's ✓ +1.
+  return bonusParts(pl, approach, row).reduce((sum, [, v]) => sum + Math.max(0, v), 0) + Math.max(0, riskMod(row, approach));
 }
 
 // The Storyteller token passes to `pl`, and the Obstacle die comes back onto it.
@@ -284,7 +285,7 @@ function* placeObstacle(rows, board) {
     const i = yield ask('You are the Storyteller', '<p>Before anyone bets, put the Obstacle on one row. Which row is the other side guarding?</p>',
       rows.map(r => ({ label: rowTag(r), hint: `${r.action} · risks ${riskName(r.risk)}`, value: r.index })));
     row = rows[i];
-    approach = yield ask('Ready for which approach?', `<p>Going into ${rowTag(row)} with this approach will ${SIM_RULES.obstacleCancels ? '<b>lose its bonuses</b> (Concept, Asset, the Scene die)' : 'be <b>−1</b>'} this round. Say how the other side saw it coming.</p>`,
+    approach = yield ask('Ready for which approach?', `<p>Going into ${rowTag(row)} with this approach will ${SIM_RULES.obstacleCancels ? '<b>lose its bonuses</b> (Concept, Asset, Scene die and the row’s ✓)' : 'be <b>−1</b>'} this round. Say how the other side saw it coming.</p>`,
       APPROACHES.map(a => ({ label: a, hint: habits(a) ? `used so far: ${habits(a)}` : 'nobody has used it yet', value: a })));
   } else {
     const pick = obstacleBotPick(opp, rows, board);
@@ -301,7 +302,7 @@ function* placeObstacle(rows, board) {
   const uses = target && (target.approachUses || {})[approach];
   yield {
     title: `${opp.letter} is the Storyteller`,
-    html: `<p>${who(opp)} puts the <b>Obstacle</b> on ${rowTag(row)}: the other side is ready for ${approach}. Going in there ${approach} ${SIM_RULES.obstacleCancels ? '<b>gets no bonuses</b> (Concept, Asset, the Scene die)' : 'is <b>−1</b>'} this round.${uses ? ` (${who(target)} has gone in ${approach} ${uses} time${uses === 1 ? '' : 's'}.)` : ''}</p>`,
+    html: `<p>${who(opp)} puts the <b>Obstacle</b> on ${rowTag(row)}: the other side is ready for ${approach}. Going in there ${approach} ${SIM_RULES.obstacleCancels ? '<b>gets no bonuses</b> (Concept, Asset, Scene die and the row’s ✓)' : 'is <b>−1</b>'} this round.${uses ? ` (${who(target)} has gone in ${approach} ${uses} time${uses === 1 ? '' : 's'}.)` : ''}</p>`,
   };
 }
 
@@ -587,15 +588,18 @@ function* playSituation(situation, act, label = act) {
       row.plan = null;
       if ([row.main, ...row.helpers].some(p => p.human)) {
         row.plan = yield* humanEdgePlan(row, fateOf(row.approach), difficulty, board);
-        const pushN = row.main.human && row.plan ? pushPoints(row, row.plan.margin) : 0;
-        if (pushN) {
+        // Succeed at a cost: you choose how many points of the row's resource to spend (+1 each), up
+        // to all you have, whenever the roll would miss.
+        if (row.plan && row.plan.pushChosen !== undefined) { row.plan.push = row.plan.pushChosen; row.plan.margin += row.plan.push; }
+        const most = row.main.human && row.plan && row.plan.pushChosen === undefined && row.plan.margin < 1 ? pushMax(row) : 0;
+        if (most) {
           const have = row.main.res[row.risk];
-          const after = row.plan.margin + pushN;
+          const outcome = m => (m >= 1 ? `a success by ${m}` : m <= -SIM_RULES.failBy ? 'still a failure' : 'a close call (nothing happens)');
           row.plan.push = yield ask('Succeed at a cost?',
-            `<p>The roll ${row.plan.margin === 0 ? 'ties the difficulty' : `misses by ${-row.plan.margin}`}. You can succeed at a cost: lower your ${row.risk} ${riskName(row.risk)} die from ${have} to ${have - pushN} for <b>+${pushN}</b>${have - pushN === 0 ? ' (that uses it up: the die leaves your sheet)' : ''}.</p>`,
-            [{ label: `Succeed at a cost: ${riskName(row.risk)} ${have} → ${have - pushN}`, hint: after >= 1 ? 'turns it into a success' : after <= -SIM_RULES.failBy ? 'still a failure' : after < 0 ? 'a failure becomes a minor failure' : 'a near miss', value: true },
-              { label: 'Leave it', hint: 'keep the resource', value: false }]);
-          if (row.plan.push) row.plan.margin += pushN;
+            `<p>The roll ${row.plan.margin === 0 ? 'ties the difficulty' : `misses by ${-row.plan.margin}`}. You can succeed at a cost: lower your ${row.risk} ${riskName(row.risk)} die (now ${have}) by as many points as you like, <b>+1 each</b>. Spent down to 0, the die leaves your sheet.</p>`,
+            [{ label: 'Leave it', hint: `${outcome(row.plan.margin)} · keep the resource`, value: 0 },
+              ...Array.from({ length: most }, (_, i) => i + 1).map(k => ({ label: `Spend ${k}: ${riskName(row.risk)} ${have} → ${have - k}`, hint: outcome(row.plan.margin + k) + (have - k === 0 ? ' · uses it up' : ''), value: k }))]);
+          row.plan.margin += row.plan.push;
         }
         const boon = row.main.zones.boon.occupant;
         const carried = row.main.zones.bane && row.main.zones.bane.occupant;
@@ -1096,6 +1100,19 @@ function* humanEdgePlan(row, fate, difficulty, board) {
   const max = Math.min(human.edge.length, cap - used);
   const outcome = m => (m > 0 ? `a success by ${m}` : m <= -SIM_RULES.failBy ? 'a failure' : 'a close call (nothing happens)');
   let k = 0;
+  // The Main player picks Story Points and resource points together (+1 each), up to all they have.
+  const resMost = human === row.main ? pushMax(row) : 0;
+  if (human === row.main && (max > 0 || resMost > 0)) {
+    const sum = parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(' · ');
+    const pick = yield {
+      title: `Push the roll on ${rowLabel(row)}?`,
+      html: `<p>${sum} = ${before + difficulty} vs difficulty ${difficulty}: right now that’s <b>${outcome(before)}</b>.</p><p>Spend Story Points and / or succeed at a cost with your ${row.risk} ${riskName(row.risk)}: <b>+1 each</b>. A resource spent down to 0 leaves your sheet.</p>`,
+      spend: { base: before, sp: max, res: resMost, have: human.res[row.risk], resLabel: `${row.risk} ${riskName(row.risk)}`, failBy: SIM_RULES.failBy },
+    };
+    k = pick.sp;
+    if (k) plan.push([human, k]);
+    return { spend: plan, margin: before + k, pushChosen: pick.res };
+  }
   if (max > 0) {
     const sum = parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(' · ');
     k = yield ask(`Spend Story Points on ${rowLabel(row)}?`,
@@ -1149,12 +1166,13 @@ function resolveRow(row, fate, difficulty, target, board) {
   // Succeed at a cost (SIM_RULES.pushResource): lower the row's resource die, +1 per point.
   let pushNote = '';
   const missBy = total(parts) - difficulty;
-  const pushN = pushPoints(row, missBy);
-  if (pushN && (main.human ? !!(row.plan && row.plan.push) : botWantsPush(row, missBy, board))) {
+  // The human player chose how much (row.plan.push); a bot spends just enough to succeed.
+  const pushN = main.human ? (row.plan && row.plan.push) || 0 : pushPoints(row, missBy) && botWantsPush(row, missBy, board) ? pushPoints(row, missBy) : 0;
+  if (pushN) {
     const have = main.res[row.risk];
     setResource(main, row.risk, have - pushN);
     parts.push([`At a cost: ${row.risk} ${riskName(row.risk)}`, pushN]);
-    pushNote = `<p>${who(main)} succeeds at a cost, lowering their ${row.risk} ${riskName(row.risk)} from ${have} to ${have - pushN} for +${pushN}.</p>`;
+    pushNote = `<p>${who(main)} pays a cost: their ${row.risk} ${riskName(row.risk)} goes from ${have} to ${have - pushN} for +${pushN}${have - pushN === 0 ? ' (used up: the die leaves their sheet)' : ''}.</p>`;
   }
 
   // Now the roll is settled, the Edge waiting on the Trouble / Liability card goes to its owner.
@@ -1218,7 +1236,7 @@ function resolveRow(row, fate, difficulty, target, board) {
         if (SIM_RULES.overflowAtRowLimit && row.tokens.length >= target) e += gainEdge(h) ? 1 : 0; // row full: Edge instead
         else n += placeToken(h, row, true) ? 1 : 0;
       }
-      return [n ? `${who(h)} adds ${n}` : '', e ? `${who(h)} takes ${storyPts(e)} (the row is full)` : ''].filter(Boolean).join(' and ');
+      return [n ? `${who(h)} ${SIM_RULES.takeSpotlight ? 'takes' : 'adds'} ${n}` : '', e ? `${who(h)} takes ${storyPts(e)} (the row is full)` : ''].filter(Boolean).join(' and ');
     }).filter(Boolean);
     // A narrow success (SIM_RULES.narrowCost) still costs the row's resource, as a failure would.
     let narrowNote = '';
@@ -1233,7 +1251,7 @@ function resolveRow(row, fate, difficulty, target, board) {
     return {
       title: `${rowLabel(row)}: success`,
       html: `${attempt}<p>${sum}. <b>Beats it by ${margin}.</b></p>
-        <p>${who(main)} places ${placed} spotlight token${placed === 1 ? '' : 's'}${overflow ? ` (${SIM_RULES.overflowAtRowLimit && placed >= room ? 'all the row can take' : 'the most for one roll'}) and takes the ${overflow} left over as Story Points` : ''}${helped.length ? `; ${helped.join(', ')}` : ''}. That row is at ${row.tokens.length}/${target}.</p>${narrowNote}${boonNote}${stakeNote}`,
+        <p>${who(main)} ${SIM_RULES.takeSpotlight ? 'takes' : 'places'} ${placed} spotlight token${placed === 1 ? '' : 's'}${SIM_RULES.takeSpotlight ? ' from the row’s stack' : ''}${overflow ? ` (${SIM_RULES.overflowAtRowLimit && placed >= room ? 'all the row can take' : 'the most for one roll'}) and takes the ${overflow} left over as Story Points` : ''}${helped.length ? `; ${helped.join(', ')}` : ''}. That row is at ${row.tokens.length}/${target}.</p>${narrowNote}${boonNote}${stakeNote}`,
     };
   }
 
@@ -1330,9 +1348,11 @@ const EDGE_WORTH = 0.7; // bots: one Edge in hand, valued in spotlight
 // on a roll that would miss, never taking the die below 1 (0 = no push). With pushToSucceed,
 // exactly the points that turn the roll into a success (a tie needs 1, a miss by 1 needs 2), or
 // none if that's more than they can spare; otherwise 1 point.
+// The most a Main player could spend on succeeding at a cost: down to 0 (pushToZero), else to 1.
+const pushMax = row => (SIM_RULES.pushResource ? Math.min(SIM_RULES.maxPushPerRoll || Infinity, Math.max(0, row.main.res[row.risk] - (SIM_RULES.pushToZero ? 0 : 1))) : 0);
 function pushPoints(row, margin) {
   if (!SIM_RULES.pushResource || margin >= 1) return 0;
-  const spare = row.main.res[row.risk] - (SIM_RULES.pushToZero ? 0 : 1);
+  const spare = pushMax(row);
   const need = SIM_RULES.pushToSucceed ? 1 - margin : 1;
   return need <= spare ? need : 0;
 }
@@ -1800,6 +1820,7 @@ function simStep(choice) {
   sim.asking = !!value.ask;
   simChoices.innerHTML = '';
   simStepBtn.disabled = sim.asking;
+  if (value.spend) { sim.asking = true; simStepBtn.disabled = true; stopAuto(); renderSpendPicker(value.spend); return; }
   if (sim.asking) {
     stopAuto();
     value.ask.forEach(o => {
@@ -1809,6 +1830,34 @@ function simStep(choice) {
       simChoices.appendChild(b);
     });
   }
+}
+
+// Two counters (Story Points, the row's resource), − / + each, the outcome so far, and Confirm.
+function renderSpendPicker({ base, sp, res, have, resLabel, failBy }) {
+  const pick = { sp: 0, res: 0 };
+  const outcome = m => (m > 0 ? `a success by ${m}` : m <= -failBy ? 'a failure' : 'a close call (nothing happens)');
+  const box = el('div', 'spend-picker');
+  const line = (key, label, max, note) => {
+    const row = el('div', 'spend-row', `<span class="spend-label">${label}</span><button type="button" class="spend-btn" data-d="-1">−</button><b class="spend-n">0</b><button type="button" class="spend-btn" data-d="1">+</button><small class="spend-note"></small>`);
+    const n = row.querySelector('.spend-n'), small = row.querySelector('.spend-note');
+    const draw = () => { n.textContent = pick[key]; small.textContent = note(pick[key]); };
+    row.querySelectorAll('.spend-btn').forEach(b => b.addEventListener('click', () => { pick[key] = Math.max(0, Math.min(max, pick[key] + +b.dataset.d)); draw(); update(); }));
+    draw();
+    return row;
+  };
+  const result = el('div', 'spend-result');
+  const confirm = el('button', 'sim-choice spend-confirm', '<span>Confirm</span>');
+  confirm.type = 'button';
+  const update = () => { result.innerHTML = `Total <b>+${pick.sp + pick.res}</b>: ${outcome(base + pick.sp + pick.res)}`; };
+  if (sp > 0) box.appendChild(line('sp', 'Story Points', sp, k => `of ${sp}`));
+  if (res > 0) box.appendChild(line('res', resLabel, res, k => `die ${have} → ${have - k}${have - k === 0 ? ' (used up)' : ''}`));
+  box.append(result, confirm);
+  update();
+  confirm.addEventListener('click', () => {
+    sim.chosen = [pick.sp ? storyPts(pick.sp) : '', pick.res ? `${pick.res} ${resLabel}` : ''].filter(Boolean).join(' and ') || 'nothing';
+    simStep({ ...pick });
+  });
+  simChoices.appendChild(box);
 }
 
 function stopAuto() {

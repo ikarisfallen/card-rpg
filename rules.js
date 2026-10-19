@@ -5,7 +5,7 @@
 
 const SIM_RULES = {
   acts: ['Beginning', 'Middle', 'Ending'],
-  difficulty: { 'Beginning': 2, 'Middle': 3, 'Ending': 4 }, // +1 each 2026-10-18 (risks as +1/-1, no Story Point cap, no minor failure)
+  difficulty: { 'Beginning': 1, 'Middle': 2, 'Ending': 3 }, // back down 2026-10-18 once spending was capped (1 Story Point + 2 resource points per roll)
   failBy: 2,          // missing the difficulty by this much or more is a failure
   maxEscalations: 2,  // the failure after the last Escalation loses the situation
   helperShare: 1,     // spotlight tokens each helper places when the Main player succeeds
@@ -41,7 +41,8 @@ const SIM_RULES = {
   rowOrder: 'initiative', // rows roll in their Main's initiative order ('abc': A, B, C)
   afterWin: 'safe',       // once a row completes the situation, the other rows still roll but a miss costs nothing
   minusNextRound: true, // a new Minus die only counts from the next round (all rows roll against the same box) // true: several failures on one Fate card only escalate once
-  maxEdgePerBet: 0,   // Edge a Main player may spend on one roll (0 = no limit; was 2 until 2026-10-18)
+  maxEdgePerBet: 1,   // Story Points a Main player may spend on one roll (0 = no limit)
+  maxPushPerRoll: 2,  // resource points they may spend on one roll, succeeding at a cost (0 = no limit)
   maxEdgeHeld: 0,     // the most Edge one player may hold (0 = no limit)
   clearSpotlight: 0,  // spotlight banked for clearing a Minus die, as well as 1 Edge (the Clear seat's
                       // "holding the line" is reward enough: with 1, clearers ended ~1.4 above average)
@@ -66,7 +67,7 @@ const SIM_RULES = {
   // Asset shield (test): a Main player who fails may discard their Asset to keep the resource and
   // skip the Liability (the Escalation, Edge and any lost stake still happen).
   boonShield: 'heal', // 'heal': still lose the resource, but no new Liability and the carried one is discarded; true: keep the resource too  // true: Liabilities clear at the end of each act; false: a Liability stays until removed
-  edgeAtActStart: { 'Beginning': 1, 'Middle': 2, 'Ending': 3 }, // Edge every player takes as the act begins
+  edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 }, // Story Points every player takes as an act begins (none since 2026-10-18)
   maxStake: 0,        // spotlight tokens a Main player may stake on their bet (stakes removed 2026-10-18: 0)
   stakeLostOn: 'miss', // 'miss': lost unless the bet succeeds; 'failure': only lost on a failure
   stakeNeedsMargin: false, // true: a stake of N only pays off if the bet beats the difficulty by N or more
@@ -170,17 +171,17 @@ const PLAYER_COUNT_RULES = {
   // 2 players: a tougher finale (difficulty 4) softened by 2 Edge, since there was no Edge left to cut.
   2: {
     target: { 'Beginning': 2, 'Middle': 3, 'Ending': 3 },
-    difficulty: { 'Beginning': 2, 'Middle': 3, 'Ending': 5 },
-    edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 4 }, // fewer Story Points (2026-10-18): more succeeding at a cost
+    difficulty: { 'Beginning': 1, 'Middle': 2, 'Ending': 4 },
+    edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 }, // no Story Points at act start (2026-10-18)
     // In the Ending a Main player may spend up to 3 Edge on a roll, not 2 (2026-10-18, for the
     // Obstacle: two players start the Ending with plenty of Edge the 2-per-roll limit kept unused).
   },
   3: {
     target: { 'Beginning': 3, 'Middle': 4, 'Ending': 5 },
-    edgeAtActStart: { 'Beginning': 0, 'Middle': 1, 'Ending': 3 }, // fewer Story Points (2026-10-18)
+    edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 }, // no Story Points at act start (2026-10-18)
     actWinBonus: { 'Beginning': { main: 2, helper: 0 }, 'Middle': { main: 2, helper: 0 }, 'Ending': { main: 4, helper: 0 } },
   },
-  4: { target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 1 } }, // fewer Story Points (2026-10-18)
+  4: { target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 } }, // no Story Points at act start (2026-10-18)
 };
 
 // Story Points (called Edge in the code): "1 Story Point", "2 Story Points".
@@ -201,9 +202,10 @@ const LENGTH_BASE = {
   // 2026-10-18: difficulty +1 in every act, the 3-player Middle a stack smaller, failures give only a
   // Liability, resources start at 4 and Story Points are 2 lower each act (Ending 2 / 3 / 2 at +1
   // stacks), so players succeed at a cost more (sim: Middle ~83 / 87 / 95%, Ending ~58 / 57 / 47%).
-  2: { stack: 2, endingSteps: 0, endingEdge: -2, edgePerExtra: 2 }, // Ending 0 at +1 stacks (resources spent to 0)
-  3: { stack: 3, endingSteps: 1, endingEdge: 1, edgePerExtra: 2, endingStack: -1, middleStack: -1 },
-  4: { stack: 4, endingSteps: 1, endingEdge: 3, edgePerExtra: 0 }, // Ending 3 (resources spent to 0)
+  // endingEdge / edgePerExtra: Story Points at the Ending's start (all 0 since 2026-10-18: no act-start Story Points).
+  2: { stack: 2, endingSteps: 0, endingEdge: 0, edgePerExtra: 0 },
+  3: { stack: 3, endingSteps: 1, endingEdge: 0, edgePerExtra: 0, endingStack: -1, middleStack: -1 },
+  4: { stack: 4, endingSteps: 1, endingEdge: 0, edgePerExtra: 0 },
 };
 function setGameLength(middles, extra) {
   GAME_LENGTH.middles = middles;
