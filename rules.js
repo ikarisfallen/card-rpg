@@ -45,7 +45,11 @@ const SIM_RULES = {
   maxPushPerRoll: 2,  // resource points they may spend on one roll, succeeding at a cost (0 = no limit)
   // Buy back resources (test 2026-10-19): on your turn, before betting, spend this many Story Points
   // to recover 1 point of a resource (never above its starting value; a used-up die returns). 0 = off.
-  recoverCost: 2,     // ON 2026-10-19 (with 2 Story Points + 2 resource points per roll)
+  // ON 2026-10-19 (replacing buy-back): each player heals this many resource points at the end of
+  // every act but the last, lowest resources first, up to healMax (6: a die's top). 0 = off.
+  actEndHeal: 2,
+  healMax: 6,
+  recoverCost: 0,     // buy-back (Story Points for resource points): off since 2026-10-19
   recoverMax: 'start', // how high buying back can take a die: 'start' (its starting value) or a number (6 = a die's top)
   extraMiddleEdge: 1, // in games with more than one Middle: Story Points for everyone at the start of Middle 2, 3, ...
   maxEdgeHeld: 0,     // the most Edge one player may hold (0 = no limit)
@@ -183,6 +187,7 @@ const PLAYER_COUNT_RULES = {
     target: { 'Beginning': 2, 'Middle': 3, 'Ending': 3 },
     difficulty: { 'Beginning': 1, 'Middle': 3, 'Ending': 3 },
     extraMiddleEdge: 3, // long games: 3 Story Points at Middle 2, 3, ... (1 wasn't enough at 2 players)
+    actEndHeal: 1, // test 2026-10-19: heal 1 point between acts at 2 players (2 made Acts II-III too easy)
     edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 }, // no Story Points at act start (2026-10-18)
     // In the Ending a Main player may spend up to 3 Edge on a roll, not 2 (2026-10-18, for the
     // Obstacle: two players start the Ending with plenty of Edge the 2-per-roll limit kept unused).
@@ -212,7 +217,7 @@ const LENGTH_BASE = {
   // Stacks: Beginning = stack, Middle = stack + extra + middleStack, Ending = stack + extra *
   // endingSteps + endingStack (extra is 1: the game is always three acts).
   // endingEdge / edgePerExtra: Story Points at the Ending's start (all 0: no act-start Story Points).
-  2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: 1 },  // 2 / 4 / 4
+  2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: 1, endingStack: 1 },  // 2 / 4 / 5
   3: { stack: 2, endingSteps: 1, endingEdge: 0, edgePerExtra: 0 },                  // 2 / 3 / 3
   4: { stack: 3, endingSteps: 2, endingEdge: 0, edgePerExtra: 0 },                  // 3 / 4 / 5
 };

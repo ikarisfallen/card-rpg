@@ -520,6 +520,7 @@ function* simGame() {
     used.add(pick);
     const situation = (pick.name || '').startsWith(`${act}:`) ? pick : { ...pick, name: `${act}: ${(pick.name || '').replace(prefix, '')}` };
     yield* playSituation(situation, act, actLabel(i));
+    if (playerRule('actEndHeal') && i < SIM_RULES.acts.length - 1) yield* healBetweenActs(players);
   }
 
   // Leftover Edge buys spotlight at the end: SIM_RULES.endEdgePerSpotlight Edge for 1.
@@ -854,6 +855,30 @@ function botRecover(pl, rows) {
     html += recoverResource(pl, res);
   }
   return html;
+}
+
+// Between acts (SIM_RULES.actEndHeal): each player puts some resource points back wherever they
+// like, up to SIM_RULES.healMax (or their starting values); a used-up die comes back. You choose
+// for each point; bots put theirs on their lowest resources.
+function* healBetweenActs(players) {
+  const cap = (pl, r) => SIM_RULES.healMax || pl.resStart[r];
+  const notes = [];
+  for (const pl of players) {
+    const got = [];
+    for (let n = 0; n < playerRule('actEndHeal'); n++) {
+      const open = Object.keys(pl.res).filter(r => pl.res[r] < cap(pl, r));
+      if (!open.length) break;
+      const res = pl.human
+        ? yield ask(`Catch your breath (${n + 1} of ${playerRule('actEndHeal')})`,
+          `<p>Between acts you get back ${playerRule('actEndHeal')} resource point${playerRule('actEndHeal') === 1 ? '' : 's'}: put each one wherever you like (up to ${SIM_RULES.healMax || 'its starting value'}).</p>`,
+          open.map(r => ({ label: `${r} ${riskName(r)}`, hint: `${pl.res[r]} → ${pl.res[r] + 1}${pl.res[r] === 0 ? ' (back on your sheet)' : ''}`, value: r })))
+        : open.sort((a, b) => pl.res[a] - pl.res[b])[0];
+      setResource(pl, res, pl.res[res] + 1);
+      got.push(res);
+    }
+    if (got.length) notes.push(`${who(pl)} ${got.join(' ')}`);
+  }
+  yield { title: 'Catching your breath', html: `<p>Between acts everyone gets back ${playerRule('actEndHeal')} resource point${playerRule('actEndHeal') === 1 ? '' : 's'}, wherever they like.</p><p>${notes.join(' · ') || 'Nobody needs to.'}</p>` };
 }
 
 function betPrelude(pl) {
