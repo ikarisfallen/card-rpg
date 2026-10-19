@@ -10,39 +10,6 @@ const THEMES = {
 };
 let DATA = THEMES.noir.data;
 const APPROACHES = window.GAME_DATA.approaches;
-// Each approach is shown as a coloured tag with its name, not its emoji (the data keeps the
-// emoji). Every text node that lands in the page gets its approach emoji swapped for a tag.
-const APPROACH_NAMES = ['Bold', 'Smart', 'Patient', 'Proud', 'Swift', 'Subtle']; // in APPROACHES order
-const APPROACH_RE = new RegExp(APPROACHES.map(a => a.replace(/\uFE0F/g, '') + '\uFE0F?').join('|'), 'g');
-const approachIndex = e => APPROACHES.findIndex(a => a.replace(/\uFE0F/g, '') === e.replace(/\uFE0F/g, ''));
-function tagApproaches(root) {
-  const skip = n => n.parentElement && n.parentElement.closest('option, script, style, textarea, .ap');
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const hits = [];
-  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-    APPROACH_RE.lastIndex = 0;
-    if (APPROACH_RE.test(n.nodeValue) && !skip(n)) hits.push(n);
-  }
-  hits.forEach(n => {
-    const frag = document.createDocumentFragment();
-    let last = 0;
-    n.nodeValue.replace(APPROACH_RE, (m, at) => {
-      if (at > last) frag.append(n.nodeValue.slice(last, at));
-      const i = approachIndex(m);
-      const tag = document.createElement('span');
-      tag.className = `ap ap-${i}`;
-      tag.textContent = APPROACH_NAMES[i];
-      frag.append(tag);
-      last = at + m.length;
-    });
-    if (last < n.nodeValue.length) frag.append(n.nodeValue.slice(last));
-    n.replaceWith(frag);
-  });
-}
-new MutationObserver(list => list.forEach(m => m.addedNodes.forEach(n => {
-  if (n.nodeType === 3) { if (n.parentNode) tagApproaches(n.parentNode); } else if (n.nodeType === 1) tagApproaches(n);
-}))).observe(document.documentElement, { childList: true, subtree: true });
-document.addEventListener('DOMContentLoaded', () => tagApproaches(document.body));
 // The six resources on the character sheet. A failure costs the row's resource ("Lost Time"),
 // and the approach used changes how much (Cost vs. Approaches): `good` guards it, `bad`
 // squanders it. Intel/Reputation are a pair (🕶️ vs 📢); the other four go round a loop where
@@ -56,6 +23,13 @@ const RISKS = {
   '⌛': { name: 'Time', good: '⚡', bad: '🐢' },       // Delayed
 };
 const RESOURCES = Object.keys(RISKS);
+// A resource as shown on the Situation cards and character sheets: the approach that guards it (+1)
+// under a 🔺, the one that squanders it (−1) under a 🔻, and its name underneath.
+function resourceBadge(res, note = '') {
+  const r = RISKS[res];
+  return `<span class="res-badge" title="${esc(r.name)}"><span class="res-grid"><span class="res-arrow">🔺</span><span class="res-arrow">🔻</span><span>${r.good}</span><span>${r.bad}</span></span>`
+    + `<span class="res-name res-${RESOURCES.indexOf(res)}">${esc(r.name)}</span>${note}</span>`;
+}
 const noVS16 = s => (s || '').replace(/️/g, ''); // emoji variation selectors vary between sources
 // What a failure costs with `approach` on a row that risks `risk`: 0, 1 or 2 (always 1 when
 // rows have a fixed approach).
@@ -591,7 +565,7 @@ const SHEET_COLS = [SHEET_COL, SHEET_COL, SHEET_COL];
 // for the Asset (off the board's left edge) and the Liability (off its right edge), each with its
 // rules in a dashed box running in from that edge, then the two rows of resources. Each resource
 // cell is its label plus a box just taller than the die; equal gaps between them all.
-const SHEET_HEAD = 48, SHEET_LABEL = 20, SHEET_ROW = 80, SHEET_GAP = 14, SHEET_PAD = 10, SHEET_PAD_TOP = 0;
+const SHEET_HEAD = 48, SHEET_LABEL = 74, SHEET_ROW = 80, SHEET_GAP = 14, SHEET_PAD = 10, SHEET_PAD_TOP = 0;
 const SHEET_CARDS = PC_CARD.h; // the Asset / Liability band
 const SHEET_CELL = SHEET_LABEL + SHEET_ROW;
 const SHEET_W = SHEET_COLS.reduce((a, b) => a + b, 0) + SHEET_PAD * 2;
@@ -625,7 +599,7 @@ function buildSheet(x, y, concept, trouble) {
     + head('➖', SIM_RULES.troubleInvoke ? (SIM_RULES.compelOnly ? `Trouble${SIM_RULES.compelRiskMatch ? ' (approach or risk)' : ''}: ${SIM_RULES.compelByStoryteller ? 'Storyteller' : 'others'} compel${SIM_RULES.compelByStoryteller ? 's' : ''} −1, +1 Story Pt` : 'Trouble: invoke / compel: −1, +Story Points') : 'Trouble: −1 on its approaches')));
   sheet.append(el('div', 'sheet-cards')); // the Asset / Liability band
   SHEET_LAYOUT.forEach(trio => trio.forEach(res => sheet.append(el('div', 'sheet-cell',
-    `<div class="sheet-label"><span class="sheet-ico">${res}</span><span class="sheet-res-name">${riskName(res)}</span></div><div class="sheet-box"></div>`))));
+    `<div class="sheet-label">${resourceBadge(res)}</div><div class="sheet-box res-box res-${RESOURCES.indexOf(res)}"></div>`))));
   addStatic(sheet, x, y);
 
   // The middle of a resource's box (under its label).
@@ -763,12 +737,7 @@ function choiceRiskHtml(risk) {
   if (SIM_RULES.riskModifier && SIM_RULES.freeApproach) {
     // One right-aligned column: the row's resource (icon, then name, as on the character sheets), then +1 with the approach that
     // guards it and −1 with the one that squanders it; the emoji line up down the right edge.
-    const res = SIM_RULES.failLiabilityOnly ? esc(r.name) : `${esc(r.name)} <span class="sit-risk-fail">(fail: −1)</span>`;
-    return `<span class="sit-risk mod stack" title="${esc(r.name)}">`
-      + `<span class="sit-risk-line res"><span class="sit-risk-emoji">${risk}</span><span class="sit-risk-name">${res}</span></span>`
-      + `<span class="sit-risk-line"><b>+1</b><span class="sit-risk-emoji">${r.good}</span></span>`
-      + `<span class="sit-risk-line"><b>−1</b><span class="sit-risk-emoji">${r.bad}</span></span>`
-      + '</span>';
+    return `<span class="sit-risk mod badge">${resourceBadge(risk, SIM_RULES.failLiabilityOnly ? '' : ' <span class="sit-risk-fail">(fail: −1)</span>')}</span>`;
   }
   return `<span class="sit-risk" title="Lost ${esc(r.name)}">`
     + (SIM_RULES.freeApproach ? `<span class="sit-risk-side"><b class="good">✓</b>${r.good}</span>` : '')
