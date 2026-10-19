@@ -715,11 +715,12 @@ function* playSituation(situation, act, label = act) {
           step.html += `<p><b>${rowTag(row)} completes the situation!</b> The danger has passed: the rows still to roll still roll for spotlight, but a miss costs nothing.</p>`;
         }
       }
+      // The pawns, approach die and cards stay put while the result shows, so the roll can be checked.
+      yield step;
       // The row is done: its pawns (and initiative token) go back to the wheel, so you can see who still has to go.
       [row.main, ...row.helpers].forEach(p => glide(p.pawn, p.pawnHome.x, p.pawnHome.y));
       if (SIM_RULES.freeApproach) dropApproachDie(row);
       if (row.main.initHome) { row.main.initToken.el.classList.remove('on-board'); glide(row.main.initToken, row.main.initHome.x, row.main.initHome.y); }
-      yield step;
       returnUsedCards(shown);
       if (TABLE.pendingSwap) { // the human player drew a second Asset or Liability
         const sw = TABLE.pendingSwap;
@@ -1142,10 +1143,17 @@ function* humanBet(pl, rows, board, difficulty) {
       let approach = null;
       if (SIM_RULES.freeApproach) {
         const score = a => total(bonusParts(pl, a)) + riskMod(row, a) - minusFor(board, a) - obstacleFor(board, row, a, pl);
+        // Where the bonus comes from: your cards, the Situation's ✓ / ✗, the Scene die, Minus dice, the Obstacle.
+        const scoreWords = a => {
+          const parts = bonusParts(pl, a), scene = total(parts.filter(([l]) => /^Scene/.test(l)));
+          const bits = [[`your cards`, total(parts) - scene], [`Situation ${riskMod(row, a) > 0 ? '✓' : '✗'}`, riskMod(row, a)], ['Scene die', scene],
+            ['Minus', -minusFor(board, a)], ['Obstacle', -obstacleFor(board, row, a, pl)]].filter(([, v]) => v);
+          return bits.length ? `${signed(score(a))}: ${bits.map(([l, v]) => `${l} ${signed(v)}`).join(' · ')}` : 'no bonus';
+        };
         approach = yield ask('Which approach?', `<p>How do you <i>${row.action}</i>? ${rowTag(row)} risks <b>${riskName(row.risk)}</b>: the approach you pick sets what a failure costs.</p>`,
           APPROACHES.map(a => ({
             label: a,
-            hint: `your cards ${signed(score(a))}${obstacleFor(board, row, a, pl) ? ` (Obstacle −${obstacleFor(board, row, a, pl)})` : ''}${SIM_RULES.failLiabilityOnly ? '' : ` · a failure costs ${lossWords(row, a)}`}${has(pl.info.trouble.approaches, a) ? ' · matches your Trouble' : ''}${bane && has(bane.card.approaches, a) ? ' · matches your Liability' : ''}`,
+            hint: `${scoreWords(a)}${SIM_RULES.failLiabilityOnly ? '' : ` · a failure costs ${lossWords(row, a)}`}${has(pl.info.trouble.approaches, a) ? ' · matches your Trouble' : ''}${bane && has(bane.card.approaches, a) ? ' · matches your Liability' : ''}`,
             value: a,
           })));
       }
