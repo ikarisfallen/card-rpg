@@ -23,7 +23,7 @@ const RULES_TEXT = [
   `Effort = ➕ Concept +1, ✔️ Asset +1, ${SIM_RULES.troubleInvoke ? '➖ Trouble −1 if invoked or compelled' : '➖ Trouble −1'}, ${SIM_RULES.sceneModifier ? `the Scene die ${sceneMod()} ${SIM_RULES.sceneBy === 'approach' ? 'if the roll uses its approach' : 'if their Concept or Asset shows its approach'}, ` : ''}${INVOKE_LINES ? 'invoked line +1, ' : ''}each helper +1, each Story Points spent +1, each Minus die showing the row\u2019s approach −1, plus the Fate number.`,
   ...(SIM_RULES.takeSpotlight ? ['<b>Taking spotlight:</b> spotlight tokens are neutral. Each situation starts with a stack in every row\u2019s Successes box, as many as it takes to win (the target). Scoring <b>takes</b> tokens from the row\u2019s stack into your <b>This scene</b> spot. The first row emptied completes the situation, and everyone\u2019s This scene tokens are scored. If the situation is lost, they go back to the pool unscored. Act bonuses' + (SIM_RULES.maxStake ? ', stake payouts' : '') + ' and cashed-in Story Points come from the pool.'] : []),
   'Beat the difficulty by N: the Main player puts N spotlight tokens on the row\u2019s Successes' + (SIM_RULES.maxTokensPerRoll ? ' (at most ' + SIM_RULES.maxTokensPerRoll + (SIM_RULES.overflowToEdge ? '; each point over that is 1 Story Point instead' : '') + ')' : '') + (SIM_RULES.overflowAtRowLimit ? ', but never more than the row still needs to win: each point over that is 1 Story Point instead (for a helper too, when the row is already full)' : '') + '; each helper adds 1.' + (SIM_RULES.endEdgePerSpotlight ? ' At the end of the game, every ' + SIM_RULES.endEdgePerSpotlight + ' leftover Story Points buy 1 spotlight. Why? Story Points are your pull over how the story goes. Whatever you never spent is still pull: when the story is told afterwards, it buys your character a bigger part in it.' : '') + (SIM_RULES.helpTokensSafe ? ' A helper\u2019s token is <b>safe</b> (ringed): it counts toward the row like any other, and if the situation is lost it still scores.' : ''),
-  ...(SIM_RULES.pushResource ? ['<b>Succeed at a cost:</b> after the Fate card, a Main player whose roll would miss may lower their die for the row’s resource by as many points as it takes to succeed, +1 each' + (SIM_RULES.pushToSucceed ? '' : ' (1 point at most)') + ', but never below 1.'] : []),
+  ...(SIM_RULES.pushResource ? ['<b>Succeed at a cost:</b> after the Fate card, a Main player whose roll would miss may lower their die for the row’s resource by as many points as it takes to succeed, +1 each' + (SIM_RULES.pushToSucceed ? '' : ' (1 point at most)') + (SIM_RULES.pushToZero ? '. A die spent down to 0 leaves the sheet: that resource is used up.' : ', but never below 1.')] : []),
   ...(SIM_RULES.obstacle ? ['<b>The Obstacle:</b> each round one player is the <b>Storyteller</b> (the seat passes clockwise every round). Before anyone bets, they set the Obstacle die to an approach and put it in one row’s Obstacle box, and say how the other side saw it coming: going into that row with that approach ' + (SIM_RULES.obstacleCancels ? '<b>loses its bonuses</b> (Concept, Asset, the Scene die) this round, so it only hurts a character leaning on that approach' : 'is <b>−1</b> this round') + '. The Storyteller still bets as usual.'] : []),
   ...(SIM_RULES.escalationChoice ? ['<b>Escalations:</b> when a Main player fails, they choose which of the Situation\u2019s two Escalations happens, and narrate it. The same one can happen again: that trouble just got really bad.'] : []),
   ...(SIM_RULES.minorFailure ? ['<b>Miss by 1: a minor failure.</b> The Main player and helpers each lose the row\u2019s resource (0, 1 or 2 by the approach), but nobody draws a Liability or takes Story Points, and the situation doesn\u2019t escalate.'] : []),
@@ -132,7 +132,7 @@ const riskPart = (row, approach) => { const v = riskMod(row, approach); return v
 const relFor = (pl, approach) => pl.info.rels.find(r => has(r.approaches, approach));
 
 function setResource(pl, res, value) {
-  if (value <= 0 && pl.res[res] > 0) { // knocked out: lose next turn, token flipped to OUT
+  if (SIM_RULES.loseTurnAtZero !== false && value <= 0 && pl.res[res] > 0) { // knocked out: lose next turn, token flipped to OUT
     pl.out = { res, skip: true };
     setOut(pl.initToken, true);
   }
@@ -140,6 +140,8 @@ function setResource(pl, res, value) {
   const die = pl.dice[res];
   setDieValue(die, Math.max(1, pl.res[res]));
   die.el.classList.toggle('depleted', pl.res[res] === 0);
+  // Spent down to 0 (pushToZero): the die leaves the sheet, that resource is used up.
+  if (SIM_RULES.pushToZero) die.el.style.visibility = pl.res[res] === 0 ? 'hidden' : '';
   pulse(die);
 }
 
@@ -590,7 +592,7 @@ function* playSituation(situation, act, label = act) {
           const have = row.main.res[row.risk];
           const after = row.plan.margin + pushN;
           row.plan.push = yield ask('Succeed at a cost?',
-            `<p>The roll ${row.plan.margin === 0 ? 'ties the difficulty' : `misses by ${-row.plan.margin}`}. You can succeed at a cost: lower your ${row.risk} ${riskName(row.risk)} die from ${have} to ${have - pushN} for <b>+${pushN}</b>.</p>`,
+            `<p>The roll ${row.plan.margin === 0 ? 'ties the difficulty' : `misses by ${-row.plan.margin}`}. You can succeed at a cost: lower your ${row.risk} ${riskName(row.risk)} die from ${have} to ${have - pushN} for <b>+${pushN}</b>${have - pushN === 0 ? ' (that uses it up: the die leaves your sheet)' : ''}.</p>`,
             [{ label: `Succeed at a cost: ${riskName(row.risk)} ${have} → ${have - pushN}`, hint: after >= 1 ? 'turns it into a success' : after <= -SIM_RULES.failBy ? 'still a failure' : after < 0 ? 'a failure becomes a minor failure' : 'a near miss', value: true },
               { label: 'Leave it', hint: 'keep the resource', value: false }]);
           if (row.plan.push) row.plan.margin += pushN;
@@ -1330,7 +1332,7 @@ const EDGE_WORTH = 0.7; // bots: one Edge in hand, valued in spotlight
 // none if that's more than they can spare; otherwise 1 point.
 function pushPoints(row, margin) {
   if (!SIM_RULES.pushResource || margin >= 1) return 0;
-  const spare = row.main.res[row.risk] - 1;
+  const spare = row.main.res[row.risk] - (SIM_RULES.pushToZero ? 0 : 1);
   const need = SIM_RULES.pushToSucceed ? 1 - margin : 1;
   return need <= spare ? need : 0;
 }

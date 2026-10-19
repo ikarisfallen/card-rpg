@@ -20,7 +20,11 @@ const SIM_RULES = {
   // ON 2026-10-18: a failure only gives the Main player a Liability (plus the Escalation); nobody
   // loses resources, which are only spent to succeed at a cost.
   failLiabilityOnly: true,
-  resourceStart: 4, // each resource die's starting value (+1 Concept, -1 Trouble); was 2 until 2026-10-18
+  resourceStart: 3, // each resource die's starting value (+1 Concept, -1 Trouble); spent down to 0
+  // Succeed at a cost may spend a resource down to 0 (its die leaves the sheet: used up); there's no
+  // lost turn for running out (2026-10-18). false: never below 1, and 0 loses your next turn.
+  pushToZero: true,
+  loseTurnAtZero: false,
   failPickLossNoBane: true, // the choice only while you don't already have a Liability (else: lose the resource)
   overflowAtRowLimit: true,  // a row takes only the tokens it needs to win; the rest of the margin is Edge
   endEdgePerSpotlight: 2, // at the end of the game, this many leftover Edge buy 1 spotlight (0 = off)
@@ -197,9 +201,9 @@ const LENGTH_BASE = {
   // 2026-10-18: difficulty +1 in every act, the 3-player Middle a stack smaller, failures give only a
   // Liability, resources start at 4 and Story Points are 2 lower each act (Ending 2 / 3 / 2 at +1
   // stacks), so players succeed at a cost more (sim: Middle ~83 / 87 / 95%, Ending ~58 / 57 / 47%).
-  2: { stack: 2, endingSteps: 0, endingEdge: 0, edgePerExtra: 2 },
+  2: { stack: 2, endingSteps: 0, endingEdge: -2, edgePerExtra: 2 }, // Ending 0 at +1 stacks (resources spent to 0)
   3: { stack: 3, endingSteps: 1, endingEdge: 1, edgePerExtra: 2, endingStack: -1, middleStack: -1 },
-  4: { stack: 4, endingSteps: 1, endingEdge: 2, edgePerExtra: 0 },
+  4: { stack: 4, endingSteps: 1, endingEdge: 3, edgePerExtra: 0 }, // Ending 3 (resources spent to 0)
 };
 function setGameLength(middles, extra) {
   GAME_LENGTH.middles = middles;
@@ -208,7 +212,7 @@ function setGameLength(middles, extra) {
   for (const [n, b] of Object.entries(LENGTH_BASE)) {
     const r = PLAYER_COUNT_RULES[n];
     r.target = { Beginning: b.stack, Middle: b.stack + extra + (b.middleStack || 0), Ending: Math.max(1, b.stack + extra * b.endingSteps + (b.endingStack || 0)) };
-    r.edgeAtActStart = { ...r.edgeAtActStart, Ending: b.endingEdge + b.edgePerExtra * extra };
+    r.edgeAtActStart = { ...r.edgeAtActStart, Ending: Math.max(0, b.endingEdge + b.edgePerExtra * extra) };
   }
 }
 setGameLength(GAME_LENGTH.middles, GAME_LENGTH.extra);
