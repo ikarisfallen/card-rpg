@@ -47,6 +47,7 @@ const EL_GAP = 20;
 const LOC_CARD = { w: 620, h: 336 }; // the Location card: an index card (5 x 3), landscape
 const elSize = kind => (kind === 'location' ? LOC_CARD : EL_CARD);
 const PEEK = 44; // how much of a tucked name card shows above the card it's under
+const STACK_PEEK = 46; // a second Asset / Liability shows this much below the first: its approach icon
 const PORTRAIT_TUCK = 30; // how much of a portrait card slides under the Asset's name card
 
 // ---------------------------------------------------------------------------
@@ -1325,6 +1326,8 @@ function deal(mode = 'deal') {
   TABLE.cell = cell;
   const boardBottom = ROW2 + MAT_TOP + MAT_ROW * 3 + MAT_FOOT + MAT_PAD;
   TABLE.lostAt = { x: BOARD_X + 130, y: boardBottom + 12 };
+  // Where a resolved roll's cards are shown: a line centred under the Board, overlapping its bottom edge.
+  TABLE.showcaseAt = { x: BOARD_X + MAT_W / 2, y: boardBottom - 70 };
   if (SIM_RULES.maxStake) { // only with stakes on
     countedLabel('Lost stakes', BOARD_X, boardBottom + 30, 'pair-label', 'spotlight',
       { x: TABLE.lostAt.x - 20, y: TABLE.lostAt.y - 40, w: 420, h: SPOTLIGHT_SIZE + 60 });
@@ -1486,7 +1489,9 @@ function deal(mode = 'deal') {
     // right), beside the board's lower half. Each label has its tokens just below it: stacks of
     // STORY_STACK / SCORE_STACK tokens, two side by side (a stack rises a few px per token, so
     // there's room above the first).
-    const pileLabelY = boonTop + PC_CARD.h + 12;
+    // Room for a second Asset / Liability peeking out under the first (SIM_RULES.stackCards).
+    const stackRoom = SIM_RULES.stackCards ? Math.max(0, (SIM_RULES.stackMax || 2) - 1) * STACK_PEEK : 0;
+    const pileLabelY = boonTop + PC_CARD.h + stackRoom + 12;
     const edgeLabelY = pileLabelY, scoreLabelY = pileLabelY;
     const edgeY = edgeLabelY + 26 + (STORY_STACK - 1) * 3;
     const scoreY = scoreLabelY + 26 + (SCORE_STACK - 1) * 4;
@@ -1620,25 +1625,10 @@ themeSelect.addEventListener('change', () => {
   fitView();
 });
 
-// ---- Game length pickers: how many Middles, and how much the stacks grow each act ----
-const middlesSelect = document.getElementById('middles-select');
-const extraSelect = document.getElementById('extra-select');
-middlesSelect.innerHTML = [0, 1, 2, 3].map(n => `<option value="${n}">${n === 0 ? 'No Middle' : `${n} Middle${n > 1 ? 's' : ''}`}</option>`).join('');
-extraSelect.innerHTML = [0, 1, 2].map(n => `<option value="${n}">Stacks +${n} per act</option>`).join('');
-function applyGameLength(middles, extra) {
-  setGameLength(middles, extra);
-  middlesSelect.value = String(middles);
-  extraSelect.value = String(extra);
-  try { localStorage.setItem('card-rpg-length', JSON.stringify({ middles, extra })); } catch { /* storage unavailable */ }
-}
-[middlesSelect, extraSelect].forEach(sel => sel.addEventListener('change', () => {
-  applyGameLength(+middlesSelect.value, +extraSelect.value);
-  deal('deal');
-  fitView();
-}));
-let savedLength = { middles: 1, extra: 1 };
-try { savedLength = { ...savedLength, ...JSON.parse(localStorage.getItem('card-rpg-length') || '{}') }; } catch { /* storage unavailable */ }
-applyGameLength(Math.max(0, Math.min(3, savedLength.middles | 0)), Math.max(0, Math.min(2, savedLength.extra | 0)));
+// The game is always three acts (Beginning, Middle, Ending) at the tuned stack sizes; the
+// game-length pickers were removed 2026-10-19 (setGameLength in rules.js still allows others).
+setGameLength(1, 1);
+try { localStorage.removeItem('card-rpg-length'); } catch { /* storage unavailable */ }
 
 let savedTheme = 'noir';
 try { savedTheme = localStorage.getItem('card-rpg-theme') || 'noir'; } catch { /* storage unavailable */ }

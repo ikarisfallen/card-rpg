@@ -898,7 +898,7 @@ html, body {
   gap: 10px;
 }
 
-#theme-select, #players-select, #middles-select, #extra-select {
+#theme-select, #players-select {
   min-height: 60px;
   padding: 0 48px 0 20px;
   border: 0;
@@ -911,7 +911,7 @@ html, body {
   cursor: pointer;
 }
 
-#theme-select option, #players-select option, #middles-select option, #extra-select option { color: #111; background: #fff; }
+#theme-select option, #players-select option { color: #111; background: #fff; }
 
 /* On narrow screens the button bar drops below the pickers instead of overlapping them. */
 @media (max-width: 1120px) {
@@ -1664,3 +1664,9 @@ body[data-theme="space"] #table {
 .spend-n { min-width: 22px; text-align: center; font-size: 18px; }
 .spend-note { min-width: 92px; opacity: 0.75; }
 .spend-result { padding: 4px 0; }
+
+/* An Asset's approach in its bottom left corner, a Liability's in its bottom right: stacked cards
+   peek out under one another, so every icon shows. */
+.pc-card.kind-boon .approach-row { justify-content: flex-start; padding-left: 4px; }
+.pc-card.kind-bane .approach-row { justify-content: flex-end; padding-right: 4px; }
+.pc-card:is(.kind-boon, .kind-bane) .approach-row { margin-top: auto; } /* always at the bottom, where a stacked card peeks out */

@@ -5,12 +5,12 @@
 
 const SIM_RULES = {
   acts: ['Beginning', 'Middle', 'Ending'],
-  difficulty: { 'Beginning': 1, 'Middle': 2, 'Ending': 3 }, // back down 2026-10-18 once spending was capped (1 Story Point + 2 resource points per roll)
+  difficulty: { 'Beginning': 1, 'Middle': 3, 'Ending': 3 }, // 2026-10-19: aiming at acts won ~90-100% / 70-80% / 50-70% (see LENGTH_BASE)
   failBy: 2,          // missing the difficulty by this much or more is a failure
   maxEscalations: 2,  // the failure after the last Escalation loses the situation
   helperShare: 1,     // spotlight tokens each helper places when the Main player succeeds
-  maxTokensPerRoll: 0,   // a success places at most this many spotlight tokens (0 = no cap)...
-  overflowToEdge: true,  // ...and each point of margin above it is 1 Edge from the pile instead
+  maxTokensPerRoll: 1,   // a success takes at most this many spotlight tokens (0 = no cap); 1 since 2026-10-19...
+  overflowToEdge: false, // ...true: each point of margin above it is 1 Story Point from the pile instead
   // Failing (the Main player): Edge taken = failEdgeMain + failEdgePerMinus per Minus die already
   // out; helpers always take 1. failPickLoss: lose the resource OR take a Liability, not both.
   failEdgeMain: 0,      // was 1 until 2026-10-18: a failure gives no Story Point
@@ -41,8 +41,13 @@ const SIM_RULES = {
   rowOrder: 'initiative', // rows roll in their Main's initiative order ('abc': A, B, C)
   afterWin: 'safe',       // once a row completes the situation, the other rows still roll but a miss costs nothing
   minusNextRound: true, // a new Minus die only counts from the next round (all rows roll against the same box) // true: several failures on one Fate card only escalate once
-  maxEdgePerBet: 1,   // Story Points a Main player may spend on one roll (0 = no limit)
+  maxEdgePerBet: 2,   // Story Points a Main player may spend on one roll (0 = no limit); 2 since 2026-10-19
   maxPushPerRoll: 2,  // resource points they may spend on one roll, succeeding at a cost (0 = no limit)
+  // Buy back resources (test 2026-10-19): on your turn, before betting, spend this many Story Points
+  // to recover 1 point of a resource (never above its starting value; a used-up die returns). 0 = off.
+  recoverCost: 2,     // ON 2026-10-19 (with 2 Story Points + 2 resource points per roll)
+  recoverMax: 'start', // how high buying back can take a die: 'start' (its starting value) or a number (6 = a die's top)
+  extraMiddleEdge: 1, // in games with more than one Middle: Story Points for everyone at the start of Middle 2, 3, ...
   maxEdgeHeld: 0,     // the most Edge one player may hold (0 = no limit)
   clearSpotlight: 0,  // spotlight banked for clearing a Minus die, as well as 1 Edge (the Clear seat's
                       // "holding the line" is reward enough: with 1, clearers ended ~1.4 above average)
@@ -57,6 +62,11 @@ const SIM_RULES = {
   banes: true,
   baneRemoveEdge: 2,
   baneClearAtActEnd: false,
+  // Test (2026-10-19): players keep every Asset and Liability they draw instead of swapping (the
+  // extra ones wait behind the slot's card). Each Asset showing the approach is +1; each Liability
+  // can be compelled. Burning an Asset avoids the new Liability (no longer shakes one off).
+  stackCards: true, // ON 2026-10-19, with stackMax 2
+  stackMax: 2, // with stackCards: the most of each a player may hold (0 = no limit); a new one past it swaps
   // Earned Assets (test): nobody starts with an Asset; a Main player who succeeds by boonMargin or
   // more draws one at random, and with one already keeps whichever they prefer.
   boonsEarned: false,
@@ -171,7 +181,8 @@ const PLAYER_COUNT_RULES = {
   // 2 players: a tougher finale (difficulty 4) softened by 2 Edge, since there was no Edge left to cut.
   2: {
     target: { 'Beginning': 2, 'Middle': 3, 'Ending': 3 },
-    difficulty: { 'Beginning': 1, 'Middle': 2, 'Ending': 4 },
+    difficulty: { 'Beginning': 1, 'Middle': 3, 'Ending': 3 },
+    extraMiddleEdge: 3, // long games: 3 Story Points at Middle 2, 3, ... (1 wasn't enough at 2 players)
     edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 }, // no Story Points at act start (2026-10-18)
     // In the Ending a Main player may spend up to 3 Edge on a roll, not 2 (2026-10-18, for the
     // Obstacle: two players start the Ending with plenty of Edge the 2-per-roll limit kept unused).
@@ -194,18 +205,16 @@ const storyPts = n => `${n} Story Point${n === 1 ? '' : 's'}`;
 // Ending's starting Edge grows with them. 1 Middle and +1 is the tuned game (2026-10-17).
 const GAME_LENGTH = { middles: 1, extra: 1 };
 const LENGTH_BASE = {
-  // Ending stacks retuned 2026-10-18 (sim, Ending ~47 / 46 / 54% won): 2 players 2/3/2, 3 players
-  // 3/4/4, 4 players 4/5/5 at +1 (the Ending grows with the Middles, not twice as fast).
-  // endingEdge +1 each (2026-10-18) to make up for the Storyteller's Obstacle.
-  // endingStack: added to the Ending's stacks (−1 at 3 players, 2026-10-18, for the Obstacle; at 2
-  // players −1 left a 1-success Ending, won 87%).
-  // 2026-10-18: difficulty +1 in every act, the 3-player Middle a stack smaller, failures give only a
-  // Liability, resources start at 4 and Story Points are 2 lower each act (Ending 2 / 3 / 2 at +1
-  // stacks), so players succeed at a cost more (sim: Middle ~83 / 87 / 95%, Ending ~58 / 57 / 47%).
-  // endingEdge / edgePerExtra: Story Points at the Ending's start (all 0 since 2026-10-18: no act-start Story Points).
-  2: { stack: 2, endingSteps: 0, endingEdge: 0, edgePerExtra: 0 },
-  3: { stack: 3, endingSteps: 1, endingEdge: 0, edgePerExtra: 0, endingStack: -1, middleStack: -1 },
-  4: { stack: 4, endingSteps: 1, endingEdge: 0, edgePerExtra: 0 },
+  // 2026-10-19: each success takes 1 token (maxTokensPerRoll 1), so the stacks count successful rolls
+  // and can rise act to act. With difficulty 1 / 3 / 3 the stacks below aim at acts won about
+  // 90-100% / 70-80% / 50-70%. With 2 Story Points + 2 resource points per roll, buy-back and up to
+  // 2 Assets / 2 Liabilities (2026-10-19 sim): 2p 100 / 78 / 71, 3p 100 / 64 / 69, 4p 100 / 81 / 68.
+  // Stacks: Beginning = stack, Middle = stack + extra + middleStack, Ending = stack + extra *
+  // endingSteps + endingStack (extra is 1: the game is always three acts).
+  // endingEdge / edgePerExtra: Story Points at the Ending's start (all 0: no act-start Story Points).
+  2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: 1 },  // 2 / 4 / 4
+  3: { stack: 2, endingSteps: 1, endingEdge: 0, edgePerExtra: 0 },                  // 2 / 3 / 3
+  4: { stack: 3, endingSteps: 2, endingEdge: 0, edgePerExtra: 0 },                  // 3 / 4 / 5
 };
 function setGameLength(middles, extra) {
   GAME_LENGTH.middles = middles;

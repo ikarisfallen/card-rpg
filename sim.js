@@ -100,6 +100,40 @@ function castLine(pl) {
 
 // The Asset in a character's slot right now (Assets can be earned and swapped during the game).
 const boonOf = pl => (pl.zones.boon.occupant ? pl.zones.boon.occupant.card : null);
+// Every Asset a player holds (SIM_RULES.stackCards: the slot's card plus the ones behind it).
+const boonsOf = pl => [boonOf(pl), ...(SIM_RULES.stackCards ? pl.moreBoons || [] : [])].filter(Boolean);
+// Every Liability piece (the extra ones stand in with the slot's card for its position).
+function banesOf(pl) {
+  const top = pl.zones.bane && pl.zones.bane.occupant;
+  if (!top) return [];
+  return [top, ...(SIM_RULES.stackCards ? (pl.moreBanes || []).map(card => ({ card, extra: true, el: top.el, x: top.x, y: top.y, w: top.w, h: top.h, children: [] })) : [])];
+}
+// Show a player's extra Assets / Liabilities as cards peeking out under the slot's card, each lower
+// by STACK_PEEK, so every card's approach icon (bottom left / bottom right) shows.
+function renderStacks(pl) {
+  (pl.stackPieces || []).forEach(removePiece);
+  pl.stackPieces = [];
+  if (!SIM_RULES.stackCards) return;
+  const show = (zone, cards) => {
+    const top = zone.occupant;
+    if (!top) return;
+    cards.forEach((card, i) => { const piece = placePcCard(card, zone.x, zone.y + STACK_PEEK * (i + 1), true); pl.stackPieces.push(piece); });
+    raise(top); // the slot's card stays on top
+  };
+  show(pl.zones.boon, pl.moreBoons || []);
+  if (pl.zones.bane) show(pl.zones.bane, pl.moreBanes || []);
+}
+
+// Remove one Liability: an extra one, or the slot's card (then the next extra one moves into the slot).
+function dropBane(pl, piece) {
+  if (piece.extra) { pl.moreBanes.splice(pl.moreBanes.indexOf(piece.card), 1); TABLE.bane.deck.push(piece.card); renderStacks(pl); return; }
+  returnBane(piece);
+  if (SIM_RULES.stackCards && pl.moreBanes && pl.moreBanes.length) {
+    const zone = pl.zones.bane, card = pl.moreBanes.shift();
+    snapTo(placePcCard(card, zone.x, zone.y, false), zone, false);
+  }
+  renderStacks(pl);
+}
 
 // `row`: the row being rolled (the Scene die counts if it's in that row's box); without one,
 // a bet being sized up (the Scene counts if the die is still free this round).
@@ -107,7 +141,7 @@ function bonusParts(pl, approach, row = null) {
   const parts = [];
   const boon = boonOf(pl);
   if (has(pl.info.concept.approaches, approach)) parts.push(['➕ Concept', 1]);
-  if (boon && has(boon.approaches, approach)) parts.push([`✔️ ${boon.text}`, 1]);
+  for (const b of boonsOf(pl)) if (has(b.approaches, approach)) parts.push([`✔️ ${b.text}`, 1]);
   if (!SIM_RULES.troubleInvoke && has(pl.info.trouble.approaches, approach)) parts.push(['➖ Trouble', -1]);
   // The Scene die: on a roll made with its approach ('approach'), or (old rule, 'character') on any
   // roll by a character whose Concept or Asset shows it.
@@ -121,6 +155,35 @@ function bonusParts(pl, approach, row = null) {
 }
 
 const total = parts => parts.reduce((s, [, v]) => s + v, 0);
+
+// When a row is resolved, the cards that counted line up across the bottom of the Board for
+// everyone to see (and count): the Concept and Assets showing the approach, a compelled Trouble
+// or Liability, and each helper's Relationship. They go back once the step is over.
+function showUsedCards(row) {
+  if (!TABLE.showcaseAt || !row.main) return [];
+  const pl = row.main, a = row.approach, list = [];
+  const add = p => { if (p && p.el && p.el.isConnected && !list.includes(p)) list.push(p); };
+  const extras = kind => (pl.stackPieces || []).filter(p => p.card.kind === kind);
+  const concept = pl.zones.concept.occupant;
+  if (concept && has(concept.card.approaches, a)) add(concept);
+  [pl.zones.boon.occupant, ...extras('boon')].forEach(p => p && has(p.card.approaches, a) && add(p));
+  const hits = row.hits || [];
+  if (hits.some(h => /Trouble/.test(h))) add(pl.zones.trouble.occupant);
+  if (hits.some(h => /Liability/.test(h))) [pl.zones.bane && pl.zones.bane.occupant, ...extras('bane')].forEach(p => p && has(p.card.approaches, a) && add(p));
+  row.helpers.forEach(h => { const rel = relFor(h, a); const z = (TABLE.relZones || []).find(z => z.occupant && z.occupant.card === rel); if (z) add(z.occupant); });
+  const gap = 12, w = PC_CARD.w, x0 = TABLE.showcaseAt.x - (list.length * w + (list.length - 1) * gap) / 2;
+  // Name cards (first / last name, an Asset's description) stay behind: unhook them while on show.
+  list.forEach((p, i) => { p.showHome = { x: p.x, y: p.y }; p.showChildren = p.children; p.children = []; glide(p, x0 + i * (w + gap), TABLE.showcaseAt.y); raise(p); });
+  return list;
+}
+function returnUsedCards(list) {
+  list.forEach(p => {
+    if (p.el && p.el.isConnected && p.showHome) glide(p, p.showHome.x, p.showHome.y);
+    if (p.showChildren) { p.children = p.showChildren; p.showChildren = null; }
+  });
+  // The slot's Asset / Liability back on top of any stacked under it.
+  TABLE.players.forEach(pl => [pl.zones.boon.occupant, pl.zones.bane && pl.zones.bane.occupant].forEach(o => o && raise(o)));
+}
 // The row's risk as a bonus (SIM_RULES.riskModifier): +1 with the approach that guards its
 // resource (✓ on the Situation card), -1 with the one that squanders it (✗), else 0.
 function riskMod(row, approach) {
@@ -431,6 +494,8 @@ function* simGame() {
     pl.initHome = { x: pl.initToken.x, y: pl.initToken.y };
     pl.info = readPlayer(pl);
     pl.res = Object.fromEntries(Object.entries(pl.dice).map(([res, die]) => [res, die.value]));
+    pl.resStart = { ...pl.res }; // buying back resources never goes above these
+    pl.moreBoons = []; pl.moreBanes = []; renderStacks(pl);
     pl.score = 0;
     pl.out = null;
     pl.approachUses = {};
@@ -515,7 +580,9 @@ function* playSituation(situation, act, label = act) {
   TABLE.target = target; // for the bots' reckoning during this act
 
   // Later acts hand everyone some Edge to face the higher difficulty.
-  const bonus = playerRule('edgeAtActStart')[act] || 0;
+  // ...plus, in a longer game, Story Points at the start of each extra Middle (Middle 2, 3, ...).
+  const extraMiddle = act === 'Middle' && /\d/.test(label) && !/Middle 1$/.test(label);
+  const bonus = (playerRule('edgeAtActStart')[act] || 0) + (extraMiddle ? playerRule('extraMiddleEdge') || 0 : 0);
   let edgeNote = '';
   if (bonus) {
     const short = [], full = [];
@@ -617,6 +684,7 @@ function* playSituation(situation, act, label = act) {
             [{ label: 'Burn it', hint: carried ? 'no Liability, and heal' : 'no Liability', value: true }, { label: 'Keep it', hint: 'take the Liability', value: false }]);
         }
       }
+      const shown = showUsedCards(row); // the cards behind this roll, lined up under the Board
       const step = resolveRow(row, fateOf(row.approach), difficulty, target, board);
       if (step.failed) {
         if (SIM_RULES.oneEscalationPerSpin && escalatedThisSpin) {
@@ -651,6 +719,7 @@ function* playSituation(situation, act, label = act) {
       if (SIM_RULES.freeApproach) dropApproachDie(row);
       if (row.main.initHome) { row.main.initToken.el.classList.remove('on-board'); glide(row.main.initToken, row.main.initHome.x, row.main.initHome.y); }
       yield step;
+      returnUsedCards(shown);
       if (TABLE.pendingSwap) { // the human player drew a second Asset or Liability
         const sw = TABLE.pendingSwap;
         TABLE.pendingSwap = null;
@@ -766,6 +835,27 @@ const ask = (title, html, options) => ({ title, html, ask: options });
 
 // Losing a turn (a resource at 0), or coming back from one. Returns { step } if the player sits
 // this round out, else { recovered } (the "back in the game" note, if any).
+// Buy back a resource (SIM_RULES.recoverCost): Story Points for 1 point of a resource, up to its start.
+const recoverCap = (pl, res) => (SIM_RULES.recoverMax === 'start' ? pl.resStart[res] : SIM_RULES.recoverMax);
+const canRecover = (pl, res) => SIM_RULES.recoverCost > 0 && pl.edge.length >= SIM_RULES.recoverCost && pl.res[res] < recoverCap(pl, res);
+function recoverResource(pl, res) {
+  for (let i = 0; i < SIM_RULES.recoverCost; i++) spendEdge(pl);
+  const was = pl.res[res];
+  setResource(pl, res, was + 1);
+  return `<p>${who(pl)} spends ${storyPts(SIM_RULES.recoverCost)} to recover their ${res} ${riskName(res)} (${was} → ${was + 1}${was === 0 ? ': the die is back on their sheet' : ''}).</p>`;
+}
+// A bot buys back the resources this situation's rows risk, lowest first, keeping 1 Story Point in hand.
+function botRecover(pl, rows) {
+  let html = '';
+  const wanted = [...new Set(rows.map(r => r.risk))];
+  for (let n = 0; n < 4; n++) {
+    const res = wanted.filter(r => canRecover(pl, r) && pl.edge.length >= SIM_RULES.recoverCost + 1).sort((a, b) => pl.res[a] - pl.res[b])[0];
+    if (!res) break;
+    html += recoverResource(pl, res);
+  }
+  return html;
+}
+
 function betPrelude(pl) {
   if (pl.out && pl.out.skip) {
     pl.out.skip = false;
@@ -801,7 +891,7 @@ function takeClearSeat(pl, rows, board, recovered) {
 }
 
 function patchUp(pl, bane, recovered) {
-  returnBane(bane);
+  dropBane(pl, bane);
   return {
     title: `${pl.letter} patches themselves up`,
     html: `${recovered}<p>${who(pl)} gives up their bet this round to deal with their Liability ${baneName(bane)}: back into the deck.</p>`,
@@ -810,7 +900,7 @@ function patchUp(pl, bane, recovered) {
 
 function shakeOffBane(pl, bane) {
   for (let i = 0; i < SIM_RULES.baneRemoveEdge; i++) spendEdge(pl);
-  returnBane(bane);
+  dropBane(pl, bane);
   return `<p>${who(pl)} spends ${storyPts(SIM_RULES.baneRemoveEdge)} to shake off their Liability ${baneName(bane)}: back into the deck.</p>`;
 }
 
@@ -929,7 +1019,7 @@ function passTurn(pl, recovered, why = 'has nothing useful to bet on and sits th
 function bet(pl, rows, board, difficulty, isLast = false) {
   const pre = betPrelude(pl);
   if (pre.step) return pre.step;
-  let recovered = pre.recovered;
+  let recovered = pre.recovered + (SIM_RULES.recoverCost ? botRecover(pl, rows) : '');
 
   const free = rows.filter(r => !r.main);
   // Each free row with each approach it could be played with (just its own without freeApproach).
@@ -1015,12 +1105,14 @@ function* humanBet(pl, rows, board, difficulty) {
       ...(seatFree ? [{ label: 'Clear box', hint: 'hold the line, and remove a Minus die at the end of the round (+1 Story Point)', value: ['clear'] }] : []),
       ...(bane && pl.edge.length >= SIM_RULES.baneRemoveEdge ? [{ label: `Shake off your Liability (${storyPts(SIM_RULES.baneRemoveEdge)})`, hint: `discard ${bane.card.text}, then bet`, value: ['shake'] }] : []),
       ...(bane ? [{ label: 'Patch yourself up', hint: `give up your bet to discard ${bane.card.text}`, value: ['patch'] }] : []),
+      ...Object.keys(pl.res).filter(r => canRecover(pl, r)).map(r => ({ label: `Recover ${r} ${riskName(r)} (${storyPts(SIM_RULES.recoverCost)})`, hint: `${pl.res[r]} → ${pl.res[r] + 1}, then bet`, value: ['recover', r] })),
       { label: 'Pass', hint: 'sit this round out', value: ['pass'] },
     ];
     const status = `<p>You have <b>${pl.edge.length}</b> Story Points and <b>${pl.score}</b> scored spotlight${bane ? `, and you carry the Liability ${baneName(bane)}` : ''}. Difficulty <b>${difficulty}</b>.</p>`;
     const [what, i] = yield ask(`Your bet, ${pl.info.name}`, `${recovered}${status}<p>Where does your pawn go?</p>`, opts);
     const row = rows[i];
     if (what === 'shake') { recovered += shakeOffBane(pl, bane); continue; }
+    if (what === 'recover') { recovered += recoverResource(pl, i); continue; }
     if (what === 'main') {
       let approach = null;
       if (SIM_RULES.freeApproach) {
@@ -1275,7 +1367,15 @@ function resolveRow(row, fate, difficulty, target, board) {
       ? (carried ? baneBite(carried, board.rows || []) >= 1 : !boonFits)
       : (main.res[row.risk] <= 1 || !boonFits)));
     let shieldText = '';
-    if (shield) {
+    if (shield && SIM_RULES.stackCards) {
+      // Several Assets: burn one (an extra one first) to avoid the new Liability; nothing else.
+      const card = main.moreBoons.length ? main.moreBoons.pop() : null;
+      if (!card) { leaveZone(boonPiece); [...boonPiece.children].forEach(removePiece); removePiece(boonPiece); }
+      if (TABLE.boonDeck) TABLE.boonDeck.push(card || boonPiece.card);
+      updateSceneBoard();
+      renderStacks(main);
+      shieldText = `${who(main)} discards their Asset, <b>${esc((card || boonPiece.card).text)}</b>, to shrug it off: no new Liability. `;
+    } else if (shield) {
       leaveZone(boonPiece);
       [...boonPiece.children].forEach(removePiece);
       removePiece(boonPiece);
@@ -1409,7 +1509,7 @@ function* troublePhase(rows, order, board, difficulty, target) {
     const row = rows.find(r => r.main === pl);
     if (!row) continue;
     const cards = [{ kind: 'Trouble', sign: '➖', piece: pl.zones.trouble.occupant }];
-    if (pl.zones.bane && pl.zones.bane.occupant) cards.push({ kind: 'Liability', sign: '✖️', piece: pl.zones.bane.occupant });
+    banesOf(pl).forEach(piece => cards.push({ kind: 'Liability', sign: '✖️', piece }));
     for (const c of cards) {
       // A match: the roll's approach is on the card, or (compelRiskMatch) the row risks the
       // resource shown on the card (Troubles show one).
@@ -1526,6 +1626,19 @@ function giveBane(pl, rows) {
   const card = deck.splice(randInt(deck.length), 1)[0];
   const name = baneName({ card });
   const old = pl.zones.bane.occupant;
+  if (old && SIM_RULES.stackCards && SIM_RULES.stackMax && banesOf(pl).length >= SIM_RULES.stackMax) {
+    // At the limit: keep the less harmful of the new one and the extra one held (bots).
+    const i = pl.moreBanes.length - 1, held = pl.moreBanes[i];
+    if (baneBite({ card }, rows) < baneBite({ card: held }, rows)) { pl.moreBanes[i] = card; deck.push(held); renderStacks(pl); pulse(old); return `<p>${who(pl)} draws the Liability ${name} and lets go of ${baneName({ card: held })} (at most ${SIM_RULES.stackMax}). How did that happen?</p>`; }
+    deck.push(card); pulse(old);
+    return `<p>${who(pl)} draws the Liability ${name}, but keeps the ones they have (at most ${SIM_RULES.stackMax}): it goes back in the deck.</p>`;
+  }
+  if (old && SIM_RULES.stackCards) {
+    pl.moreBanes.push(card);
+    renderStacks(pl);
+    pulse(old);
+    return `<p>${who(pl)} draws the Liability ${name}: they now carry ${banesOf(pl).length}. How did that happen?</p>`;
+  }
   if (old && pl.human) { // the human player chooses: see applySwap
     TABLE.pendingSwap = { kind: 'Liability', pl, card };
     return `<p>${who(pl)} draws the Liability ${name}. How did that happen? Keep it, or the one you have, ${baneName(old)}?</p>`;
@@ -1556,6 +1669,19 @@ function giveBoon(pl, rows) {
   const fit = c => rows.filter(r => has(c.approaches, r.approach)).length;
   const name = c => `<b>${esc(c.text)}</b> (✔️${c.approaches.join('')})`;
   const zone = pl.zones.boon, old = zone.occupant;
+  if (old && SIM_RULES.stackCards && SIM_RULES.stackMax && boonsOf(pl).length >= SIM_RULES.stackMax) {
+    // At the limit: keep the better of the new one and the extra one held (bots).
+    const i = pl.moreBoons.length - 1, held = pl.moreBoons[i];
+    if (fit(card) > fit(held)) { pl.moreBoons[i] = card; deck.push(held); renderStacks(pl); pulse(old); return `<p>${who(pl)} earns the Asset ${name(card)}, swapping out ${name(held)} (at most ${SIM_RULES.stackMax}).</p>`; }
+    deck.push(card); pulse(old);
+    return `<p>${who(pl)} draws the Asset ${name(card)}, but keeps the ones they have (at most ${SIM_RULES.stackMax}).</p>`;
+  }
+  if (old && SIM_RULES.stackCards) {
+    pl.moreBoons.push(card);
+    renderStacks(pl);
+    pulse(old);
+    return `<p>${who(pl)} earns the Asset ${name(card)}: they now hold ${boonsOf(pl).length}.</p>`;
+  }
   if (old && pl.human) { // the human player chooses: see applySwap
     TABLE.pendingSwap = { kind: 'Asset', pl, card };
     return `<p>${who(pl)} draws the Asset ${name(card)}: keep it, or the one you have, ${name(old.card)}?</p>`;
