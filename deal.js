@@ -115,213 +115,11 @@ function buildElementDeck(kind, label, group, backNames) {
 
 const KIND_LABEL = { concept: 'Concept', trouble: 'Trouble', boon: 'Asset', bane: 'Liability', relationship: 'Relationship' };
 
-// Small line drawings for Assets, between the name and the approach row. Drawn in the card's
-// accent colour (stroke = currentColor) on an 80 x 44 grid. Assets without art just leave the gap.
-const BOON_ART = {
-  'Zippo Lighter': `
-    <rect x="31" y="21" width="20" height="21" rx="2"/>
-    <path d="M31 21 v-7 h11 v7"/><path d="M42 14 l9 -3 v10"/>
-    <rect x="33" y="10" width="8" height="4"/>
-    <path d="M37 9 c-4 -4 0 -8 1 -9 c2 3 4 5 0 9" class="art-fill"/>`,
-  'Pocket Watch': `
-    <circle cx="44" cy="27" r="14"/><circle cx="44" cy="27" r="11" class="art-thin"/>
-    <rect x="41" y="9" width="6" height="4" rx="1"/><circle cx="44" cy="6" r="3"/>
-    <path d="M44 27 v-8 M44 27 l6 3"/>
-    <path d="M41 6 c-14 -2 -26 6 -32 20 c-2 6 2 10 6 8" class="art-thin" stroke-dasharray="2 3"/>`,
-  'Plasma Blade': `
-    <path d="M30 22 H76" class="art-glow"/><path d="M30 22 H76"/>
-    <rect x="8" y="18" width="20" height="8" rx="2"/><path d="M12 18 v8 M17 18 v8"/>
-    <path d="M28 14 v16"/>`,
-
-  // ---- Film Noir ----
-  'Silver Flask': `
-    <rect x="37" y="3" width="6" height="6" rx="1"/><path d="M36 14 l2 -5 h4 l2 5"/>
-    <rect x="27" y="14" width="26" height="27" rx="5"/>
-    <path d="M31 20 q2 -3 5 -2" class="art-thin"/>`,
-  'Trench Coat': `
-    <path d="M28 6 l12 6 l12 -6 l10 5 l-3 31 h-38 l-3 -31 z"/>
-    <path d="M28 6 l12 15 l12 -15"/><path d="M40 21 v21" class="art-thin"/>
-    <path d="M20 29 h40"/><rect x="37" y="27" width="6" height="4" class="art-thin"/>`,
-  'Dark Sunglasses': `
-    <path d="M13 15 h21 v6 a9 9 0 0 1 -9 9 h-3 a9 9 0 0 1 -9 -9 z" class="art-dark"/>
-    <path d="M46 15 h21 v6 a9 9 0 0 1 -9 9 h-3 a9 9 0 0 1 -9 -9 z" class="art-dark"/>
-    <path d="M34 17 q6 -4 12 0"/><path d="M13 15 l-6 -5 M67 15 l6 -5"/>`,
-  'Manila Envelope': `
-    <rect x="17" y="9" width="46" height="30" rx="2"/>
-    <path d="M17 9 l23 15 l23 -15"/><circle cx="40" cy="24" r="2.5"/>
-    <path d="M40 26.5 c-3 6 -9 8 -13 6" class="art-thin"/>`,
-  'Rotary Phone': `
-    <path d="M18 17 q22 -13 44 0 l-3 6 q-19 -8 -38 0 z"/>
-    <path d="M22 41 l5 -16 h26 l5 16 z"/>
-    <circle cx="40" cy="32" r="6"/><circle cx="40" cy="32" r="2" class="art-thin"/>`,
-  'Brass Knuckles': `
-    <circle cx="24" cy="17" r="6"/><circle cx="35.5" cy="17" r="6"/>
-    <circle cx="47" cy="17" r="6"/><circle cx="58.5" cy="17" r="6"/>
-    <path d="M18 21 q-2 9 7 16 h30 q9 -7 7 -16"/>`,
-  'Cigarette Case': `
-    <rect x="12" y="13" width="36" height="26" rx="3"/><path d="M12 20 h36" class="art-thin"/>
-    <path d="M18 27 h24 M18 33 h24" class="art-thin"/>
-    <path d="M48 30 h16"/><path d="M62 30 h3" class="art-glow"/>
-    <path d="M68 25 c3 -3 -2 -6 1 -10 c3 -3 -1 -6 1 -9" class="art-thin"/>`,
-  'Magnifying Glass': `
-    <circle cx="33" cy="17" r="12"/><path d="M26 12 a8 8 0 0 1 6 -3" class="art-thin"/>
-    <path d="M42 26 l15 14" class="art-thick"/>`,
-  'Folded Newspaper': `
-    <rect x="17" y="5" width="46" height="35" rx="1"/><path d="M21 11 h38" class="art-thick"/>
-    <path d="M21 19 h17 M21 24 h17 M21 29 h17 M21 34 h17" class="art-thin"/>
-    <rect x="42" y="18" width="17" height="17" class="art-thin"/>`,
-  'Leather Briefcase': `
-    <path d="M32 14 v-5 a2 2 0 0 1 2 -2 h12 a2 2 0 0 1 2 2 v5"/>
-    <rect x="15" y="14" width="50" height="28" rx="3"/><path d="M15 24 h50"/>
-    <rect x="37" y="21" width="6" height="6" rx="1" class="art-fill"/>`,
-
-  // ---- Space Opera ----
-  'Holo-map': `
-    <path d="M37 36 L23 8 M43 36 L57 8" class="art-thin"/>
-    <circle cx="40" cy="16" r="8" class="art-fill"/><ellipse cx="40" cy="16" rx="17" ry="4" class="art-thin"/>
-    <path d="M29 42 h22 l-3 -6 h-16 z"/>`,
-  'Stillsuit': `
-    <circle cx="40" cy="8" r="6"/>
-    <path d="M28 42 v-19 a12 9 0 0 1 24 0 v19"/>
-    <path d="M30 26 q10 4 20 0 M30 31 q10 4 20 0 M30 36 q10 4 20 0" class="art-thin"/>
-    <path d="M33 6 a8 8 0 0 1 14 0"/><path d="M37 11 c-5 4 -9 7 -10 14" class="art-thin"/>`,
-  'Blaster Pistol': `
-    <rect x="26" y="7" width="16" height="4" rx="1" class="art-thin"/>
-    <path d="M12 13 h42 v9 h-22 l-4 17 h-9 l2 -17 h-9 z"/>
-    <path d="M54 15 h13 v5 h-13"/><path d="M34 22 q2 7 -5 7" class="art-thin"/>`,
-  'Astromech Droid': `
-    <path d="M28 18 a12 12 0 0 1 24 0 z"/><circle cx="40" cy="11" r="2.5" class="art-dark"/>
-    <rect x="28" y="18" width="24" height="20" rx="2"/>
-    <path d="M32 24 h8 M32 29 h16" class="art-thin"/>
-    <path d="M24 20 v20 h-3 M56 20 v20 h3"/>`,
-  'Grappling Line': `
-    <path d="M56 6 v28"/><path d="M56 26 c0 9 -11 9 -13 2 M56 26 c0 9 11 9 13 2"/>
-    <circle cx="56" cy="5" r="2"/>
-    <path d="M54 5 c-12 -2 -22 4 -26 12 c-6 10 -16 12 -21 8" class="art-thin"/>`,
-  'Med-kit': `
-    <path d="M34 12 v-4 h12 v4"/><rect x="19" y="12" width="42" height="29" rx="4"/>
-    <path d="M40 19 v15 M32.5 26.5 h15" class="art-thick"/>`,
-  'Encrypted Datapad': `
-    <rect x="22" y="3" width="36" height="39" rx="4"/><rect x="27" y="8" width="26" height="25" rx="1" class="art-thin"/>
-    <path d="M36 20 v-3 a4 4 0 0 1 8 0 v3"/><rect x="34" y="20" width="12" height="9" rx="1" class="art-fill"/>
-    <circle cx="40" cy="37.5" r="1.5"/>`,
-  'Personal Shield': `
-    <path d="M40 3 l17 6 v12 c0 11 -8 17 -17 21 c-9 -4 -17 -10 -17 -21 v-12 z"/>
-    <path d="M40 9 l11 4 v8 c0 7 -5 11 -11 14" class="art-thin"/>
-    <path d="M14 14 q-4 8 0 16 M66 14 q4 8 0 16" class="art-thin"/>`,
-  'Smuggling Compartment': `
-    <path d="M6 20 h16 M58 20 h16"/><path d="M22 20 v20 h36 v-20" class="art-thin"/>
-    <rect x="26" y="28" width="13" height="12" class="art-fill"/><rect x="41" y="31" width="12" height="9" class="art-fill"/>
-    <path d="M22 20 L49 4"/>`,
-  'Signet Ring': `
-    <ellipse cx="40" cy="31" rx="19" ry="9"/><ellipse cx="40" cy="31" rx="14" ry="5" class="art-thin"/>
-    <path d="M27 24 l4 -10 h18 l4 10 z" class="art-fill"/><path d="M36 19 l4 -3 l4 3 l-4 3 z" class="art-thin"/>`,
-  'Hand Scanner': `
-    <path d="M42 13 L70 5 M42 21 L70 31" class="art-thin"/><path d="M70 5 v26" class="art-glow"/>
-    <path d="M14 9 h24 a4 4 0 0 1 4 4 v8 a4 4 0 0 1 -4 4 h-9 l-2 16 h-7 l-1 -16 h-5 a4 4 0 0 1 -4 -4 v-8 a4 4 0 0 1 4 -4 z"/>
-    <rect x="16" y="12" width="15" height="8" rx="1" class="art-fill"/>`,
-};
-
-// Liability art, same grid and style as BOON_ART (drawn in the Liability card's grey). Liabilities that aren't
-// objects get a symbol: a white flag for lost nerve, a ghost for visions, a snuffed candle...
-const BANE_ART = {
-  'Broken Leg': `
-    <rect x="28" y="4" width="12" height="29" rx="3"/><path d="M28 33 v6 h17 a3 3 0 0 0 -3 -6 z"/>
-    <path d="M28 11 h12 M28 18 h12 M28 25 h12" class="art-thin"/>
-    <path d="M55 4 l5 38 M50 5 h9 M56 21 h5"/>`,
-  'Cracked Ribs': `
-    <path d="M40 3 v39"/>
-    <path d="M40 10 c-10 0 -18 3 -19 9 M40 10 c10 0 18 3 19 9 M40 18 c-9 0 -16 3 -17 8 M40 18 c9 0 16 3 17 8 M40 26 c-7 0 -13 3 -14 7 M40 26 c7 0 13 3 14 7"/>
-    <path d="M55 9 l4 4 -4 3 4 4" class="art-thin"/>`,
-  'Out of Ammo': `
-    <circle cx="40" cy="22" r="16"/><circle cx="40" cy="22" r="3"/>
-    <circle cx="40" cy="12" r="3.5" class="art-thin"/><circle cx="48.7" cy="17" r="3.5" class="art-thin"/><circle cx="48.7" cy="27" r="3.5" class="art-thin"/>
-    <circle cx="40" cy="32" r="3.5" class="art-thin"/><circle cx="31.3" cy="27" r="3.5" class="art-thin"/><circle cx="31.3" cy="17" r="3.5" class="art-thin"/>`,
-  'Lost Your Lock Picks': `
-    <path d="M24 20 v-6 a9 9 0 0 1 18 0 v6"/><rect x="20" y="20" width="26" height="21" rx="3"/>
-    <circle cx="33" cy="28" r="2.5" class="art-dark"/><path d="M33 30 v5"/>
-    <path d="M52 34 L66 10 l4 2 M56 38 L70 16" class="art-thin" stroke-dasharray="2 3"/>`,
-  'Front-Page Scandal': `
-    <rect x="15" y="5" width="44" height="35" rx="1"/><path d="M19 11 h36 M19 17 h24" class="art-thick"/>
-    <path d="M19 24 h14 M19 29 h14 M19 34 h14" class="art-thin"/><rect x="37" y="23" width="18" height="13" class="art-fill"/>
-    <path d="M67 8 v18 M67 32 v2" class="art-thick"/>`,
-  'The Cops Are Watching': `
-    <path d="M10 22 q30 -24 60 0 q-30 24 -60 0 z"/>
-    <circle cx="40" cy="22" r="9" class="art-fill"/><circle cx="40" cy="22" r="4" class="art-dark"/>`,
-  'Lost Your Nerve': `
-    <path d="M26 42 V4"/>
-    <path d="M26 6 c8 -3 14 3 22 0 c6 -2 10 -1 12 0 v16 c-4 -2 -8 -2 -12 0 c-8 3 -14 -3 -22 0" class="art-fill"/>`,
-  'Drowning in Gin': `
-    <path d="M18 41 h15 v-21 l-3 -6 v-9 h-9 v9 l-3 6 z"/><path d="M18 27 h15" class="art-thin"/>
-    <path d="M44 16 h20 l-3 25 h-14 z"/><path d="M45 24 q4.5 -3 9 0 q4.5 3 9 0" class="art-thin"/>
-    <path d="M38 10 l3 -3 M40 16 l4 -1" class="art-thin"/>`,
-  'Splitting Headache': `
-    <path d="M30 42 v-8 c-6 -3 -9 -9 -9 -15 a15 15 0 0 1 30 0 c0 3 2 5 4 8 l-4 2 v5 h-6 v8"/>
-    <path d="M37 4 l-4 9 6 4 -5 9" class="art-thick"/>
-    <path d="M12 8 l5 4 M10 20 h6 M62 6 l-5 5" class="art-thin"/>`,
-  'Shaky Hands': `
-    <path d="M28 18 h22 v10 a9 9 0 0 1 -9 9 h-4 a9 9 0 0 1 -9 -9 z"/><path d="M50 21 a5 5 0 0 1 0 9"/>
-    <path d="M20 40 h38"/><path d="M34 14 q2 -4 0 -8 M42 14 q2 -4 0 -8" class="art-thin"/>
-    <path d="M14 16 q-3 6 0 12 M64 16 q3 6 0 12" class="art-thin"/>`,
-  'Running Late': `
-    <circle cx="46" cy="24" r="14"/><path d="M46 24 v-8 M46 24 l6 4"/>
-    <path d="M35 10 a5 5 0 0 1 6 -4 M57 10 a5 5 0 0 0 -6 -4 M38 37 l-3 5 M54 37 l3 5"/>
-    <path d="M8 16 h16 M4 24 h18 M8 32 h16" class="art-thin"/>`,
-  'No Time to Think': `
-    <path d="M28 4 h24 M28 42 h24"/><path d="M30 4 L40 23 L30 42 M50 4 L40 23 L50 42"/>
-    <path d="M33 41 L47 41 L40 31 Z" class="art-fill"/><path d="M40 23 v8" class="art-thin"/>`,
-
-  // ---- Space Opera ----
-  'Blaster Burn': `
-    <path d="M40 4 L44 15 L55 11 L49 21 L61 25 L48 28 L52 40 L42 32 L36 42 L34 30 L21 33 L29 23 L19 15 L32 16 Z" class="art-fill"/>
-    <circle cx="39" cy="23" r="4" class="art-dark"/><path d="M64 10 q3 -4 0 -8 M68 16 q3 -4 0 -8" class="art-thin"/>`,
-  'Out of Power Cells': `
-    <rect x="16" y="11" width="42" height="23" rx="3"/><rect x="58" y="17" width="5" height="11" rx="1"/>
-    <rect x="20" y="15" width="6" height="15" rx="1" class="art-fill"/>
-    <path d="M44 15 l-6 8 h6 l-6 8" class="art-thin"/>`,
-  'Fried Comms': `
-    <rect x="28" y="16" width="20" height="26" rx="3"/><rect x="32" y="20" width="12" height="7" rx="1" class="art-fill"/>
-    <path d="M42 16 v-6 l3 -3 -3 -3"/><path d="M33 32 h10 M33 36 h10" class="art-thin"/>
-    <path d="M54 8 l6 -3 M56 16 l7 1 M53 24 l6 4" class="art-thin"/>`,
-  'Bounty on Your Head': `
-    <rect x="22" y="3" width="36" height="39" rx="1"/><path d="M27 9 h26" class="art-thick"/>
-    <circle cx="40" cy="26" r="9"/><path d="M40 14 v24 M28 26 h24" class="art-thin"/>`,
-  'Branded a Traitor': `
-    <circle cx="40" cy="22" r="17"/>
-    <path d="M40 10 l3.5 7.5 8 1 -6 5.5 1.5 8 -7 -4 -7 4 1.5 -8 -6 -5.5 8 -1 z" class="art-fill"/>
-    <path d="M44 4 l-4 8 5 6 -6 7 4 7 -3 8" class="art-thick"/>`,
-  'Lost Hope': `
-    <rect x="33" y="18" width="14" height="22" rx="1"/><path d="M26 41 h28"/>
-    <path d="M40 18 v-4"/><path d="M40 12 c-4 -3 4 -5 0 -8 M44 10 c3 -3 -2 -5 2 -8" class="art-thin"/>`,
-  'Haunted by Visions': `
-    <path d="M27 41 v-19 a13 13 0 0 1 26 0 v19 l-4.3 -4 -4.4 4 -4.3 -4 -4.3 4 -4.4 -4 z"/>
-    <circle cx="35" cy="21" r="2.5" class="art-dark"/><circle cx="45" cy="21" r="2.5" class="art-dark"/>
-    <path d="M14 14 q-4 8 0 16 M66 14 q4 8 0 16" class="art-thin"/>`,
-  'Spice Withdrawal': `
-    <path d="M30 6 h12 M32 6 v30 a4 4 0 0 0 8 0 v-30"/><path d="M33 33 h6" class="art-thin"/>
-    <circle cx="50" cy="38" r="1.2" class="art-dark"/><circle cx="55" cy="40" r="1.2" class="art-dark"/><circle cx="58" cy="36" r="1.2" class="art-dark"/>
-    <path d="M22 12 q-3 5 0 10 M50 12 q3 5 0 10" class="art-thin"/>`,
-  'Concussion': `
-    <circle cx="40" cy="29" r="12"/><ellipse cx="40" cy="12" rx="20" ry="5" class="art-thin"/>
-    <path d="M22 11 l2 -3 2 3 -2 3 z M38 5 l2 -3 2 3 -2 3 z M56 13 l2 -3 2 3 -2 3 z" class="art-fill"/>
-    <path d="M35 28 l3 3 M38 28 l-3 3 M42 28 l3 3 M45 28 l-3 3" class="art-thin"/>`,
-  'Hyperdrive Down': `
-    <path d="M30 22 L58 10 L68 22 L58 34 Z"/><path d="M30 22 h38" class="art-thin"/>
-    <circle cx="22" cy="20" r="4" class="art-fill"/><circle cx="14" cy="26" r="5" class="art-fill"/><circle cx="20" cy="31" r="3" class="art-fill"/>
-    <path d="M52 16 l3 6 -3 6" class="art-thin"/>`,
-  'The Countdown Is Running': `
-    <circle cx="36" cy="27" r="14"/><rect x="31" y="9" width="10" height="5" rx="1"/>
-    <rect x="28" y="23" width="16" height="8" rx="1" class="art-fill"/><path d="M33 25 v4 M36 25 v4 M39 26 h3" class="art-thin"/>
-    <path d="M41 9 c4 -6 10 -6 14 -2"/><path d="M57 3 l2 -2 M60 7 h3 M57 10 l2 2" class="art-thin"/>`,
-};
-
 function pcFront(card) {
-  const art = (card.kind === 'bane' ? BANE_ART : {})[card.text];
   const sign = card.sign || (card.kind === 'relationship' ? '👥' : ''); // shown beside the card's type
   return `
     <div class="kind-label">${sign ? `<span class="sign">${sign}</span>` : ''}${KIND_LABEL[card.kind]}</div>
     <div class="pc-text${card.text.length > 34 ? ' long' : ''}">${esc(card.text)}</div>
-    ${art ? `<svg class="pc-art" viewBox="0 0 80 44" aria-hidden="true">${art}</svg>` : ''}
     <div class="approach-row">${card.approaches.join('')}${card.resource ? `<span class="resource">${card.resource}</span>` : ''}</div>`;
 }
 
@@ -1232,8 +1030,8 @@ function deal(mode = 'deal') {
   TABLE = { players: [], relZones: [], rows: [{}, {}, {}] };
 
   const players = DATA.players.slice(0, PLAYER_COUNT); // W, X, Y, Z: as many as are playing
-  const concepts = buildPcDeck('concept', DATA.concepts, DATA.firstNames, '➕', 2, true);
-  const troubles = buildPcDeck('trouble', DATA.troubles, DATA.lastNames, '➖', 2, true);
+  const concepts = buildPcDeck('concept', DATA.concepts, DATA.firstNames, '➕', SIM_RULES.charApproaches || 2, true);
+  const troubles = buildPcDeck('trouble', DATA.troubles, DATA.lastNames, '➖', SIM_RULES.charApproaches || 2, true);
   const boons = buildPcDeck('boon', DATA.boons, DATA.boonStates, '✔️', 1);
   const portraits = makePortraits(DATA.relationships.length);
   const relationships = shuffle(DATA.relationships).map((text, i) => ({
@@ -1487,24 +1285,21 @@ function deal(mode = 'deal') {
       accepts: 'bane', x: boardR, y: boonTop, w: PC_CARD.w, h: PC_CARD.h,
       el: (() => { const z = zoneOutline(boardR, boonTop, PC_CARD.w, PC_CARD.h, ''); z.classList.add('hidden-zone'); return z; })(), // lined up by the ✖️ on the board
     });
-    // Story Points under the Asset (bottom left) and Scored spotlight under the Liability (bottom
-    // right), beside the board's lower half. Each label has its tokens just below it: stacks of
-    // STORY_STACK / SCORE_STACK tokens, two side by side (a stack rises a few px per token, so
-    // there's room above the first).
-    // Room for a second Asset / Liability peeking out under the first (SIM_RULES.stackCards).
-    const stackRoom = SIM_RULES.stackCards ? Math.max(0, (SIM_RULES.stackMax || 2) - 1) * STACK_STEP : 0;
-    const pileLabelY = boonTop + PC_CARD.h + stackRoom + 12;
-    const edgeLabelY = pileLabelY, scoreLabelY = rowTop + PEEK; // Scored spotlight: right of the Trouble card
-    const edgeY = edgeLabelY + 26 + (STORY_STACK - 1) * 3;
+    // Scored spotlight right of the Trouble card, Story Points under it, both above the Liabilities.
+    // Each label has its tokens just below it: stacks of STORY_STACK / SCORE_STACK tokens, two side by
+    // side (a stack rises a few px per token, so there's room above the first).
+    const scoreLabelY = rowTop + PEEK;
     const scoreY = scoreLabelY + 26 + (SCORE_STACK - 1) * 4;
-    countedLabel('Story Points', bx + 6, edgeLabelY, 'pair-label', 'edge', { x: bx - 4, w: PC_CARD.w + 8, y: edgeLabelY - 4, h: edgeY + EDGE_SIZE - edgeLabelY + 8 });
+    const edgeLabelY = scoreY + SPOTLIGHT_SIZE + 14;
+    const edgeY = edgeLabelY + 26 + (STORY_STACK - 1) * 3;
+    countedLabel('Story Points', boardR + 6, edgeLabelY, 'pair-label', 'edge', { x: boardR - 4, w: PC_CARD.w + 8, y: edgeLabelY - 4, h: edgeY + EDGE_SIZE - edgeLabelY + 8 });
     countedLabel('Scored spotlight', boardR + 6, scoreLabelY, 'pair-label', 'spotlight', { x: boardR - 4, w: PC_CARD.w + 8, y: scoreLabelY - 4, h: scoreY + SPOTLIGHT_SIZE - scoreLabelY + 8 });
     Object.assign(TABLE.players[i], {
       zones: { concept: conceptSlot, trouble: troubleSlot, boon: boonSlot, bane: baneSlot },
       dice, supply, scored: [], edge: [], scene: [],
       sceneAt: { x: supplyX, y: supplyY },
       scoreAt: { x: boardR + 6, y: scoreY },
-      edgeAt: { x: bx + 6, y: edgeY },
+      edgeAt: { x: boardR + 6, y: edgeY },
     });
   });
 

@@ -70,6 +70,7 @@ const SIM_RULES = {
   // extra ones wait behind the slot's card). Each Asset showing the approach is +1; each Liability
   // can be compelled. Burning an Asset avoids the new Liability (no longer shakes one off).
   stackCards: true, // ON 2026-10-19, with stackMax 2
+  charApproaches: 1, // approaches on each Concept and Trouble card (1 since 2026-10-19; was 2)
   stackMax: 2, // with stackCards: the most of each a player may hold (0 = no limit); a new one past it swaps
   // Earned Assets (test): nobody starts with an Asset; a Main player who succeeds by boonMargin or
   // more draws one at random, and with one already keeps whichever they prefer.
@@ -214,12 +215,14 @@ const LENGTH_BASE = {
   // and can rise act to act. With difficulty 1 / 3 / 3 the stacks below aim at acts won about
   // 90-100% / 70-80% / 50-70%. With 2 Story Points + 2 resource points per roll, buy-back and up to
   // 2 Assets / 2 Liabilities (2026-10-19 sim): 2p 100 / 78 / 71, 3p 100 / 64 / 69, 4p 100 / 81 / 68.
+  // One approach per Concept / Trouble (2026-10-19): Middle one smaller everywhere, Ending one smaller
+  // at 2 and 4 players; sim ~ 2p 100 / 68 / 60, 3p 100 / 79 / 48, 4p 100 / 67 / 73.
   // Stacks: Beginning = stack, Middle = stack + extra + middleStack, Ending = stack + extra *
   // endingSteps + endingStack (extra is 1: the game is always three acts).
   // endingEdge / edgePerExtra: Story Points at the Ending's start (all 0: no act-start Story Points).
-  2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: 1, endingStack: 1 },  // 2 / 4 / 5
-  3: { stack: 2, endingSteps: 1, endingEdge: 0, edgePerExtra: 0 },                  // 2 / 3 / 3
-  4: { stack: 3, endingSteps: 2, endingEdge: 0, edgePerExtra: 0 },                  // 3 / 4 / 5
+  2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: 0, endingStack: 0 },  // 2 / 3 / 4
+  3: { stack: 2, endingSteps: 1, endingEdge: 0, edgePerExtra: 0, middleStack: -1 },  // 2 / 2 / 3
+  4: { stack: 3, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: -1 },  // 3 / 3 / 4
 };
 function setGameLength(middles, extra) {
   GAME_LENGTH.middles = middles;

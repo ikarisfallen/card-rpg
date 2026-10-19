@@ -1115,26 +1115,6 @@ body[data-theme="space"] #table {
 /* How many tokens a pile holds, after its label: "Edge (3)". */
 .pile-count { font-weight: 600; opacity: 0.75; }
 
-/* Asset art: a small line drawing between the name and the approach row. */
-/* The name keeps its full size; the art shrinks to fit (a two-line name leaves ~30px). */
-.pc-text:has(+ .pc-art) { flex: none; }
-.pc-art {
-  flex: 1 1 0;
-  min-height: 26px;
-  max-height: 44px;
-  width: 100%;
-  align-self: center;
-  fill: none;
-  stroke: color-mix(in srgb, var(--accent) 80%, #000);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.pc-art .art-thin { stroke-width: 1.5; }
-.pc-art .art-fill { fill: color-mix(in srgb, var(--accent) 45%, #fff); }
-.pc-art .art-dark { fill: color-mix(in srgb, var(--accent) 60%, #000); }
-.pc-art .art-thick { stroke-width: 5; }
-.pc-art .art-glow { stroke: color-mix(in srgb, var(--accent) 35%, #fff); stroke-width: 8; }
 
 /* The label beside a player's spotlight stack: name and count on two lines. */
 .stack-label { width: 78px; white-space: normal; line-height: 1.25; }
@@ -1322,7 +1302,6 @@ body[data-theme="space"] #table {
 .pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .pc-text.long { font-size: 19px; }
 .pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .approach-row { font-size: 25px; gap: 4px; }
 .pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane) .approach-row .sign { font-size: 19px; }
-.pc-text:has(+ .pc-art) { padding-bottom: 3px; } /* room for descenders above a Liability's drawing */
 
 /* One text size, not bold, on every card's text: Concept, Trouble, Asset, Liability, Relationship,
    Situation and the Elements (long text may still shrink to fit its card). */
@@ -1665,11 +1644,8 @@ body[data-theme="space"] #table {
 .spend-note { min-width: 92px; opacity: 0.75; }
 .spend-result { padding: 4px 0; }
 
-/* An Asset's approach in its bottom left corner, a Liability's in its bottom right: stacked cards
-   peek out under one another, so every icon shows. */
-.pc-card.kind-boon .approach-row { justify-content: flex-start; padding-left: 4px; }
-.pc-card.kind-bane .approach-row { justify-content: flex-end; padding-right: 4px; }
-.pc-card:is(.kind-boon, .kind-bane) .approach-row { margin-top: auto; } /* always at the bottom, where a stacked card peeks out */
+/* An Asset's or Liability's approach: centred at the bottom of the card. */
+.pc-card:is(.kind-boon, .kind-bane) .approach-row { margin-top: auto; }
 
 /* A Location's place adjective, tucked above it, reads just above the card's name (not centred). */
 .el-card.kind-location .name-end { place-items: center start; padding-left: 80px; }
@@ -1681,7 +1657,8 @@ body[data-theme="space"] #table {
 .sheet-label { height: 74px; align-items: flex-end; } /* SHEET_LABEL */
 .sheet-label .res-grid { font-size: 26px; }
 .sheet-label .res-name { font-size: 13px; }
-.sit-risk.mod.badge { display: flex; align-items: center; justify-content: center; }
+.sit-risk.mod.badge { display: flex; align-items: center; justify-content: flex-end; margin-left: auto; }
+.sit-risk.mod.badge .res-badge { align-items: center; } /* the block sits against the card's right edge; its name centred under the emoji */
 .sit-risk.mod.badge .res-grid { font-size: 30px; column-gap: 8px; }
 .sit-risk.mod.badge .res-name { font-size: 15px; }
 .res-grid { justify-items: center; align-items: end; }
@@ -1696,3 +1673,7 @@ body[data-theme="space"] #table {
 .res-5 { --res: #7b1fa2; } /* Time: purple */
 .sheet-label .res-badge { gap: 4px; }
 .sheet .sheet-cell .sheet-box.res-box { background: var(--res); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35); } /* the die's box in its resource's colour */
+/* One approach per card now: every character card's icons are the same, larger size. */
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane, .kind-relationship) .approach-row { font-size: 40px; gap: 6px; }
+.pc-card .approach-row .resource { padding-left: 6px; margin-left: 6px; }
+.res-name { box-sizing: border-box; min-width: 6.4em; text-align: center; } /* every resource name as wide as "Reputation" */
