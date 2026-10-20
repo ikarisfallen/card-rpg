@@ -679,7 +679,7 @@ function* playSituation(situation, act, label = act) {
         const most = row.main.human && row.plan && row.plan.pushChosen === undefined && row.plan.margin < 1 ? pushMax(row) : 0;
         if (most) {
           const have = row.main.res[row.risk];
-          const outcome = m => (m >= 1 ? `a success by ${m}` : m <= -SIM_RULES.failBy ? 'still a failure' : 'a close call (nothing happens)');
+          const outcome = outcomeText;
           row.plan.push = yield ask('Succeed at a cost?',
             `<p>The roll ${row.plan.margin === 0 ? 'ties the difficulty' : `misses by ${-row.plan.margin}`}. You can succeed at a cost: lower your ${row.risk} ${riskName(row.risk)} die (now ${have}) by as many points as you like, <b>+1 each</b>. Spent down to 0, the die leaves your sheet.</p>`,
             [{ label: 'Leave it', hint: `${outcome(row.plan.margin)} · keep the resource`, value: 0 },
@@ -1232,6 +1232,19 @@ function* humanBet(pl, rows, board, difficulty) {
 
 // The effort parts of a row's roll before any Edge: cards, help, Minus dice, invoked lines,
 // Trouble / Liability hits and the Fate number.
+// How a roll lands, by its margin over the difficulty, and what that means:
+// Epic Failure (miss by failBy+): a Liability and an Escalation; Failure (miss by less, or a tie):
+// no progress, nothing lost; Success: a spotlight token; Epic Success (by boonMargin+): an Asset too.
+function outcomeOf(m) {
+  const assets = SIM_RULES.boonUpgrades || SIM_RULES.boonsEarned;
+  if (m >= (assets ? SIM_RULES.boonMargin : Infinity)) return { name: 'Epic Success', what: 'take a spotlight token and draw an Asset', cls: 'epic-success' };
+  if (m > 0) return { name: 'Success', what: 'take a spotlight token', cls: 'success' };
+  if (m <= -SIM_RULES.failBy) return { name: 'Epic Failure', what: 'draw a Liability, and the situation escalates', cls: 'epic-failure' };
+  return { name: 'Failure', what: 'no progress, but nothing lost', cls: 'failure' };
+}
+const outcomeHtml = m => { const o = outcomeOf(m); return `<b class="outcome ${o.cls}">${o.name}</b> (${o.what})`; };
+const outcomeText = m => { const o = outcomeOf(m); return `${o.name}: ${o.what}`; };
+
 // Step 1 of a roll: who's rolling, and how.
 function rollIntro(row) {
   const m = row.main;
@@ -1246,11 +1259,10 @@ function rollIntro(row) {
 function rollBonuses(row, fate, difficulty, board) {
   const parts = rowParts(row, fate, board);
   const sum = total(parts), m = sum - difficulty;
-  const outcome = m > 0 ? `a success by ${m}` : m <= -SIM_RULES.failBy ? `a failure (misses by ${-m})` : m === 0 ? 'a tie: nothing happens' : `a near miss (by ${-m}): nothing happens`;
   return {
     title: `What counts for ${row.main.info.name}`,
     html: `<ul class="roll-parts">${parts.map(([l, v]) => `<li><span>${esc(l)}</span><b>${signed(v)}</b></li>`).join('')}</ul>
-      <p>Total <b>${sum}</b> vs difficulty ${difficulty}: right now that’s <b>${outcome}</b>.</p>`,
+      <p>Total <b>${sum}</b> vs difficulty ${difficulty} (${signed(m)}): right now that’s ${outcomeHtml(m)}.</p>`,
   };
 }
 
@@ -1310,7 +1322,7 @@ function* humanEdgePlan(row, fate, difficulty, board) {
   const plan = human === row.main ? [] : botEdgePlan(row, before, bots, cap); // a bot Main decides first
   const used = plan.reduce((k, [, n]) => k + n, 0);
   const max = Math.min(human.edge.length, cap - used);
-  const outcome = m => (m > 0 ? `a success by ${m}` : m <= -SIM_RULES.failBy ? 'a failure' : 'a close call (nothing happens)');
+  const outcome = outcomeText;
   let k = 0;
   // The Main player picks Story Points and resource points together (+1 each), up to all they have.
   const resMost = human === row.main ? pushMax(row) : 0;
@@ -1318,7 +1330,7 @@ function* humanEdgePlan(row, fate, difficulty, board) {
     const sum = parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(' · ');
     const pick = yield {
       title: `Push the roll on ${rowLabel(row)}?`,
-      html: `<p>${sum} = ${before + difficulty} vs difficulty ${difficulty}: right now that’s <b>${outcome(before)}</b>.</p><p>Spend Story Points and / or succeed at a cost with your ${row.risk} ${riskName(row.risk)}: <b>+1 each</b>. A resource spent down to 0 leaves your sheet.</p>`,
+      html: `<p>${sum} = ${before + difficulty} vs difficulty ${difficulty}: right now that’s ${outcomeHtml(before)}.</p><p>Spend Story Points and / or succeed at a cost with your ${row.risk} ${riskName(row.risk)}: <b>+1 each</b>. A resource spent down to 0 leaves your sheet.</p>`,
       spend: { base: before, sp: max, res: resMost, have: human.res[row.risk], resLabel: `${row.risk} ${riskName(row.risk)}`, failBy: SIM_RULES.failBy },
     };
     k = pick.sp;
@@ -1328,7 +1340,7 @@ function* humanEdgePlan(row, fate, difficulty, board) {
   if (max > 0) {
     const sum = parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(' · ');
     k = yield ask(`Spend Story Points on ${rowLabel(row)}?`,
-      `<p>${sum} = ${before + difficulty} vs difficulty ${difficulty}${used ? `, and ${who(row.main)} spends ${storyPts(used)}` : ''}: right now that’s <b>${outcome(before + used)}</b>.</p><p>You have ${human.edge.length} banked Story Points (at most ${cap} per roll in all).</p>`,
+      `<p>${sum} = ${before + difficulty} vs difficulty ${difficulty}${used ? `, and ${who(row.main)} spends ${storyPts(used)}` : ''}: right now that’s ${outcomeHtml(before + used)}.</p><p>You have ${human.edge.length} banked Story Points (at most ${cap} per roll in all).</p>`,
       Array.from({ length: max + 1 }, (_, i) => ({ label: i ? `Spend ${storyPts(i)}` : 'Spend none', hint: outcome(before + used + i), value: i })));
   }
   if (k) plan.push([human, k]);
@@ -1461,8 +1473,8 @@ function resolveRow(row, fate, difficulty, target, board) {
       } else narrowNote = `<p>Only just, but going in ${row.approach} guarded their ${riskName(row.risk)}.</p>`;
     }
     return {
-      title: `${rowLabel(row)}: success`,
-      html: `${attempt}<p>${sum}. <b>Beats it by ${margin}.</b></p>
+      title: `${rowLabel(row)}: ${outcomeOf(margin).name}`,
+      html: `${attempt}<p>${sum}. <b>Beats it by ${margin}: ${margin >= SIM_RULES.boonMargin && (SIM_RULES.boonUpgrades || SIM_RULES.boonsEarned) ? "an Epic Success" : "a Success"}.</b></p>
         <p>${who(main)} ${SIM_RULES.takeSpotlight ? 'takes' : 'places'} ${placed} spotlight token${placed === 1 ? '' : 's'}${SIM_RULES.takeSpotlight ? ' from the row’s stack' : ''}${overflow ? ` (${SIM_RULES.overflowAtRowLimit && placed >= room ? 'all the row can take' : 'the most for one roll'}) and takes the ${overflow} left over as Story Points` : ''}${helped.length ? `; ${helped.join(', ')}` : ''}. That row is at ${row.tokens.length}/${target}.</p>${narrowNote}${boonNote}${stakeNote}`,
     };
   }
@@ -1528,8 +1540,8 @@ function resolveRow(row, fate, difficulty, target, board) {
     const edgeText = [got ? `${who(main)} takes ${storyPts(got)}${board.minus.length && playerRule('failEdgePerMinus') ? ' (desperation: the Minus box is filling up)' : ''}` : '', ...helpersEdged.map(h => `${who(h)} takes 1 Story Point`)].filter(Boolean).join(', ');
     return {
       failed: true,
-      title: `${rowLabel(row)}: failure`,
-      html: `${attempt}<p>${sum}. <b>Misses by ${-margin}: a failure.</b></p>
+      title: `${rowLabel(row)}: Epic Failure`,
+      html: `${attempt}<p>${sum}. <b>Misses by ${-margin}: an Epic Failure.</b></p>
         <p>${lossText}${edgeText}${edgeText ? '.' : ''}</p>
         ${team.filter(pl => pl.out && pl.out.skip).map(pl => `<p>${who(pl)} is out of ${riskName(row.risk)}: they’ll lose their next turn.</p>`).join('')}${baneNote}${stakeNote}`,
     };
@@ -1553,7 +1565,7 @@ function resolveRow(row, fate, difficulty, target, board) {
     };
   }
   return {
-    title: `${rowLabel(row)}: close`,
+    title: `${rowLabel(row)}: Failure`,
     html: `${attempt}<p>${sum}. ${margin === 0 ? 'Ties the difficulty' : `Misses by ${-margin}`}: no progress${closeBane ? '' : ', but nothing lost'}.</p>${closeBane}${stakeNote}`,
   };
 }
@@ -2073,7 +2085,7 @@ function simStep(choice) {
 // Two counters (Story Points, the row's resource), − / + each, the outcome so far, and Confirm.
 function renderSpendPicker({ base, sp, res, have, resLabel, failBy }) {
   const pick = { sp: 0, res: 0 };
-  const outcome = m => (m > 0 ? `a success by ${m}` : m <= -failBy ? 'a failure' : 'a close call (nothing happens)');
+  const outcome = outcomeHtml;
   const box = el('div', 'spend-picker');
   const line = (key, label, max, note) => {
     const row = el('div', 'spend-row', `<span class="spend-label">${label}</span><button type="button" class="spend-btn" data-d="-1">−</button><b class="spend-n">0</b><button type="button" class="spend-btn" data-d="1">+</button><small class="spend-note"></small>`);
@@ -2086,7 +2098,7 @@ function renderSpendPicker({ base, sp, res, have, resLabel, failBy }) {
   const result = el('div', 'spend-result');
   const confirm = el('button', 'sim-choice spend-confirm', '<span>Confirm</span>');
   confirm.type = 'button';
-  const update = () => { result.innerHTML = `Total <b>+${pick.sp + pick.res}</b>: ${outcome(base + pick.sp + pick.res)}`; };
+  const update = () => { const m = base + pick.sp + pick.res; result.innerHTML = `Spend <b>+${pick.sp + pick.res}</b> → ${signed(m)}: ${outcome(m)}`; };
   if (sp > 0) box.appendChild(line('sp', 'Story Points', sp, k => `of ${sp}`));
   if (res > 0) box.appendChild(line('res', resLabel, res, k => `die ${have} → ${have - k}${have - k === 0 ? ' (used up)' : ''}`));
   box.append(result, confirm);

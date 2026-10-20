@@ -1746,3 +1746,8 @@ body[data-theme="space"] #table {
 .mat-cell.edge { margin-left: 11px; } /* room either side of the line */
 .mat-cell.edge::before { content: ""; position: absolute; left: -17px; top: 50%; transform: translateY(-50%); border-left: 10px solid rgba(255, 255, 255, 0.55); border-top: 7px solid transparent; border-bottom: 7px solid transparent; } /* ▶ from the Approach box to the Edge box */
 .mat-goal { padding-left: 104px; } /* clear of the Edge die (72px) at the banner's left end */
+/* How a roll lands: Epic Failure / Failure / Success / Epic Success. */
+.outcome.epic-failure { color: #ff6b6b; }
+.outcome.failure { color: #f2b24c; }
+.outcome.success { color: #7ee08a; }
+.outcome.epic-success { color: #ffd84d; }
