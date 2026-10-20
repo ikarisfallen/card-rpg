@@ -1464,7 +1464,6 @@ body[data-theme="space"] #table {
 
 /* In a Main box the Scene die shows at 70% so it fits beside the pawn; a stake is stacked
    under the pawn, at 80% so the pawn's base still reads. */
-.die.die-scene.in-box .lift { transform: scale(0.7); }
 .token.spotlight.staked .lift { transform: scale(0.8); }
 
 /* The Asset and Liability rules spread over the taller footer. */
@@ -1682,3 +1681,10 @@ body[data-theme="space"] #table {
 .pc-card .approach-row .resource .res-name { font-size: 12px; }
 /* "Risk" over the rows' resource column, at the bottom right of the Situation's opening text. */
 .situation-card .sit-risk-head { position: absolute; right: 6px; bottom: 2px; width: 6.4em; font-size: 15px; text-align: center; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--accent) 70%, #000); }
+
+/* A roll's bonuses and penalties, one per line, the value on the right. */
+.roll-parts { list-style: none; margin: 6px 0; padding: 0; }
+.roll-parts li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+.roll-parts li:last-child { border-bottom: none; }
+/* Every approach die looks the same (the Scene, Obstacle and Minus dice too): where it sits says what it does. */
+.die-minus, .die-scene, .die-obstacle { --die-hi: #fffaf0; --die-lo: #ddd3bd; }

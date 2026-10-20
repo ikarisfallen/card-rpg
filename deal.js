@@ -48,6 +48,7 @@ const RESOURCE_START = 2; // +1 if the Concept names the resource, -1 if the Tro
 
 // Character cards (Concept, Trouble, Asset, Liability, Relationship) are the size of a Fate card.
 const PC_CARD = { w: 150, h: 210 };
+const DIE_SIZE = 72; // every die on the table: the sheets' resource dice and all the approach dice
 // Element cards: MacGuffin, Ally and Villain side by side, and underneath them the Location:
 // as wide as the Situation card, shaped like an index card (5 x 3), its nine lines in two
 // columns. Text is as large as the Situation card's.
@@ -407,7 +408,7 @@ function buildSheet(x, y, concept, trouble) {
     x: x + SHEET_PAD + col * SHEET_COL + SHEET_COL / 2,
     y: y + SHEET_CARDS_Y + SHEET_CARDS + SHEET_GAP + row * (SHEET_CELL + SHEET_GAP) + SHEET_LABEL + SHEET_ROW / 2,
   });
-  const DIE = 72;
+  const DIE = DIE_SIZE;
   const dice = {};
   SHEET_LAYOUT.forEach((trio, row) => trio.forEach((res, k) => {
     const value = (SIM_RULES.resourceStart ?? RESOURCE_START) + (concept?.resource === res) - (trouble?.resource === res);
@@ -427,7 +428,7 @@ function buildSheet(x, y, concept, trouble) {
 // The first column is a slot cut into the Board: the Situation card slides in so its three
 // choices (with their risks) sit in it, level with rows A, B and C.
 const MAT_COL_NAMES = ['main', 'help', ...(SIM_RULES.freeApproach ? [] : ['approach']), 'minus', ...(SIM_RULES.obstacle ? ['obstacle'] : []), 'successes'];
-const MAT_COL_W = { main: 180, help: 104, approach: 104, minus: 104, obstacle: 104, successes: 124 };
+const MAT_COL_W = { main: 240, help: 104, approach: 104, minus: 104, obstacle: 104, successes: 124 };
 const MAT_COLS = MAT_COL_NAMES.map(n => MAT_COL_W[n]);
 const matCol = name => MAT_COL_NAMES.indexOf(name);
 // The Board is as tall as the upright Situation card beside it, top and bottom level with it: the
@@ -597,7 +598,7 @@ const REL_BOARD = 720; // room for Fate-card-sized Relationships between the paw
 // The Storyteller token (SIM_RULES.obstacle), passed round the table: it sits right of the
 // Storyteller's Trouble card (above their Liability), with a slot (a little above its centre,
 // the token's name round the bottom) where the Obstacle die rests while it isn't on the Board.
-const STORY_SIZE = 110, OBSTACLE_SIZE = 58, OBSTACLE_RIDE = 7;
+const STORY_SIZE = 110, OBSTACLE_SIZE = DIE_SIZE, OBSTACLE_RIDE = 7;
 // The token's face: a slot for the die, and its name curving round the bottom edge.
 const STORY_FACE = `<span class="story-slot"></span><svg class="story-ring" viewBox="0 0 ${STORY_SIZE} ${STORY_SIZE}" aria-hidden="true">`
   + `<path id="story-arc" d="M 13 ${STORY_SIZE / 2} A ${STORY_SIZE / 2 - 13} ${STORY_SIZE / 2 - 13} 0 0 0 ${STORY_SIZE - 13} ${STORY_SIZE / 2}" fill="none"/>`
@@ -767,7 +768,7 @@ function updateSceneBoard(scene = undefined) {
   if (key) {
     const value = APPROACHES.findIndex(a => noVS(a) === noVS(key.approach)) + 1;
     if (!TABLE.sceneDie || !TABLE.sceneDie.el.isConnected) {
-      TABLE.sceneDie = createDie({ className: 'die-scene', faces: APPROACHES, size: 58, value, x: TABLE.sceneDieAt.x, y: TABLE.sceneDieAt.y });
+      TABLE.sceneDie = createDie({ className: 'die-scene', faces: APPROACHES, size: DIE_SIZE, value, x: TABLE.sceneDieAt.x, y: TABLE.sceneDieAt.y });
     } else {
       setDieValue(TABLE.sceneDie, value);
     }
@@ -1126,7 +1127,7 @@ function deal(mode = 'deal') {
   });
 
   const cell = buildMat(BOARD_X, ROW2, situation);
-  TABLE.sceneDieAt = { x: BOARD_X + MAT_PAD + 8, y: ROW2 + MAT_PAD + (MAT_BANNER - 58) / 2 }; // left end of the banner
+  TABLE.sceneDieAt = { x: BOARD_X + MAT_PAD + 8, y: ROW2 + MAT_PAD + (MAT_BANNER - DIE_SIZE) / 2 }; // left end of the banner
   TABLE.sceneNoteEl = document.querySelector('.mat .mat-scene');
   TABLE.cell = cell;
   const boardBottom = ROW2 + MAT_TOP + MAT_ROW * 3 + MAT_FOOT + MAT_PAD;
@@ -1152,7 +1153,7 @@ function deal(mode = 'deal') {
     const idx = APPROACHES.indexOf(appr);
     if (idx < 0) return;
     const c = cell(row, matCol('approach'));
-    TABLE.rows[row].approachDie = createDie({ className: 'die-approach', faces: APPROACHES, value: idx + 1, x: c.x - 40, y: c.y - 40 });
+    TABLE.rows[row].approachDie = createDie({ className: 'die-approach', size: DIE_SIZE, faces: APPROACHES, value: idx + 1, x: c.x - DIE_SIZE / 2, y: c.y - DIE_SIZE / 2 });
   });
 
 
@@ -1278,11 +1279,16 @@ function deal(mode = 'deal') {
     // Spotlight tokens: one stack above the portrait, beside the player's badge. Scored ones
     // go in a row under the sheet.
     const supplyX = bx + PC_CARD.w - SPOTLIGHT_SIZE - 4;
-    const supplyY = portraitY - SPOTLIGHT_SIZE - 8; // the bottom token
+    const supplyY = portraitY - SPOTLIGHT_SIZE - 26; // the bottom token, clear of the approach die
     // With takeSpotlight there's no personal supply: the spot holds the tokens taken this scene.
     const supply = SIM_RULES.takeSpotlight ? [] : placeSpotlightTokens(p, PLAYER_COLORS[i % PLAYER_COLORS.length], supplyX, supplyY);
     countedLabel(SIM_RULES.takeSpotlight ? 'This scene' : 'Spotlight', bx, portraitY - 52, 'pair-label stack-label', 'spotlight',
       { x: supplyX - 20, y: supplyY - SPOTLIGHT_TOKENS * SPOTLIGHT_STEP - 20, w: SPOTLIGHT_SIZE + 40, h: SPOTLIGHT_TOKENS * SPOTLIGHT_STEP + SPOTLIGHT_SIZE + 26 });
+
+    // The player's approach die (six approaches): overlapping the portrait's top right corner,
+    // until they go in as a Main and set it in their box on the Board.
+    const approachDieHome = { x: bx + PC_CARD.w - DIE_SIZE + 8, y: portraitY - 20 };
+    const approachDie = createDie({ className: 'die-approach', size: DIE_SIZE, faces: APPROACHES, value: randInt(6) + 1, x: approachDieHome.x, y: approachDieHome.y });
 
     // Liability: a bad thing that has happened to the character. Just off the board's right edge,
     // level with the Asset, so both cards that can be compelled (Trouble, Liability) are on the right.
@@ -1301,7 +1307,7 @@ function deal(mode = 'deal') {
     countedLabel('Scored spotlight', boardR + 6, scoreLabelY, 'pair-label', 'spotlight', { x: boardR - 4, w: PC_CARD.w + 8, y: scoreLabelY - 4, h: scoreY + SPOTLIGHT_SIZE - scoreLabelY + 8 });
     Object.assign(TABLE.players[i], {
       zones: { concept: conceptSlot, trouble: troubleSlot, boon: boonSlot, bane: baneSlot },
-      dice, supply, scored: [], edge: [], scene: [],
+      dice, supply, scored: [], edge: [], scene: [], approachDie, approachDieHome,
       sceneAt: { x: supplyX, y: supplyY },
       scoreAt: { x: boardR + 6, y: scoreY },
       edgeAt: { x: boardR + 6, y: edgeY },

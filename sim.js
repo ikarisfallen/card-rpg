@@ -173,12 +173,20 @@ function showUsedCards(row) {
   row.helpers.forEach(h => { const rel = relFor(h, a); const z = (TABLE.relZones || []).find(z => z.occupant && z.occupant.card === rel); if (z) add(z.occupant); });
   const gap = 12, w = PC_CARD.w, x0 = TABLE.showcaseAt.x - (list.length * w + (list.length - 1) * gap) / 2;
   // Name cards (first / last name, an Asset's description) stay behind: unhook them while on show.
-  list.forEach((p, i) => { p.showHome = { x: p.x, y: p.y }; p.showChildren = p.children; p.children = []; glide(p, x0 + i * (w + gap), TABLE.showcaseAt.y); raise(p); });
+  list.forEach((p, i) => {
+    p.showHome = { x: p.x, y: p.y, rot: p.rot, faceUp: p.faceUp };
+    p.showChildren = p.children; p.children = [];
+    p.rot = 0; setFaceUp(p, true); // a Relationship off the wheel reads upright
+    glide(p, x0 + i * (w + gap), TABLE.showcaseAt.y); raise(p);
+  });
   return list;
 }
 function returnUsedCards(list) {
   list.forEach(p => {
-    if (p.el && p.el.isConnected && p.showHome) glide(p, p.showHome.x, p.showHome.y);
+    if (p.el && p.el.isConnected && p.showHome) {
+      p.rot = p.showHome.rot; setFaceUp(p, p.showHome.faceUp);
+      glide(p, p.showHome.x, p.showHome.y);
+    }
     if (p.showChildren) { p.children = p.showChildren; p.showChildren = null; }
   });
   // The slot's Asset / Liability back on top of any stacked under it.
@@ -191,7 +199,7 @@ function riskMod(row, approach) {
   if (!r) return 0;
   return same(approach, r.good) ? 1 : same(approach, r.bad) ? -1 : 0;
 }
-const riskPart = (row, approach) => { const v = riskMod(row, approach); return v ? [[`${v > 0 ? '✓' : '✗'} ${riskName(row.risk)}`, v]] : []; };
+const riskPart = (row, approach) => { const v = riskMod(row, approach); return v ? [[`${v > 0 ? '🔺' : '🔻'} ${riskName(row.risk)}`, v]] : []; };
 const relFor = (pl, approach) => pl.info.rels.find(r => has(r.approaches, approach));
 
 function setResource(pl, res, value) {
@@ -654,6 +662,12 @@ function* playSituation(situation, act, label = act) {
       : rows;
     for (const row of rollOrder) {
       if (!row.main) continue;
+      // Each roll goes step by step: 1) who's rolling; 2) the cards that count come out under the
+      // Board and every bonus is listed; 3) the human player spends Story Points / resources;
+      // 4) the result; 5) tokens move, and the cards and pawns go back.
+      yield rollIntro(row);
+      const shown = showUsedCards(row); // the cards behind this roll, lined up under the Board
+      yield rollBonuses(row, fateOf(row.approach), difficulty, board);
       // The human player on this row decides their Edge, and (as a failing Main) whether to burn
       // their Asset, before the roll is settled.
       row.plan = null;
@@ -688,8 +702,12 @@ function* playSituation(situation, act, label = act) {
             [{ label: 'Burn it', hint: carried ? 'no Liability, and heal' : 'no Liability', value: true }, { label: 'Keep it', hint: 'take the Liability', value: false }]);
         }
       }
-      const shown = showUsedCards(row); // the cards behind this roll, lined up under the Board
-      const step = resolveRow(row, fateOf(row.approach), difficulty, target, board);
+      // The result first: spotlight tokens it moves wait for the wrap-up step.
+      const moves = [];
+      const realGlide = glide;
+      glide = (p, x, y) => moves.push([p, x, y]);
+      let step;
+      try { step = resolveRow(row, fateOf(row.approach), difficulty, target, board); } finally { glide = realGlide; }
       if (step.failed) {
         if (SIM_RULES.oneEscalationPerSpin && escalatedThisSpin) {
           step.html += '<p>The situation already escalated on this Fate card, so no new Escalation.</p>';
@@ -722,11 +740,14 @@ function* playSituation(situation, act, label = act) {
       }
       // The pawns, approach die and cards stay put while the result shows, so the roll can be checked.
       yield step;
-      // The row is done: its pawns (and initiative token) go back to the wheel, so you can see who still has to go.
+      // Wrap-up: the tokens move, and the row's pawns (and initiative token) go back to the wheel,
+      // so you can see who still has to go.
+      moves.forEach(([p, x, y]) => glide(p, x, y));
       [row.main, ...row.helpers].forEach(p => glide(p.pawn, p.pawnHome.x, p.pawnHome.y));
       if (SIM_RULES.freeApproach) dropApproachDie(row);
       if (row.main.initHome) { row.main.initToken.el.classList.remove('on-board'); glide(row.main.initToken, row.main.initHome.x, row.main.initHome.y); }
       returnUsedCards(shown);
+      yield rollWrapUp(row, moves);
       if (TABLE.pendingSwap) { // the human player drew a second Asset or Liability
         const sw = TABLE.pendingSwap;
         TABLE.pendingSwap = null;
@@ -956,7 +977,7 @@ function claimSceneDie(row) {
   TABLE.sceneRow = row;
   if (TABLE.sceneDie) {
     TABLE.sceneDie.el.classList.add('in-box');
-    const c = cellSpot(row, COL.main, TABLE.sceneDie.w, TABLE.sceneDie.h, MAIN_SIDE, -22); // top right
+    const c = cellSpot(row, COL.main, TABLE.sceneDie.w, TABLE.sceneDie.h, MAIN_SCENE, 0); // right of the approach die
     glide(TABLE.sceneDie, c.x, c.y);
   }
 }
@@ -967,18 +988,24 @@ function returnSceneDie(row) {
   if (TABLE.sceneDie && TABLE.sceneDieAt) { TABLE.sceneDie.el.classList.remove('in-box'); glide(TABLE.sceneDie, TABLE.sceneDieAt.x, TABLE.sceneDieAt.y); }
 }
 
-// The approach die the Main player sets in their box (freeApproach), and taking it off again.
-const APPROACH_DIE = 40;
-const MAIN_SIDE = 58; // how far left / right of the pawn the other pieces in a Main box sit
+// The Main player's own approach die (freeApproach): turned to the approach they go in with and
+// moved from their portrait into their box on the Board, then back home after the roll.
+// A Main box, left to right: the pawn, then the approach die, then a claimed Scene die.
+const MAIN_PAWN = -82, MAIN_DIE = -6, MAIN_SCENE = 74; // centres, from the box's middle
 function setApproachDie(row) {
   const idx = APPROACHES.findIndex(a => same(a, row.approach));
-  if (idx < 0) return;
-  const c = cellSpot(row, COL.main, APPROACH_DIE, APPROACH_DIE, -MAIN_SIDE, -22); // top left
-  row.approachDie = createDie({ className: 'die-approach', size: APPROACH_DIE, faces: APPROACHES, value: idx + 1, x: c.x, y: c.y });
+  const die = row.main.approachDie;
+  if (idx < 0 || !die) return;
+  setDieValue(die, idx + 1);
+  const c = cellSpot(row, COL.main, die.w, die.h, MAIN_DIE, 0); // right of the pawn
+  glide(die, c.x, c.y);
+  row.approachDie = die;
 }
 function dropApproachDie(row) {
-  if (row.approachDie) removePiece(row.approachDie);
+  const die = row.approachDie;
   row.approachDie = null;
+  const pl = die && TABLE.players.find(p => p.approachDie === die);
+  if (pl) glide(die, pl.approachDieHome.x, pl.approachDieHome.y);
 }
 
 // Main on `row`. `stake` is a number, or a function of the roll's parts (the bots' choice).
@@ -989,11 +1016,11 @@ function betMain(pl, row, board, difficulty, recovered, stake, approach = null) 
   // What the Storyteller (and the playtest stats) see: how often each approach has been used.
   pl.approachUses = pl.approachUses || {};
   pl.approachUses[row.approach] = (pl.approachUses[row.approach] || 0) + 1;
-  const c = cellSpot(row, COL.main, pl.pawn.w, pl.pawn.h);
+  const c = cellSpot(row, COL.main, pl.pawn.w, pl.pawn.h, MAIN_PAWN, 0); // first in the box
   glide(pl.pawn, c.x, c.y);
   if (SIM_RULES.rowOrder === 'initiative') { // rolls in this order: the token rides along, small, in the box's corner
     pl.initToken.el.classList.add('on-board');
-    const t = cellSpot(row, COL.main, pl.initToken.w, pl.initToken.h, -MAIN_SIDE, 26); // bottom left
+    const t = cellSpot(row, COL.main, pl.initToken.w, pl.initToken.h, MAIN_PAWN + 26, 28); // at the pawn's base, bottom right
     glide(pl.initToken, t.x, t.y);
   }
   // The first Main of the round going in with the Scene's approach takes the Scene die.
@@ -1027,7 +1054,7 @@ function betMain(pl, row, board, difficulty, recovered, stake, approach = null) 
     if (fromScored) pl.score--;
     token.home = token.home || { x: token.x, y: token.y };
     token.el.classList.add('staked');
-    const spot = cellSpot(row, COL.main, token.w, token.h, 0, 26 - i * 5); // a stack under the pawn's base
+    const spot = cellSpot(row, COL.main, token.w, token.h, MAIN_PAWN, 26 - i * 5); // a stack under the pawn's base
     glide(token, spot.x, spot.y);
     row.stake.push(token);
   }
@@ -1197,6 +1224,39 @@ function* humanBet(pl, rows, board, difficulty) {
 
 // The effort parts of a row's roll before any Edge: cards, help, Minus dice, invoked lines,
 // Trouble / Liability hits and the Fate number.
+// Step 1 of a roll: who's rolling, and how.
+function rollIntro(row) {
+  const m = row.main;
+  return {
+    title: `${m.info.name} rolls`,
+    html: `<p>${who(m)} goes ${row.approach} to <i>${row.action}</i>${row.helpers.length ? `, with help from ${row.helpers.map(who).join(' and ')}` : ''}.</p>`,
+  };
+}
+
+// Step 2: every bonus and penalty, one per line, and where that leaves the roll (before any Story
+// Points or resource points are spent).
+function rollBonuses(row, fate, difficulty, board) {
+  const parts = rowParts(row, fate, board);
+  const sum = total(parts), m = sum - difficulty;
+  const outcome = m > 0 ? `a success by ${m}` : m <= -SIM_RULES.failBy ? `a failure (misses by ${-m})` : m === 0 ? 'a tie: nothing happens' : `a near miss (by ${-m}): nothing happens`;
+  return {
+    title: `What counts for ${row.main.info.name}`,
+    html: `<ul class="roll-parts">${parts.map(([l, v]) => `<li><span>${esc(l)}</span><b>${signed(v)}</b></li>`).join('')}</ul>
+      <p>Total <b>${sum}</b> vs difficulty ${difficulty}: right now that’s <b>${outcome}</b>.</p>`,
+  };
+}
+
+// Step 5: the spotlight tokens the roll earned move, and the cards and pawns go back.
+function rollWrapUp(row, moves) {
+  const byPlayer = {};
+  moves.forEach(([p]) => { if (p.player) byPlayer[p.player] = (byPlayer[p.player] || 0) + 1; });
+  const took = Object.entries(byPlayer).map(([letter, n]) => `${who(TABLE.players.find(pl => pl.letter === letter))} takes ${n} spotlight token${n === 1 ? '' : 's'}`);
+  return {
+    title: `${row.main.info.name}’s roll is done`,
+    html: `<p>${took.length ? `${took.join(', ')}. ` : ''}The cards go back, and the pawns return to the Relationship board.</p>`,
+  };
+}
+
 function rowParts(row, fate, board) {
   const parts = [...bonusParts(row.main, row.approach, row), ...riskPart(row, row.approach)];
   if (row.helpers.length) parts.push([`Help ×${row.helpers.length}`, row.helpers.length]);
@@ -1771,8 +1831,8 @@ function escalate(situation, n, board, pick = null) {
   const text = situation.escalations[i] || '';
   const m = noVS(text).match(/➖\s*(\S+)\s*$/);
   const idx = Math.max(0, APPROACHES.findIndex(a => same(a, m ? m[1] : '')));
-  const spot = TABLE.minusAt(board.minus.length, 64);
-  const die = createDie({ className: 'die-minus', faces: APPROACHES, value: idx + 1, size: 64, x: spot.x, y: spot.y });
+  const spot = TABLE.minusAt(board.minus.length, DIE_SIZE);
+  const die = createDie({ className: 'die-minus', faces: APPROACHES, value: idx + 1, size: DIE_SIZE, x: spot.x, y: spot.y });
   die.fresh = !!SIM_RULES.minusNextRound;
   die.el.classList.toggle('fresh', die.fresh);
   pulse(die);
