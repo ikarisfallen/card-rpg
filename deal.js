@@ -455,7 +455,7 @@ function buildSheet(x, y, concept, trouble) {
 // Main and Help hold pawns (round spots); Approach holds the Main's own approach die and Edge the
 // Edge die (the Situation's bonus die) when the Main claims it.
 const MAT_COL_NAMES = ['main', 'help', 'approach', ...(SIM_RULES.sceneModifier && SIM_RULES.sceneClaim ? ['edge'] : []), 'minus', ...(SIM_RULES.obstacle ? ['obstacle'] : []), 'successes'];
-const MAT_COL_W = { main: 104, help: 104, approach: 96, edge: 96, minus: 104, obstacle: 104, successes: 124 };
+const MAT_COL_W = { main: 104, help: 104, approach: 102, edge: 102, minus: 104, obstacle: 104, successes: 124 };
 const MAT_COLS = MAT_COL_NAMES.map(n => MAT_COL_W[n]);
 const matCol = name => MAT_COL_NAMES.indexOf(name);
 // The Board is as tall as the upright Situation card beside it, top and bottom level with it: the
@@ -483,7 +483,7 @@ function boardRulesHtml(players) {
       ${perAct ? row('Successes', a => actTarget(a, players)) : ''}
       ${row('Difficulty', a => playerRule('difficulty', players)[a])}
       ${acts.some(a => edge[a]) ? row('Story Points at start', a => edge[a] || 0) : ''}
-      ${row(acts.some(a => bonus[a].helper) ? 'Win bonus <small>(helper)</small>' : 'Win bonus', a => `${bonus[a].main}${bonus[a].helper ? ` <small>(${bonus[a].helper})</small>` : ''}`)}
+      ${row(acts.some(a => bonus[a].helper) ? 'Win bonus <small>(helper)</small>' : SIM_RULES.actWinBonusAs === 'storyPoints' ? 'Winner’s Story Pts' : 'Win bonus', a => `${bonus[a].main}${bonus[a].helper ? ` <small>(${bonus[a].helper})</small>` : ''}`)}
     </table>`;
 }
 
@@ -517,7 +517,7 @@ function buildMat(x, y, situation) {
   const cellFor = {
     main: () => el('div', 'mat-cell round'),
     help: () => el('div', 'mat-cell help round'),
-    approach: () => el('div', 'mat-cell'),
+    approach: () => el('div', 'mat-cell approach'),
     edge: () => el('div', 'mat-cell edge'),
     minus: row => (row === 0 ? el('div', 'mat-cell minus') : null),
     obstacle: () => el('div', 'mat-cell obstacle'),

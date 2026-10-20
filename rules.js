@@ -42,6 +42,8 @@ const SIM_RULES = {
   // Every row that completes the situation this round shares the win (2026-10-19): the act ends at
   // the end of the round and each finishing Main banks the full act-win bonus. false: the first only.
   shareActWin: true,
+  actWinBonusAs: 'storyPoints', // ON 2026-10-20: the act-win bonus is Story Points instead of spotlight ('spotlight')
+  shareActBonus: false, // 2026-10-20: everyone who finishes keeps their spotlight, but only the first to finish is the winner (stamp, bonus)
   // The Underdog Bonus (2026-10-20): a finisher who wasn't leading in scored spotlight going into the act's scoring banks double the act-win bonus.
   underdogBonus: true,
   afterWin: 'none',       // 'safe': once a row completes the situation, misses on the rows still to roll cost nothing (dropped 2026-10-20: the situation is still on until the round ends)
@@ -92,11 +94,12 @@ const SIM_RULES = {
   stakeLostOn: 'miss', // 'miss': lost unless the bet succeeds; 'failure': only lost on a failure
   stakeNeedsMargin: false, // true: a stake of N only pays off if the bet beats the difficulty by N or more
   stakePayout: 2,     // a successful stake comes back plus this many times the stake
-  // Spotlight banked for finishing an act's situation: by the Main player on the winning row,
-  // and by each player helping on that row.
+  // The bonus for finishing an act's situation first (Story Points, actWinBonusAs), for the Main
+  // player on the winning row and each player helping on that row. 2026-10-20: 1 / 2 / 4 Story
+  // Points (sim, with the stacks in LENGTH_BASE: 2p 100 / 75 / 60, 3p 100 / 75-78 / 63-78, 4p 100 / 77 / 53).
   actWinBonus: {
-    'Beginning': { main: 2, helper: 0 }, // helpers' share removed 2026-10-18
-    'Middle': { main: 3, helper: 0 },
+    'Beginning': { main: 1, helper: 0 }, // helpers' share removed 2026-10-18
+    'Middle': { main: 2, helper: 0 },
     'Ending': { main: 4, helper: 0 },
   },
   stakeFrom: 'scored',    // 'scored': stake spotlight you've already won; 'supply': stake unplayed tokens
@@ -201,7 +204,6 @@ const PLAYER_COUNT_RULES = {
   3: {
     target: { 'Beginning': 3, 'Middle': 4, 'Ending': 5 },
     edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 }, // no Story Points at act start (2026-10-18)
-    actWinBonus: { 'Beginning': { main: 2, helper: 0 }, 'Middle': { main: 2, helper: 0 }, 'Ending': { main: 4, helper: 0 } },
   },
   4: { target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 } }, // no Story Points at act start (2026-10-18)
 };
@@ -227,7 +229,7 @@ const LENGTH_BASE = {
   // endingEdge / edgePerExtra: Story Points at the Ending's start (all 0: no act-start Story Points).
   2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: 0, endingStack: 0 },  // 2 / 3 / 4
   3: { stack: 2, endingSteps: 1, endingEdge: 0, edgePerExtra: 0, middleStack: -1 },  // 2 / 2 / 3
-  4: { stack: 3, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: -1 },  // 3 / 3 / 4
+  4: { stack: 3, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: 0 },  // 3 / 3 / 5
 };
 function setGameLength(middles, extra) {
   GAME_LENGTH.middles = middles;

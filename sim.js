@@ -782,7 +782,8 @@ function* playSituation(situation, act, label = act) {
       // Everyone who finished a row this round shares the win (SIM_RULES.shareActWin).
       const finishers = SIM_RULES.shareActWin ? rollOrder.filter(r => r.main && r.tokens.length >= target) : [won];
       entry.result = { row: won.index, name: hero.info.name, color: hero.color, letter: hero.letter, action: won.action,
-        winners: finishers.map(r => ({ row: r.index, name: r.main.info.name, color: r.main.color, letter: r.main.letter })) };
+        // The winner's stamp: every finisher, or (shareActBonus off) only the first to finish.
+        winners: (SIM_RULES.shareActBonus === false ? [won] : finishers).map(r => ({ row: r.index, name: r.main.info.name, color: r.main.color, letter: r.main.letter })) };
       showAct(TABLE.history.length - 1);
       // The Spotlight Shift: whoever on the winning row had the least scored spotlight (before
       // this win) takes the act-win bonus; ties go to the Main.
@@ -796,11 +797,17 @@ function* playSituation(situation, act, label = act) {
       const scored = scoreBoard(rows);
       // Bonus for finishing it, straight into Scored spotlight: the hero, and their helpers.
       const share = playerRule('actWinBonus')[act] || { main: 0, helper: 0 };
+      // The bonus is spotlight, or (SIM_RULES.actWinBonusAs 'storyPoints') Story Points from the pile.
+      const asStory = SIM_RULES.actWinBonusAs === 'storyPoints';
       const award = (pl, n) => {
         let got = 0;
-        for (let i = 0; i < n; i++) { const t = spotSupply(pl).pop(); if (t) { bankToken(pl, t); got++; } }
+        for (let i = 0; i < n; i++) {
+          if (asStory) { got += gainEdge(pl) ? 1 : 0; continue; }
+          const t = spotSupply(pl).pop(); if (t) { bankToken(pl, t); got++; }
+        }
         return got;
       };
+      const bonusWords = n => (asStory ? `${storyPts(n)} bonus` : `${n}-spotlight bonus`);
       const underdog = pl => SIM_RULES.underdogBonus && before.get(pl) < lead;
       const winBonus = pl => share.main * (underdog(pl) ? 2 : 1);
       const dogNote = pl => (underdog(pl) ? ' — doubled, the <b>Underdog Bonus</b>: they weren’t leading' : '');
@@ -808,16 +815,17 @@ function* playSituation(situation, act, label = act) {
       const starDog = dogNote(star);
       const helperBonus = [hero, ...won.helpers].filter(p => p !== star).map(h => [h, award(h, share.helper)]).filter(([, n]) => n);
       // The other rows that finished this round: each Main banks the full bonus too.
-      const others = finishers.filter(r => r !== won).map(r => [r, dogNote(r.main), award(r.main, winBonus(r.main))]);
+      // With shareActBonus off, the others who finished keep their spotlight but only the first gets the bonus.
+      const others = finishers.filter(r => r !== won).map(r => SIM_RULES.shareActBonus === false ? [r, '', 0] : [r, dogNote(r.main), award(r.main, winBonus(r.main))]);
       yield {
         title: 'Situation defeated!',
         html: `<p>${rowTag(won)} reached ${reached}/${target}. Every spotlight token on the board is scored:</p>
           <p>${scored}</p><p>Totals: ${TABLE.players.map(pl => `${who(pl)} ${pl.score}`).join(' · ')}</p>
           ${bonus ? (star === hero
-            ? `<p>${who(hero)} finished it, and banks a <b>${bonus}-spotlight bonus</b> for winning ${act}${starDog}${helperBonus.length ? `; ${helperBonus.map(([h, n]) => `${who(h)} banks ${n} for helping`).join(', ')}` : ''}.</p>`
-            : `<p><b>${who(star)} steals the spotlight!</b> They had the least spotlight on the winning row, so they bank the <b>${bonus}-spotlight bonus</b> for ${act}${helperBonus.length ? `; ${helperBonus.map(([h, n]) => `${who(h)} banks ${n}`).join(', ')}` : ''}.</p>`) : ''}
-          ${others.map(([r, dog, n]) => `<p>${who(r.main)} finished ${rowTag(r)} this round too${n ? ` and banks a <b>${n}-spotlight bonus</b>${dog}` : ''}.</p>`).join('')}
-          <p>The Situation card gets a ★ stamp for ${finishers.map(r => `${who(r.main)} on ${rowLabel(r)}`).join(' and ')}.</p>`,
+            ? `<p>${who(hero)} finished it, and takes a <b>${bonusWords(bonus)}</b> for winning ${act}${starDog}${helperBonus.length ? `; ${helperBonus.map(([h, n]) => `${who(h)} banks ${n} for helping`).join(', ')}` : ''}.</p>`
+            : `<p><b>${who(star)} steals the spotlight!</b> They had the least spotlight on the winning row, so they take the <b>${bonusWords(bonus)}</b> for ${act}${helperBonus.length ? `; ${helperBonus.map(([h, n]) => `${who(h)} banks ${n}`).join(', ')}` : ''}.</p>`) : ''}
+          ${others.map(([r, dog, n]) => `<p>${who(r.main)} finished ${rowTag(r)} this round too${n ? ` and takes a <b>${bonusWords(n)}</b>${dog}` : ''}.</p>`).join('')}
+          <p>The Situation card gets a ★ stamp for ${(SIM_RULES.shareActBonus === false ? [won] : finishers).map(r => `${who(r.main)} on ${rowLabel(r)}`).join(' and ')}${SIM_RULES.shareActBonus === false && finishers.length > 1 ? ': the first to finish is the winner' : ''}.</p>`,
       };
       yield endSituation(rows, board);
       return;

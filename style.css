@@ -1741,3 +1741,7 @@ body[data-theme="space"] #table {
 .pc-card .approach-row .resource .res-badge { gap: 2px; }
 .pc-card .approach-row .resource .res-grid { font-size: 17px; column-gap: 4px; }
 .pc-card .approach-row .resource .res-name { font-size: 10px; }
+/* A line between the Approach and Edge columns, down through the three rows. */
+.mat-cell.approach { margin-right: 11px; }
+.mat-cell.edge { margin-left: 11px; } /* room either side of the line */
+.mat-cell.edge::before { content: ""; position: absolute; left: -14px; top: -7px; bottom: -7px; width: 2px; border-radius: 1px; background: rgba(255, 255, 255, 0.4); }
