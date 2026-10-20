@@ -130,7 +130,7 @@ function pcFront(card) {
   return `
     <div class="kind-label">${sign ? `<span class="sign">${sign}</span>` : ''}${KIND_LABEL[card.kind]}</div>
     <div class="pc-text${card.text.length > 30 ? ' long' : ''}">${esc(card.text)}</div>
-    <div class="approach-row">${card.approaches.map(a => (card.kind === 'relationship' ? a : approachTag(a))).join('')}${card.resource ? `<span class="resource">${resourceLabel(card.resource)}</span>` : ''}</div>`;
+    <div class="approach-row">${card.approaches.map(a => (card.kind === 'relationship' ? a : approachTag(a))).join('')}${card.resource ? `<span class="resource">${resourceBadge(card.resource)}</span>` : ''}</div>`;
 }
 
 function namesBack(label, names) {

@@ -1736,3 +1736,8 @@ body[data-theme="space"] #table {
 .el-lines .el-approach .ap-name { font-size: 9px; }
 .die-symbol .ap-icon { gap: 1px; }
 .die-symbol .ap-name { font-size: 10px; margin-top: 3px; }
+/* A Concept's / Trouble's resource as on the sheet: 🔺 / 🔻 approaches over the name, clear of the card's edge. */
+.pc-card .approach-row .resource { margin-right: 12px; }
+.pc-card .approach-row .resource .res-badge { gap: 2px; }
+.pc-card .approach-row .resource .res-grid { font-size: 17px; column-gap: 4px; }
+.pc-card .approach-row .resource .res-name { font-size: 10px; }
