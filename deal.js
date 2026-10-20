@@ -25,10 +25,12 @@ const RISKS = {
 const RESOURCES = Object.keys(RISKS);
 // A resource as shown on the Situation cards and character sheets: the approach that guards it (+1)
 // under a 🔺, the one that squanders it (−1) under a 🔻, and its name underneath.
+// Just the resource's name in its coloured box (as on the Concept and Trouble cards).
+const resourceLabel = res => `<span class="res-name res-${RESOURCES.indexOf(res)}">${esc(RISKS[res].name)}</span>`;
 function resourceBadge(res, note = '') {
   const r = RISKS[res];
   return `<span class="res-badge" title="${esc(r.name)}"><span class="res-grid"><span class="res-arrow">🔺</span><span class="res-arrow">🔻</span><span>${r.good}</span><span>${r.bad}</span></span>`
-    + `<span class="res-name res-${RESOURCES.indexOf(res)}">${esc(r.name)}</span>${note}</span>`;
+    + `${resourceLabel(res)}${note}</span>`;
 }
 const noVS16 = s => (s || '').replace(/️/g, ''); // emoji variation selectors vary between sources
 // What a failure costs with `approach` on a row that risks `risk`: 0, 1 or 2 (always 1 when
@@ -120,7 +122,7 @@ function pcFront(card) {
   return `
     <div class="kind-label">${sign ? `<span class="sign">${sign}</span>` : ''}${KIND_LABEL[card.kind]}</div>
     <div class="pc-text${card.text.length > 34 ? ' long' : ''}">${esc(card.text)}</div>
-    <div class="approach-row">${card.approaches.join('')}${card.resource ? `<span class="resource">${card.resource}</span>` : ''}</div>`;
+    <div class="approach-row">${card.approaches.join('')}${card.resource ? `<span class="resource">${resourceLabel(card.resource)}</span>` : ''}</div>`;
 }
 
 function namesBack(label, names) {
@@ -556,15 +558,18 @@ function situationFront(situation, result = null) {
   const escalations = situation.escalations
     .map((text, i) => text && `<div class="sit-esc"><b>Escalation ${i + 1}:</b> ${esc(text)}</div>`)
     .join('');
+  // Who won on row i (a shared win stamps every finished row).
+  const winnerOn = i => result && !result.lost && (result.winners || [result]).find(w => w.row === i);
   return `
     <div class="sit-intro">
       ${result && result.lost ? '<div class="sit-lost">Lost</div>' : ''}
       <div class="sit-name">${esc(situation.name || 'Situation')}</div>
       <div class="sit-text">${esc(intro)}</div>
+      ${SIM_RULES.riskModifier && SIM_RULES.freeApproach ? '<div class="sit-risk-head">Risk</div>' : ''}
     </div>
     <div class="sit-choices">
       ${['A', 'B', 'C'].map((k, i) => `
-        <div class="sit-choice${result && result.row === i ? ' won' : ''}"><span class="sit-choice-text">${esc(choices[k])}</span>${choiceRiskHtml(situation.risks[i])}${result && result.row === i ? `<span class="sit-stamp" style="--c:${result.color}">★ ${esc(result.name)}</span>` : ''}</div>`).join('')}
+        <div class="sit-choice${winnerOn(i) ? ' won' : ''}"><span class="sit-choice-text">${esc(choices[k])}</span>${choiceRiskHtml(situation.risks[i])}${winnerOn(i) ? `<span class="sit-stamp" style="--c:${winnerOn(i).color}">★ ${esc(winnerOn(i).name)}</span>` : ''}</div>`).join('')}
     </div>
     <div class="sit-escs">${escalations}</div>`;
 }

@@ -39,7 +39,12 @@ const SIM_RULES = {
   // first, ties to fewer Edge, then the earlier player; 'roundGain' = fewest tokens placed this round.
   initiativeBy: 'standing',
   rowOrder: 'initiative', // rows roll in their Main's initiative order ('abc': A, B, C)
-  afterWin: 'safe',       // once a row completes the situation, the other rows still roll but a miss costs nothing
+  // Every row that completes the situation this round shares the win (2026-10-19): the act ends at
+  // the end of the round and each finishing Main banks the full act-win bonus. false: the first only.
+  shareActWin: true,
+  // The Underdog Bonus (2026-10-20): a finisher who wasn't leading in scored spotlight going into the act's scoring banks double the act-win bonus.
+  underdogBonus: true,
+  afterWin: 'none',       // 'safe': once a row completes the situation, misses on the rows still to roll cost nothing (dropped 2026-10-20: the situation is still on until the round ends)
   minusNextRound: true, // a new Minus die only counts from the next round (all rows roll against the same box) // true: several failures on one Fate card only escalate once
   maxEdgePerBet: 2,   // Story Points a Main player may spend on one roll (0 = no limit); 2 since 2026-10-19
   maxPushPerRoll: 2,  // resource points they may spend on one roll, succeeding at a cost (0 = no limit)
