@@ -1751,3 +1751,7 @@ body[data-theme="space"] #table {
 .outcome.failure { color: #f2b24c; }
 .outcome.success { color: #7ee08a; }
 .outcome.epic-success { color: #ffd84d; }
+/* Bonuses cancelled by the Obstacle: crossed out. */
+s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
+.roll-parts li.cancelled small { opacity: 0.7; margin-left: 4px; }
+.cancel-note { opacity: 0.75; font-size: 0.92em; }

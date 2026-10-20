@@ -1034,10 +1034,10 @@ function betMain(pl, row, board, difficulty, recovered, stake, approach = null) 
   if (SIM_RULES.sceneBy === 'approach' && SIM_RULES.sceneClaim && TABLE.scene && !TABLE.sceneRow && same(row.approach, TABLE.scene.approach)) {
     claimSceneDie(row);
   }
-  const parts = [...bonusParts(pl, row.approach, row), ...riskPart(row, row.approach)];
+  const blocked = obstacleFor(board, row, row.approach, pl) > 0; // the Obstacle cancels these bonuses (crossed out)
+  const parts = [...bonusParts(pl, row.approach, row), ...riskPart(row, row.approach)].map(([l, v]) => (blocked && v > 0 ? [l, 0, v] : [l, v]));
   const minus = minusFor(board, row.approach);
   if (minus) parts.push([`Minus ➖${row.approach} ×${minus}`, -minus]);
-  { const ob = obstacleFor(board, row, row.approach, pl); if (ob) parts.push([`Obstacle ➖${row.approach}`, -ob]); }
 
   // Invoke a matching element line, if one is still free.
   const line = freeLine(row.approach);
@@ -1070,7 +1070,7 @@ function betMain(pl, row, board, difficulty, recovered, stake, approach = null) 
   let html = `${recovered}<p>${who(pl)} decides to <i>${row.action}</i> (${rowTag(row)} as <b>Main</b>${SIM_RULES.freeApproach ? `, going in ${row.approach}` : ''}).</p>`;
   if (row.sceneDie) html += `<p>They’re the first this round to go in ${row.approach}, the Edge die’s approach: they take the Edge die (${sceneMod()}).</p>`;
   if (line) html += `<p>They invoke <b>“${esc(line.text)}”</b> from the ${esc(line.from)} card (${row.approach} +1). Nobody else can use that line this situation.</p>`;
-  html += '<p>' + (parts.length ? parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(', ') : 'No card bonuses for this approach');
+  html += '<p>' + (parts.length ? parts.map(partHtml).join(', ') + obstacleNote(parts) : 'No card bonuses for this approach');
   html += ` → <b>${signed(total(parts))}</b> before the spin. If it fails, they take ${failWords(row)}.</p>`;
   if (n) html += `<p>They <b>stake ${n}</b> of their scored spotlight: ${SIM_RULES.stakeNeedsMargin ? `beat the difficulty by ${n}+` : 'succeed'} and they bank ${n * (1 + SIM_RULES.stakePayout)}; anything less and the stake is gone.</p>`;
   else if (SIM_RULES.maxStake) html += `<p>${pl.scored.length || pl.score ? 'They stake nothing.' : 'Nothing scored yet, so nothing to stake.'}</p>`;
@@ -1200,9 +1200,11 @@ function* humanBet(pl, rows, board, difficulty) {
         const scoreWords = a => {
           const parts = bonusParts(pl, a), scene = total(parts.filter(([l]) => /^Edge die/.test(l)));
           const cards = parts.filter(([l]) => !/^Edge die/.test(l)).map(([l, v]) => [esc(l), v]); // each card by name
+          const blocked = obstacleFor(board, row, a, pl) > 0; // the Obstacle cancels this approach's bonuses here
           const bits = [...cards, [`Situation ${riskMod(row, a) > 0 ? '🔺' : '🔻'}`, riskMod(row, a)], ['Edge die', scene],
-            ['Minus', -minusFor(board, a)], ['Obstacle', -obstacleFor(board, row, a, pl)]].filter(([, v]) => v);
-          return bits.length ? `${bits.map(([l, v]) => `${l} ${signed(v)}`).join(' · ')} = <b>${signed(score(a))}</b>` : 'no bonus = <b>0</b>';
+            ['Minus', -minusFor(board, a)]].filter(([, v]) => v);
+          const shown = bits.map(([l, v]) => (blocked && v > 0 ? `<s>${l} ${signed(v)}</s>` : `${l} ${signed(v)}`));
+          return bits.length ? `${shown.join(' · ')} = <b>${signed(score(a))}</b>${blocked ? ' (Obstacle: bonuses cancelled)' : ''}` : 'no bonus = <b>0</b>';
         };
         approach = yield ask('Which approach?', `<p>How do you <i>${row.action}</i>? ${rowTag(row)} risks <b>${riskName(row.risk)}</b>: the approach you pick sets what a failure costs.</p>`,
           APPROACHES.map(a => ({
@@ -1261,7 +1263,9 @@ function rollBonuses(row, fate, difficulty, board) {
   const sum = total(parts), m = sum - difficulty;
   return {
     title: `What counts for ${row.main.info.name}`,
-    html: `<ul class="roll-parts">${parts.map(([l, v]) => `<li><span>${esc(l)}</span><b>${signed(v)}</b></li>`).join('')}</ul>
+    html: `<ul class="roll-parts">${parts.map(([l, v, was]) => (was !== undefined
+      ? `<li class="cancelled"><span><s>${esc(l)}</s> <small>cancelled by the Obstacle</small></span><b><s>${signed(was)}</s></b></li>`
+      : `<li><span>${esc(l)}</span><b>${signed(v)}</b></li>`)).join('')}</ul>
       <p>Total <b>${sum}</b> vs difficulty ${difficulty} (${signed(m)}): right now that’s ${outcomeHtml(m)}.</p>`,
   };
 }
@@ -1277,12 +1281,17 @@ function rollWrapUp(row, moves) {
   };
 }
 
+// One part of a roll as text; a bonus the Obstacle cancelled is crossed out (it counts 0).
+const partHtml = ([l, v, was]) => (was !== undefined ? `<s class="cancelled" title="cancelled by the Obstacle">${esc(l)} ${signed(was)}</s>` : `${esc(l)} ${signed(v)}`);
+const obstacleNote = parts => (parts.some(p => p[2] !== undefined) ? ' <span class="cancel-note">(crossed out: cancelled by the Obstacle)</span>' : '');
+
 function rowParts(row, fate, board) {
-  const parts = [...bonusParts(row.main, row.approach, row), ...riskPart(row, row.approach)];
+  // The Obstacle on this row and approach cancels its bonuses: they stay on the list, crossed out.
+  const ob = obstacleFor(board, row, row.approach, row.main) > 0;
+  const parts = [...bonusParts(row.main, row.approach, row), ...riskPart(row, row.approach)].map(([l, v]) => (ob && v > 0 ? [l, 0, v] : [l, v]));
   if (row.helpers.length) parts.push([`Help ×${row.helpers.length}`, row.helpers.length]);
   const minus = minusFor(board, row.approach);
   if (minus) parts.push([`Minus ➖${row.approach} ×${minus}`, -minus]);
-  { const ob = obstacleFor(board, row, row.approach, row.main); if (ob) parts.push([`Obstacle ➖${row.approach}`, -ob]); }
   if (row.invoke) parts.push([`Invoke “${row.invoke.text}”`, 1]);
   (row.hits || []).forEach(h => parts.push([h, -1])); // invoked or compelled Trouble / Liability
   parts.push([`Fate ${row.approach}`, fate]);
@@ -1327,7 +1336,7 @@ function* humanEdgePlan(row, fate, difficulty, board) {
   // The Main player picks Story Points and resource points together (+1 each), up to all they have.
   const resMost = human === row.main ? pushMax(row) : 0;
   if (human === row.main && (max > 0 || resMost > 0)) {
-    const sum = parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(' · ');
+    const sum = parts.map(partHtml).join(' · ') + obstacleNote(parts);
     const pick = yield {
       title: `Push the roll on ${rowLabel(row)}?`,
       html: `<p>${sum} = ${before + difficulty} vs difficulty ${difficulty}: right now that’s ${outcomeHtml(before)}.</p><p>Spend Story Points and / or succeed at a cost with your ${row.risk} ${riskName(row.risk)}: <b>+1 each</b>. A resource spent down to 0 leaves your sheet.</p>`,
@@ -1338,7 +1347,7 @@ function* humanEdgePlan(row, fate, difficulty, board) {
     return { spend: plan, margin: before + k, pushChosen: pick.res };
   }
   if (max > 0) {
-    const sum = parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(' · ');
+    const sum = parts.map(partHtml).join(' · ') + obstacleNote(parts);
     k = yield ask(`Spend Story Points on ${rowLabel(row)}?`,
       `<p>${sum} = ${before + difficulty} vs difficulty ${difficulty}${used ? `, and ${who(row.main)} spends ${storyPts(used)}` : ''}: right now that’s ${outcomeHtml(before + used)}.</p><p>You have ${human.edge.length} banked Story Points (at most ${cap} per roll in all).</p>`,
       Array.from({ length: max + 1 }, (_, i) => ({ label: i ? `Spend ${storyPts(i)}` : 'Spend none', hint: outcome(before + used + i), value: i })));
@@ -1410,7 +1419,7 @@ function resolveRow(row, fate, difficulty, target, board) {
 
   const effort = total(parts);
   const margin = effort - difficulty;
-  const sum = `${parts.map(([l, v]) => `${esc(l)} ${signed(v)}`).join(' · ')} = <b>${effort}</b> vs difficulty ${difficulty}`;
+  const sum = `${parts.map(partHtml).join(' · ')} = <b>${effort}</b> vs difficulty ${difficulty}${obstacleNote(parts)}`;
   const attempt = `<p>${who(main)} tries to <i>${row.action}</i>${row.helpers.length ? `, with help from ${row.helpers.map(who).join(' and ')}` : ''}.</p>`
     + (spent ? `<p>Seeing the card, ${paid.map(([p, k], i) => `${who(p)} ${i ? 'adds' : 'spends'} ${k} banked Story Point${k === 1 ? '' : 's'}`).join(' and ')} (+${spent}).</p>` : '') + pushNote + troubleNote;
   const team = [main, ...row.helpers];
