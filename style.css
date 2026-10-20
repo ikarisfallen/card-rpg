@@ -1741,7 +1741,8 @@ body[data-theme="space"] #table {
 .pc-card .approach-row .resource .res-badge { gap: 2px; }
 .pc-card .approach-row .resource .res-grid { font-size: 17px; column-gap: 4px; }
 .pc-card .approach-row .resource .res-name { font-size: 10px; }
-/* A line between the Approach and Edge columns, down through the three rows. */
+/* An arrow on each row from the Approach box to the Edge box. */
 .mat-cell.approach { margin-right: 11px; }
 .mat-cell.edge { margin-left: 11px; } /* room either side of the line */
-.mat-cell.edge::before { content: ""; position: absolute; left: -14px; top: -7px; bottom: -7px; width: 2px; border-radius: 1px; background: rgba(255, 255, 255, 0.4); }
+.mat-cell.edge::before { content: ""; position: absolute; left: -17px; top: 50%; transform: translateY(-50%); border-left: 10px solid rgba(255, 255, 255, 0.55); border-top: 7px solid transparent; border-bottom: 7px solid transparent; } /* ▶ from the Approach box to the Edge box */
+.mat-goal { padding-left: 104px; } /* clear of the Edge die (72px) at the banner's left end */
