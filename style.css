@@ -1675,10 +1675,10 @@ body[data-theme="space"] #table {
 /* One approach per card now: every character card's icons are the same, larger size. */
 .pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane, .kind-relationship) .approach-row { font-size: 40px; gap: 6px; }
 .pc-card .approach-row .resource { padding-left: 6px; margin-left: 6px; }
-.res-name { box-sizing: border-box; min-width: 6.4em; text-align: center; } /* every resource name as wide as "Reputation" */
+.res-name { box-sizing: border-box; min-width: 6.95em; text-align: center; } /* every resource name as wide as "Information" */
 /* A Concept's / Trouble's resource: its coloured name label beside the approach. */
 .pc-card .approach-row .resource { border-left: none; padding-left: 0; display: flex; align-items: center; }
-.pc-card .approach-row .resource .res-name { font-size: 12px; }
+.pc-card .approach-row .resource .res-name { font-size: 11px; }
 /* "Risk" over the rows' resource column, at the bottom right of the Situation's opening text. */
 .situation-card .sit-risk-head { position: absolute; right: 6px; bottom: 2px; width: 6.4em; font-size: 15px; text-align: center; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: color-mix(in srgb, var(--accent) 70%, #000); }
 
@@ -1693,3 +1693,46 @@ body[data-theme="space"] #table {
 .mat-cell.round { border-radius: 50%; width: 94px; height: 94px; justify-self: center; align-self: center; margin: 0; }
 /* The Edge die's name over its home spot on the banner. */
 .edge-die-name { text-align: center; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #8ff0a4; }
+
+/* Element lines: a small label (FEAR, CROSSING...) over each line's text instead of an icon. */
+.el-card .el-lines li { grid-template-columns: 1fr auto; }
+.el-body { display: flex; flex-direction: column; min-width: 0; }
+.el-label { font-size: 0.55em; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.1; opacity: 0.6; }
+
+/* Mad-lib blanks on the Situation card: a line to fill in, with what goes there written small under it. */
+.madlib { display: inline-flex; flex-direction: column; align-items: center; vertical-align: top; margin: 0 2px; }
+.madlib-blank { display: block; min-width: 3.6em; height: 1.05em; border-bottom: 1.5px solid currentColor; opacity: 0.75; }
+.madlib-label { font-size: 0.55em; font-weight: 700; line-height: 1.1; letter-spacing: 0.04em; opacity: 0.7; white-space: nowrap; }
+.el-lines .el-text { font-size: 1.08em; } /* the lines a bit larger than the card text (the cards are taller now) */
+.situation-card .sit-intro .sit-text { font-size: 0.85em; } /* room for the mad-lib labels */
+.situation-card .sit-intro .sit-text { line-height: 1.22; }
+/* Element cards, tightened: less padding, closer lines. */
+.el-card .card-front { gap: 6px; padding: 8px 10px; }
+.el-card .el-lines li { gap: 4px; }
+.el-card.kind-location .el-lines { column-gap: 16px; }
+.el-card.kind-location .el-lines { grid-template-columns: 1fr 1fr; justify-content: stretch; align-content: space-between; } /* two columns filling the card edge to edge */
+/* With mad-lib blanks the choices and Escalations run longer: a touch smaller to fit. */
+.situation-card .sit-choice { font-size: calc(var(--card-text) * 0.92); }
+.situation-card .sit-escs { font-size: 0.8em; }
+.madlib-label { line-height: 1; }
+/* The Location: two columns over the whole card (the right one starts at the top, beside the title). */
+.el-card.kind-location .card-front { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+.loc-col { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.el-card.kind-location .loc-col .el-lines { display: flex; flex-direction: column; justify-content: space-between; }
+.el-card .el-label { font-size: 0.62em; }
+/* Spillover fixes (2026-10-20): character card text a little smaller (the approach row is bigger
+   now), long words may break, Element titles may wrap to two lines, and the Relationship label fits. */
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane, .kind-relationship) .pc-text { font-size: calc(var(--card-text) * 0.9); overflow-wrap: anywhere; }
+.pc-card:is(.kind-concept, .kind-trouble, .kind-boon, .kind-bane, .kind-relationship) .pc-text.long { font-size: calc(var(--card-text) * 0.76); }
+.el-card .el-name { line-height: 1.2; }
+.el-card .el-name.long { font-size: calc(var(--card-title) * 0.74); } /* a long title stays on one line */
+.pc-card.kind-relationship .kind-label { letter-spacing: 0; font-size: 0.8em; }
+/* An Element's type (LOCATION, ALLY...) small and uppercase above its name, like the line labels; the mad-lib labels uppercase too. */
+.el-head .el-title .el-type { font-size: calc(var(--card-text) * 0.62); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.1; }
+.madlib-label { text-transform: uppercase; }
+/* An approach's name, small and in capitals under its icon (cards and dice; not the resource badges). */
+.ap-icon { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; }
+.ap-name { font-family: "Segoe UI", system-ui, sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(0, 0, 0, 0.6); margin-top: 2px; }
+.el-lines .el-approach .ap-name { font-size: 9px; }
+.die-symbol .ap-icon { gap: 1px; }
+.die-symbol .ap-name { font-size: 10px; margin-top: 3px; }

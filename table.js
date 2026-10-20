@@ -315,6 +315,7 @@ function buildDieFace(container, faces) {
 function renderDieFace(container, faces, value, faceHtml = null) {
   if (faces) {
     const symbol = container.querySelector('.die-symbol');
+    if (!faceHtml && typeof approachFace === 'function' && faces === APPROACHES) faceHtml = approachFace; // an approach die: its name too
     if (faceHtml) symbol.innerHTML = faceHtml(faces[value - 1]);
     else symbol.textContent = faces[value - 1];
     return;

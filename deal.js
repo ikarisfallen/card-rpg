@@ -10,17 +10,22 @@ const THEMES = {
 };
 let DATA = THEMES.noir.data;
 const APPROACHES = window.GAME_DATA.approaches;
-// The six resources on the character sheet. A failure costs the row's resource ("Lost Time"),
+// The approaches' names, small and in capitals under their icons on cards and dice.
+const APPROACH_NAMES = ['Bold', 'Wise', 'Calm', 'Loud', 'Swift', 'Subtle']; // in APPROACHES order
+const approachName = a => APPROACH_NAMES[APPROACHES.findIndex(x => x.replace(/️/g, '') === (a || '').replace(/️/g, ''))] || '';
+const approachTag = a => `<span class="ap-icon">${a}<span class="ap-name">${approachName(a)}</span></span>`;
+const approachFace = a => approachTag(a); // an approach die's face
+// The six resources on the character sheet. A failure costs the row's resource ("Lost Momentum"),
 // and the approach used changes how much (Cost vs. Approaches): `good` guards it, `bad`
-// squanders it. Intel/Reputation are a pair (🕶️ vs 📢); the other four go round a loop where
+// squanders it. Information/Reputation are a pair (🕶️ vs 📢); the other four go round a loop where
 // each approach guards one resource and squanders the next.
 const RISKS = {
-  'ℹ️': { name: 'Intel', good: '🕶️', bad: '📢' },     // Revealed
+  'ℹ️': { name: 'Information', good: '🕶️', bad: '📢' },     // Revealed
   '⭐': { name: 'Reputation', good: '📢', bad: '🕶️' }, // Unaware
   '📦': { name: 'Resources', good: '🧠', bad: '⚡' },  // Wasted
-  '🔥': { name: 'Drive', good: '💪', bad: '🧠' },     // Ineffective
-  '📏': { name: 'Efficiency', good: '🐢', bad: '💪' },    // Spillover
-  '⌛': { name: 'Time', good: '⚡', bad: '🐢' },       // Delayed
+  '🔥': { name: 'Motivation', good: '💪', bad: '🧠' },     // Ineffective
+  '📏': { name: 'Control', good: '🐢', bad: '💪' },    // Spillover
+  '⌛': { name: 'Momentum', good: '⚡', bad: '🐢' },       // Delayed
 };
 const RESOURCES = Object.keys(RISKS);
 // A resource as shown on the Situation cards and character sheets: the approach that guards it (+1)
@@ -52,9 +57,11 @@ const DIE_SIZE = 72; // every die on the table: the sheets' resource dice and al
 // Element cards: MacGuffin, Ally and Villain side by side, and underneath them the Location:
 // as wide as the Situation card, shaped like an index card (5 x 3), its nine lines in two
 // columns. Text is as large as the Situation card's.
-const EL_CARD = { w: 310, h: 380 }; // wide enough for two name cards side by side
+const EL_CARD = { w: 310, h: Math.round(310 * 88 / 63) }; // wide enough for two name cards side by side; Magic card proportions (63 x 88)
 const EL_GAP = 20;
-const LOC_CARD = { w: 620, h: 336 }; // the Location card: an index card (5 x 3), landscape
+// The Location card: landscape, in two columns (the title and four lines, then five lines from the top).
+// The Situation card turned landscape (SIT_CARD is set further down, so read it when used).
+const LOC_CARD = { get w() { return SIT_CARD.h; }, get h() { return SIT_CARD.w; } };
 const elSize = kind => (kind === 'location' ? LOC_CARD : EL_CARD);
 const PEEK = 44; // how much of a tucked name card shows above the card it's under
 const STACK_STEP = PC_CARD.h + 8; // a second Asset / Liability sits right under the first
@@ -122,8 +129,8 @@ function pcFront(card) {
   const sign = card.sign || (card.kind === 'relationship' ? '👥' : ''); // shown beside the card's type
   return `
     <div class="kind-label">${sign ? `<span class="sign">${sign}</span>` : ''}${KIND_LABEL[card.kind]}</div>
-    <div class="pc-text${card.text.length > 34 ? ' long' : ''}">${esc(card.text)}</div>
-    <div class="approach-row">${card.approaches.join('')}${card.resource ? `<span class="resource">${resourceLabel(card.resource)}</span>` : ''}</div>`;
+    <div class="pc-text${card.text.length > 30 ? ' long' : ''}">${esc(card.text)}</div>
+    <div class="approach-row">${card.approaches.map(a => (card.kind === 'relationship' ? a : approachTag(a))).join('')}${card.resource ? `<span class="resource">${resourceLabel(card.resource)}</span>` : ''}</div>`;
 }
 
 function namesBack(label, names) {
@@ -186,14 +193,32 @@ function plainBack(label) {
   return `<div class="back-emblem"><span>✦</span><small>${esc(label)}</small></div>`;
 }
 
+// What each Element line is, by its icon: a small label over the line's text on the card.
+const LINE_NAMES = {
+  '💎': 'Material', '📍': 'Where it’s from', '✨': 'What it’s for', '❌': 'Its flaw',          // Object
+  '👻': 'Fear', '🚩': 'Goal', '🔒': 'Secret', '🔗': 'Connection',                             // Ally, Villain
+  '🪜': 'Climb', '🧱': 'Cover', '🕳': 'Pit', '🌉': 'Crossing', '🪨': 'Obstacle',               // Location
+  '🚪': 'Hidden entry', '💦': 'Slick', '⚠': 'Hazard', '💀': 'Enemies',
+};
+const lineName = icon => LINE_NAMES[noVS16(icon)] || '';
+
 function elementFront(card) {
   const [headIcon, ...lineIcons] = card.icons;
-  return `
-    <div class="el-head"><span class="el-icon">${headIcon}</span><span class="el-title"><span class="el-name">${esc(card.name)}</span><span class="el-type">${esc(card.label)}</span></span></div>
-    <ul class="el-lines">
-      ${card.lines.map((line, i) => `
-        <li data-line="${i}"><span class="el-icon">${lineIcons[i] || ''}</span><span class="el-text">${esc(line.text)}</span><span class="el-approach">${line.approach}</span></li>`).join('')}
-    </ul>`;
+  const head = `<div class="el-head"><span class="el-icon">${headIcon}</span><span class="el-title"><span class="el-type">${esc(card.label)}</span><span class="el-name${card.name.length > 18 ? ' long' : ''}">${esc(card.name)}</span></span></div>`;
+  const items = (from, to) => card.lines.slice(from, to).map((line, k) => {
+    const i = from + k;
+    return `
+        <li data-line="${i}"><span class="el-body"><span class="el-label">${esc(lineName(lineIcons[i] || ''))}</span><span class="el-text">${esc(line.text)}</span></span><span class="el-approach">${approachTag(line.approach)}</span></li>`;
+  }).join('');
+  // The Location: two columns over the whole card, the title and its first lines on the left and
+  // the rest on the right, from the top.
+  if (card.kind === 'location') {
+    const left = Math.floor(card.lines.length / 2);
+    return `
+    <div class="loc-col">${head}<ul class="el-lines">${items(0, left)}</ul></div>
+    <div class="loc-col"><ul class="el-lines">${items(left)}</ul></div>`;
+  }
+  return `${head}<ul class="el-lines">${items(0)}</ul>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -238,7 +263,7 @@ window.onPieceMoved = queuePileCounts;
 
 function placePcCard(card, x, y, faceUp = true) {
   const back = card.kind === 'relationship' ? portraitBack(card.portrait)
-    : card.names ? namesBack(KIND_LABEL[card.kind], card.names) : plainBack(KIND_LABEL[card.kind]);
+    : card.names && card.kind !== 'boon' ? namesBack(KIND_LABEL[card.kind], card.names) : plainBack(KIND_LABEL[card.kind]); // an Asset has no names on its back
   const { w, h } = PC_CARD;
   const piece = createCard({
     className: `pc-card kind-${card.kind}`,
@@ -551,6 +576,36 @@ function choiceRiskHtml(risk) {
     + '</span>';
 }
 
+// The Situation card as a mad lib: each Element symbol is a blank with what goes there written
+// small underneath ("Villain", "Villain’s Goal", "Crossing"); the read-aloud text fills them in.
+const KIND_NAMES = { villain: 'Villain', ally: 'Ally', macguffin: 'Object', location: 'Location' };
+function madLibKeys() {
+  const keys = [];
+  const groups = { villain: DATA.villains, ally: DATA.allies, macguffin: DATA.macguffins, location: DATA.locations };
+  for (const [kind, group] of Object.entries(groups)) {
+    if (!group || !group.icons) continue;
+    const [head, ...lines] = group.icons.map(noVS);
+    lines.forEach(icon => {
+      keys.push({ key: head + icon, label: `${KIND_NAMES[kind]}’s ${lineName(icon)}` });
+      if (kind === 'location') keys.push({ key: icon, label: lineName(icon) }); // a feature alone is the Location's
+    });
+    keys.push({ key: head, label: KIND_NAMES[kind] });
+  }
+  keys.push({ key: noVS('🏠'), label: 'Location' }); // situations use 🏠 for any location
+  return keys.sort((a, b) => b.key.length - a.key.length); // pairs first
+}
+function madLib(text) {
+  const src = noVS(text || ''), keys = madLibKeys();
+  let out = '';
+  for (let i = 0; i < src.length;) {
+    const hit = keys.find(k => src.startsWith(k.key, i));
+    if (!hit) { out += esc(src[i]); i++; continue; }
+    out += `<span class="madlib"><span class="madlib-blank"></span><span class="madlib-label">${esc(hit.label)}</span></span>`;
+    i += hit.key.length;
+  }
+  return out;
+}
+
 function situationFront(situation, result = null) {
   const lines = situation.description.split('\n');
   const first = lines.findIndex(l => /^\s*[ABC]\)/.test(l));
@@ -561,7 +616,7 @@ function situationFront(situation, result = null) {
     if (m) choices[m[1]] = m[2].replace(APPROACH_AND_RISK, '');
   });
   const escalations = situation.escalations
-    .map((text, i) => text && `<div class="sit-esc"><b>Escalation ${i + 1}:</b> ${esc(text)}</div>`)
+    .map((text, i) => text && `<div class="sit-esc"><b>Escalation ${i + 1}:</b> ${madLib(text)}</div>`)
     .join('');
   // Who won on row i (a shared win stamps every finished row).
   const winnerOn = i => result && !result.lost && (result.winners || [result]).find(w => w.row === i);
@@ -569,12 +624,12 @@ function situationFront(situation, result = null) {
     <div class="sit-intro">
       ${result && result.lost ? '<div class="sit-lost">Lost</div>' : ''}
       <div class="sit-name">${esc(situation.name || 'Situation')}</div>
-      <div class="sit-text">${esc(intro)}</div>
+      <div class="sit-text">${madLib(intro)}</div>
       ${SIM_RULES.riskModifier && SIM_RULES.freeApproach ? '<div class="sit-risk-head">Risk</div>' : ''}
     </div>
     <div class="sit-choices">
       ${['A', 'B', 'C'].map((k, i) => `
-        <div class="sit-choice${winnerOn(i) ? ' won' : ''}"><span class="sit-choice-text">${esc(choices[k])}</span>${choiceRiskHtml(situation.risks[i])}${winnerOn(i) ? `<span class="sit-stamp" style="--c:${winnerOn(i).color}">★ ${esc(winnerOn(i).name)}</span>` : ''}</div>`).join('')}
+        <div class="sit-choice${winnerOn(i) ? ' won' : ''}"><span class="sit-choice-text">${madLib(choices[k])}</span>${choiceRiskHtml(situation.risks[i])}${winnerOn(i) ? `<span class="sit-stamp" style="--c:${winnerOn(i).color}">★ ${esc(winnerOn(i).name)}</span>` : ''}</div>`).join('')}
     </div>
     <div class="sit-escs">${escalations}</div>`;
 }
