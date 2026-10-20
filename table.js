@@ -367,20 +367,38 @@ function createToken({ className = '', size = 56, label, html, x, y }) {
   return addPiece({ kind: 'token', className, w: size, h: size, lift: el('div', null, html ?? esc(label)), x, y });
 }
 
+// A pawn seen from above at a slant, like a chess pawn: a round head on a collar, a flared body, and
+// a two-step base whose ellipses read as sitting in a round spot. Lit from the upper left.
 function createPawn({ color, label, x, y }) {
-  const id = `pawn-grad-${++createPawn.n}`;
+  const id = `pawn-${++createPawn.n}`;
+  const light = `color-mix(in srgb, ${color} 45%, #fff)`, dark = `color-mix(in srgb, ${color} 65%, #000)`;
   const lift = el('div', null, `
-    <svg viewBox="0 0 64 96" aria-hidden="true">
+    <svg viewBox="0 0 80 96" aria-hidden="true">
       <defs>
-        <linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="color-mix(in srgb, ${color} 55%, #fff)"/><stop offset="1" stop-color="${color}"/>
+        <linearGradient id="${id}-side" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="${light}"/><stop offset="0.45" stop-color="${color}"/><stop offset="1" stop-color="${dark}"/>
         </linearGradient>
+        <linearGradient id="${id}-top" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="${light}"/><stop offset="1" stop-color="${color}"/>
+        </linearGradient>
+        <radialGradient id="${id}-head" cx="0.35" cy="0.32" r="0.75">
+          <stop offset="0" stop-color="${light}"/><stop offset="0.55" stop-color="${color}"/><stop offset="1" stop-color="${dark}"/>
+        </radialGradient>
       </defs>
-      <path fill="url(#${id})" stroke="rgba(0,0,0,.4)" stroke-width="1.5"
-        d="M32 4a15 15 0 0 1 9.5 26.6C47 33 50 37.5 50 43H41l5 33h8a4 4 0 0 1 4 4v10H6V80a4 4 0 0 1 4-4h8l5-33h-9c0-5.5 3-10 8.5-12.4A15 15 0 0 1 32 4z"/>
-      <text x="32" y="22" text-anchor="middle" dominant-baseline="middle">${esc(label)}</text>
+      <g stroke="rgba(0,0,0,.35)" stroke-width="1">
+        <path fill="url(#${id}-side)" d="M5 74v5a35 14 0 0 0 70 0v-5z"/>
+        <ellipse fill="url(#${id}-top)" cx="40" cy="74" rx="35" ry="14"/>
+        <path fill="url(#${id}-side)" d="M13 63v4a27 11 0 0 0 54 0v-4z"/>
+        <ellipse fill="url(#${id}-top)" cx="40" cy="63" rx="27" ry="11"/>
+        <path fill="url(#${id}-side)" d="M27 62L33 39h14l6 23a13 6 0 0 1-26 0z"/>
+        <path fill="url(#${id}-side)" d="M28 36v3a12 5 0 0 0 24 0v-3z"/>
+        <ellipse fill="url(#${id}-top)" cx="40" cy="36" rx="12" ry="5"/>
+        <circle fill="url(#${id}-head)" cx="40" cy="23" r="15"/>
+      </g>
+      <ellipse cx="34" cy="16" rx="5" ry="3.5" fill="rgba(255,255,255,.45)"/>
+      <text x="40" y="25" text-anchor="middle" dominant-baseline="middle">${esc(label)}</text>
     </svg>`);
-  return addPiece({ kind: 'pawn', w: 56, h: 84, lift, x, y });
+  return addPiece({ kind: 'pawn', w: 80, h: 96, lift, x, y });
 }
 createPawn.n = 0;
 

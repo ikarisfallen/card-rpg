@@ -427,8 +427,10 @@ function buildSheet(x, y, concept, trouble) {
 // wider: it names the resource and which approaches guard or squander it.
 // The first column is a slot cut into the Board: the Situation card slides in so its three
 // choices (with their risks) sit in it, level with rows A, B and C.
-const MAT_COL_NAMES = ['main', 'help', ...(SIM_RULES.freeApproach ? [] : ['approach']), 'minus', ...(SIM_RULES.obstacle ? ['obstacle'] : []), 'successes'];
-const MAT_COL_W = { main: 240, help: 104, approach: 104, minus: 104, obstacle: 104, successes: 124 };
+// Main and Help hold pawns (round spots); Approach holds the Main's own approach die and Edge the
+// Edge die (the Situation's bonus die) when the Main claims it.
+const MAT_COL_NAMES = ['main', 'help', 'approach', ...(SIM_RULES.sceneModifier && SIM_RULES.sceneClaim ? ['edge'] : []), 'minus', ...(SIM_RULES.obstacle ? ['obstacle'] : []), 'successes'];
+const MAT_COL_W = { main: 104, help: 104, approach: 96, edge: 96, minus: 104, obstacle: 104, successes: 124 };
 const MAT_COLS = MAT_COL_NAMES.map(n => MAT_COL_W[n]);
 const matCol = name => MAT_COL_NAMES.indexOf(name);
 // The Board is as tall as the upright Situation card beside it, top and bottom level with it: the
@@ -478,7 +480,8 @@ function buildMat(x, y, situation) {
   const heads = {
     main: ['Main', `${SIM_RULES.rowOrder === 'initiative' ? 'rolls in initiative order<br>' : ''}${SIM_RULES.maxStake ? `stake up to ${SIM_RULES.maxStake} ${miniSpot} · ` : ''}${SIM_RULES.maxEdgePerBet ? `Story Points: up to ${SIM_RULES.maxEdgePerBet}` : 'spend any Story Points'}${(PLAYER_COUNT_RULES[players] || {}).endingEdgeCap ? ` (Ending ${PLAYER_COUNT_RULES[players].endingEdgeCap})` : ''} ${miniEdge}`],
     help: ['Help', '+1 each · needs a matching Relationship'],
-    approach: ['Approach', 'read it on the Fate card'],
+    approach: ['Approach', SIM_RULES.freeApproach ? 'the Main’s own die, set to how they go in' : 'read it on the Fate card'],
+    edge: ['Edge', `${sceneMod()}: the first Main going in with its approach takes the Edge die`],
     minus: ['Tension', `−1 to its approach${SIM_RULES.minusNextRound ? '<br>from next round' : ''}<br>2 out: a fail loses${SIM_RULES.clearTiming === 'end' ? `<br>Clear: ${miniEdge}${SIM_RULES.clearGoesFirst ? ` ${miniFirst}st` : ''}` : ''}`],
     obstacle: ['Obstacle', `${SIM_RULES.obstacleCancels ? 'its approach gets<br>no bonuses' : '−1 to its approach'}<br>on its row only<br>set by the Storyteller`],
     successes: ['Successes', `${typeof playerRule('target', players) === 'object' ? 'stack in the table' : playerRule('target', players)} to win${SIM_RULES.overflowAtRowLimit ? `<br>extra margin → ${miniEdge}` : ''}`],
@@ -487,9 +490,10 @@ function buildMat(x, y, situation) {
   // Minus dice come from Escalations and hit every roll, so it's one tall box for all three
   // rows (added on row A only): the dice at the top, and a pawn clearing one of them at the bottom.
   const cellFor = {
-    main: () => el('div', 'mat-cell'),
-    help: () => el('div', 'mat-cell help'),
+    main: () => el('div', 'mat-cell round'),
+    help: () => el('div', 'mat-cell help round'),
     approach: () => el('div', 'mat-cell'),
+    edge: () => el('div', 'mat-cell edge'),
     minus: row => (row === 0 ? el('div', 'mat-cell minus') : null),
     obstacle: () => el('div', 'mat-cell obstacle'),
     successes: () => el('div', 'mat-cell'),
@@ -620,7 +624,7 @@ function relationshipBoard(x, y, players, relationships) {
   players.forEach((p, i) => {
     const deg = i * 360 / n;
     const pawn = at(deg, R);
-    const pawnPiece = createPawn({ color: PLAYER_COLORS[i % PLAYER_COLORS.length], label: p, x: pawn.x - 28, y: pawn.y - 42 });
+    const pawnPiece = createPawn({ color: PLAYER_COLORS[i % PLAYER_COLORS.length], label: p, x: pawn.x - 40, y: pawn.y - 48 });
     const tok = at(deg, R - 78);
     const initPiece = createToken({ className: 'initiative', size: 50, html: initiativeFaces(initiative[i]), x: tok.x - 25, y: tok.y - 25 });
     initPiece.initiative = initiative[i];
@@ -1127,7 +1131,10 @@ function deal(mode = 'deal') {
   });
 
   const cell = buildMat(BOARD_X, ROW2, situation);
-  TABLE.sceneDieAt = { x: BOARD_X + MAT_PAD + 8, y: ROW2 + MAT_PAD + (MAT_BANNER - DIE_SIZE) / 2 }; // left end of the banner
+  TABLE.sceneDieAt = { x: BOARD_X + MAT_PAD + 8, y: ROW2 + MAT_PAD + (MAT_BANNER - DIE_SIZE) / 2 + 8 }; // left end of the banner
+  // "Edge" over the Edge die's home spot.
+  const edgeName = addStatic(el('div', 'edge-die-name', 'Edge'), TABLE.sceneDieAt.x, TABLE.sceneDieAt.y - 22);
+  edgeName.style.width = `${DIE_SIZE}px`;
   TABLE.sceneNoteEl = document.querySelector('.mat .mat-scene');
   TABLE.cell = cell;
   const boardBottom = ROW2 + MAT_TOP + MAT_ROW * 3 + MAT_FOOT + MAT_PAD;

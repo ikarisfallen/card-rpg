@@ -1688,3 +1688,8 @@ body[data-theme="space"] #table {
 .roll-parts li:last-child { border-bottom: none; }
 /* Every approach die looks the same (the Scene, Obstacle and Minus dice too): where it sits says what it does. */
 .die-minus, .die-scene, .die-obstacle { --die-hi: #fffaf0; --die-lo: #ddd3bd; }
+
+/* Main and Help: round spots for the pawns. */
+.mat-cell.round { border-radius: 50%; width: 94px; height: 94px; justify-self: center; align-self: center; margin: 0; }
+/* The Edge die's name over its home spot on the banner. */
+.edge-die-name { text-align: center; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #8ff0a4; }
