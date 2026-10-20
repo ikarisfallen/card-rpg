@@ -1188,10 +1188,11 @@ function* humanBet(pl, rows, board, difficulty) {
       let approach = null;
       if (SIM_RULES.freeApproach) {
         const score = a => total(bonusParts(pl, a)) + riskMod(row, a) - minusFor(board, a) - obstacleFor(board, row, a, pl);
-        // Where the bonus comes from: your cards, the Situation's ✓ / ✗, the Scene die, Minus dice, the Obstacle.
+        // Where the bonus comes from: each card by name, the Situation's 🔺 / 🔻, the Edge die, Minus dice, the Obstacle.
         const scoreWords = a => {
           const parts = bonusParts(pl, a), scene = total(parts.filter(([l]) => /^Edge die/.test(l)));
-          const bits = [[`your cards`, total(parts) - scene], [`Situation ${riskMod(row, a) > 0 ? '🔺' : '🔻'}`, riskMod(row, a)], ['Edge die', scene],
+          const cards = parts.filter(([l]) => !/^Edge die/.test(l)).map(([l, v]) => [esc(l), v]); // each card by name
+          const bits = [...cards, [`Situation ${riskMod(row, a) > 0 ? '🔺' : '🔻'}`, riskMod(row, a)], ['Edge die', scene],
             ['Minus', -minusFor(board, a)], ['Obstacle', -obstacleFor(board, row, a, pl)]].filter(([, v]) => v);
           return bits.length ? `${bits.map(([l, v]) => `${l} ${signed(v)}`).join(' · ')} = <b>${signed(score(a))}</b>` : 'no bonus = <b>0</b>';
         };
