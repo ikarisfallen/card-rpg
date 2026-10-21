@@ -1335,7 +1335,9 @@ function* humanEdgePlan(row, fate, difficulty, board) {
   let k = 0;
   // The Main player picks Story Points and resource points together (+1 each), up to all they have.
   const resMost = human === row.main ? pushMax(row) : 0;
-  if (human === row.main && (max > 0 || resMost > 0)) {
+  // Already the best result there is (an Epic Success): nothing to gain, so don't ask.
+  const best = outcomeOf(before).name === 'Epic Success';
+  if (human === row.main && !best && (max > 0 || resMost > 0)) {
     const sum = parts.map(partHtml).join(' · ') + obstacleNote(parts);
     const pick = yield {
       title: `Push the roll on ${rowLabel(row)}?`,
@@ -1346,7 +1348,7 @@ function* humanEdgePlan(row, fate, difficulty, board) {
     if (k) plan.push([human, k]);
     return { spend: plan, margin: before + k, pushChosen: pick.res };
   }
-  if (max > 0) {
+  if (max > 0 && !(human === row.main && best)) {
     const sum = parts.map(partHtml).join(' · ') + obstacleNote(parts);
     k = yield ask(`Spend Story Points on ${rowLabel(row)}?`,
       `<p>${sum} = ${before + difficulty} vs difficulty ${difficulty}${used ? `, and ${who(row.main)} spends ${storyPts(used)}` : ''}: right now that’s ${outcomeHtml(before + used)}.</p><p>You have ${human.edge.length} banked Story Points (at most ${cap} per roll in all).</p>`,
