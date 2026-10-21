@@ -5,9 +5,10 @@
 
 const SIM_RULES = {
   acts: ['Beginning', 'Middle', 'Ending'],
-  difficulty: { 'Beginning': 1, 'Middle': 3, 'Ending': 2 }, // aiming at acts won ~90-100% / 70-80% / 50-70% (see LENGTH_BASE); Ending 2 since 2026-10-20 (failBy 1)
+  difficulty: { 'Beginning': 1, 'Middle': 3, 'Ending': 3 }, // aiming at acts won ~90-100% / 70-80% / 50-70% (see LENGTH_BASE); retuned 2026-10-21 for bots that help
   failBy: 1,          // missing the difficulty by this much or more is an Epic Failure (1 since 2026-10-20: any miss; a tie is a Failure)
   maxEscalations: 2,  // the failure after the last Escalation loses the situation
+  botHelp: true,      // bots help a friend's row when it beats a weak roll of their own, or finishes the situation (2026-10-21)
   helperShare: 1,     // spotlight tokens each helper places when the Main player succeeds
   maxTokensPerRoll: 1,   // a success takes at most this many spotlight tokens (0 = no cap); 1 since 2026-10-19...
   overflowToEdge: false, // ...true: each point of margin above it is 1 Story Point from the pile instead
@@ -194,7 +195,7 @@ const PLAYER_COUNT_RULES = {
   // 2 players: a tougher finale (difficulty 4) softened by 2 Edge, since there was no Edge left to cut.
   2: {
     target: { 'Beginning': 2, 'Middle': 3, 'Ending': 3 },
-    difficulty: { 'Beginning': 1, 'Middle': 3, 'Ending': 2 },
+    difficulty: { 'Beginning': 1, 'Middle': 3, 'Ending': 3 },
     extraMiddleEdge: 3, // long games: 3 Story Points at Middle 2, 3, ... (1 wasn't enough at 2 players)
     actEndHeal: 1, // test 2026-10-19: heal 1 point between acts at 2 players (2 made Acts II-III too easy)
     edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 }, // no Story Points at act start (2026-10-18)
@@ -218,8 +219,8 @@ const storyPts = n => `${n} Story Point${n === 1 ? '' : 's'}`;
 // Ending's starting Edge grows with them. 1 Middle and +1 is the tuned game (2026-10-17).
 const GAME_LENGTH = { middles: 1, extra: 1 };
 const LENGTH_BASE = {
-  // 2026-10-20, any miss an Epic Failure (failBy 1), Ending difficulty 2: sim ~ 2p 100 / 68-90 / 73-75,
-  // 3p 100 / 63-70 / 55-70, 4p 100 / 56-84 / 64.
+  // 2026-10-21, any miss an Epic Failure (failBy 1) and bots that help when it pays (botHelp),
+  // difficulty 1 / 3 / 3: sim ~ 2p 100 / 65 / 65, 3p 100 / 80 / 65, 4p 100 / 78 / 60.
   // 2026-10-19: each success takes 1 token (maxTokensPerRoll 1), so the stacks count successful rolls
   // and can rise act to act. With difficulty 1 / 3 / 3 the stacks below aim at acts won about
   // 90-100% / 70-80% / 50-70%. With 2 Story Points + 2 resource points per roll, buy-back and up to
@@ -229,9 +230,9 @@ const LENGTH_BASE = {
   // Stacks: Beginning = stack, Middle = stack + extra + middleStack, Ending = stack + extra *
   // endingSteps + endingStack (extra is 1: the game is always three acts).
   // endingEdge / edgePerExtra: Story Points at the Ending's start (all 0: no act-start Story Points).
-  2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: 2 },  // 2 / 2 / 6
-  3: { stack: 2, endingSteps: 1, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: 2 },  // 2 / 2 / 5
-  4: { stack: 3, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: 2 },  // 3 / 3 / 7
+  2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: 0, endingStack: 0 },  // 2 / 3 / 4
+  3: { stack: 2, endingSteps: 1, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: 1 },  // 2 / 2 / 4
+  4: { stack: 3, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: 0 },  // 3 / 3 / 5
 };
 function setGameLength(middles, extra) {
   GAME_LENGTH.middles = middles;

@@ -1106,9 +1106,12 @@ function bet(pl, rows, board, difficulty, isLast = false) {
   // cost, and a point more if it could knock them out.
   const options = free.flatMap(r => (SIM_RULES.freeApproach ? APPROACHES : [r.approach]).map(approach => ({ row: r, approach })));
   const rollScore = o => total(bonusParts(pl, o.approach)) + riskMod(o.row, o.approach) - minusFor(board, o.approach) - obstacleFor(board, o.row, o.approach, pl) + (freeLine(o.approach) ? 1 : 0);
+  // Walking into the Obstacle (its row, its approach) is what the other side expects: avoid it
+  // unless it's clearly the best roll anyway.
+  const intoObstacle = o => (board.obstacle && board.obstacle.row === o.row.index && same(o.approach, board.obstacle.approach) ? 0.75 : 0);
   const value = o => {
     const cost = riskCost(o.row.risk, o.approach);
-    return rollScore(o) - (cost - 1) * (SIM_RULES.narrowCost ? 1 : 0.5) - (cost && pl.res[o.row.risk] <= cost ? 1 : 0);
+    return rollScore(o) - (cost - 1) * (SIM_RULES.narrowCost ? 1 : 0.5) - (cost && pl.res[o.row.risk] <= cost ? 1 : 0) - intoObstacle(o);
   };
   const scored = options.map(o => ({ ...o, v: value(o) + Math.random() * 0.01 })); // break ties at random
   const pick = scored.length ? scored.reduce((a, b) => (b.v > a.v ? b : a)) : null;
@@ -1136,6 +1139,17 @@ function bet(pl, rows, board, difficulty, isLast = false) {
   const target = TABLE.target ?? actTarget(SIM_RULES.acts[0]);
   const stealRow = SIM_RULES.spotlightShift
     ? helpable.find(r => target - r.tokens.length <= 2 && pl.score < r.main.score) : null;
+
+  // Smarter help (SIM_RULES.botHelp): back a friend's row instead of making a weak roll of your own,
+  // when your +1 lifts their roll (before the Fate card) from a miss or a tie to a likely success,
+  // or when their success, with yours, would finish the situation.
+  const myMargin = pick ? rollScore(pick) - difficulty : -Infinity;
+  const mainMargin = r => total(rowParts(r, 0, board)) - difficulty;
+  const goodHelp = SIM_RULES.botHelp ? helpable
+    .map(r => ({ r, m: mainMargin(r), left: target - r.tokens.length }))
+    .filter(h => (h.m >= -1 && h.m <= 0 && myMargin <= h.m - 1) || (h.left <= 1 + SIM_RULES.helperShare && h.m >= 0 && myMargin <= 0))
+    .sort((a, b) => a.left - b.left || b.m - a.m)[0] : null;
+  if (goodHelp) return betHelp(pl, goodHelp.r, recovered);
 
   if (!stealRow && best && (score(best) >= 0 || !helpable.length)) {
     // Stake spotlight tokens: more the better the odds, one more when behind.

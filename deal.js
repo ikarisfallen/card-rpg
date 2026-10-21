@@ -6,7 +6,7 @@
 // Card sets. Approaches, resources and the Fate deck are shared by every theme.
 const THEMES = {
   noir: { label: 'Film Noir', data: window.GAME_DATA },
-  space: { label: 'Space Opera', data: window.SPACE_OPERA_DATA },
+  starwars: { label: 'Star Wars', data: window.STAR_WARS_DATA },
 };
 let DATA = THEMES.noir.data;
 const APPROACHES = window.GAME_DATA.approaches;
@@ -123,6 +123,42 @@ function buildElementDeck(kind, label, group, backNames) {
 // ---------------------------------------------------------------------------
 
 const KIND_LABEL = { concept: 'Concept', trouble: 'Trouble', boon: 'Asset', bane: 'Liability', relationship: 'Relationship' };
+
+// The player reference card, two-sided and as big as an Ally / Villain / Object card: the round on
+// one side, a roll on the other.
+function refRoundSide() {
+  return `
+    <div class="ref-title"><span class="ref-kind">Player reference</span>Each round</div>
+    <ol class="ref-steps">
+      <li><b>Obstacle.</b> The Storyteller sets it on a row and an approach: that approach’s bonuses don’t count there.</li>
+      <li><b>Moves</b>, in initiative order: <b>Main</b> on a free row (choose your approach) · <b>Help</b> a Main (a Relationship beside you shows their approach) · <b>Clear seat</b> · <b>Pass</b>.</li>
+      <li><b>Compel.</b> The Storyteller may compel one Main’s ✖️ Trouble or ➖ Liability: −1 and +1 Story Point, or refuse for 1.</li>
+      <li><b>Fate.</b> Turn one card for everyone.</li>
+      <li><b>Rolls</b>, in initiative order (see the back).</li>
+      <li><b>Clear seat:</b> remove a Tension die, +1 Story Point, go first next round.</li>
+      <li><b>End.</b> A row emptied? The situation is won. Least spotlight goes first next round.</li>
+    </ol>`;
+}
+function refRollSide() {
+  const signed = n => (n > 0 ? `+${n}` : `${n}`.replace('-', '−'));
+  return `
+    <div class="ref-title"><span class="ref-kind">Player reference</span>Your roll</div>
+    <ul class="ref-list">
+      <li><span>✔️ Concept · ➕ each Asset</span><b>+1</b></li>
+      <li><span>Edge die · each helper</span><b>+1</b></li>
+      <li><span>Row’s 🔺 / 🔻</span><b>+1 / −1</b></li>
+      <li><span>Each Tension die · a compel</span><b>−1</b></li>
+      <li><span>Fate card</span><b>−2 to +2</b></li>
+      <li><span>After Fate: Story Points, resource points</span><b>+1 each, up to ${SIM_RULES.maxEdgePerBet || 2} + ${SIM_RULES.maxPushPerRoll || 2}</b></li>
+    </ul>
+    <div class="ref-sub">Margin over the difficulty</div>
+    <ul class="ref-list ref-results">
+      <li><span><b>Epic Failure</b>: a Liability, and an Escalation</span><b>${signed(-SIM_RULES.failBy)} or less</b></li>
+      ${SIM_RULES.failBy > 1 ? `<li><span><b>Failure</b>: nothing happens</span><b>${signed(1 - SIM_RULES.failBy)} to 0</b></li>` : `<li><span><b>Failure</b>: nothing happens</span><b>0</b></li>`}
+      <li><span><b>Success</b>: take a spotlight token</span><b>+1</b></li>
+      <li><span><b>Epic Success</b>: a token and an Asset</span><b>+${SIM_RULES.boonMargin} or more</b></li>
+    </ul>`;
+}
 
 function pcFront(card) {
   const sign = card.sign || (card.kind === 'relationship' ? '👥' : ''); // shown beside the card's type
@@ -1358,7 +1394,14 @@ function deal(mode = 'deal') {
     const edgeX = boardX + 26; // clear of the This scene label to its left
     countedLabel('Story Points', edgeX, edgeLabelY, 'pair-label stack-label big-count', 'edge', { x: edgeX - 10, w: PC_CARD.w + 8, y: edgeLabelY - 4, h: edgeY + EDGE_SIZE - edgeLabelY + 8 });
     countedLabel('Scored spotlight', scoreX, scoreLabelY, 'pair-label stack-label big-count', 'spotlight', { x: scoreX - 10, w: PC_CARD.w + 8, y: scoreLabelY - 4, h: scoreY + SPOTLIGHT_SIZE - scoreLabelY + 8 });
-    charBottom = Math.max(charBottom, boonTop + STACK_STEP + PC_CARD.h, sheetY + SHEET_H + 10);
+    // Two player reference cards under the area, one showing each side.
+    const refY = Math.max(boonTop + STACK_STEP + PC_CARD.h, sheetY + SHEET_H + 10) + 24;
+    const refX = bx + (AREA_W - 2 * EL_CARD.w - EL_GAP) / 2;
+    [true, false].forEach((up, k) => createCard({
+      className: 'ref-card', w: EL_CARD.w, h: EL_CARD.h, x: refX + k * (EL_CARD.w + EL_GAP), y: refY, faceUp: up,
+      front: refRoundSide(), back: refRollSide(),
+    }));
+    charBottom = Math.max(charBottom, refY + EL_CARD.h);
     Object.assign(TABLE.players[i], {
       zones: { concept: conceptSlot, trouble: troubleSlot, boon: boonSlot, bane: baneSlot },
       dice, supply, scored: [], edge: [], scene: [], approachDie, approachDieHome,
