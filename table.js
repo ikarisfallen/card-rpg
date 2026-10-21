@@ -69,11 +69,13 @@ function frameRect(r) {
   applyView();
 }
 
-// Frame everything noted since the step began (nothing noted: the camera stays put).
+// Frame everything noted since the step began (nothing noted: the camera stays put), plus
+// whatever the game wants kept in view meanwhile (window.followAlso, e.g. the Fate card during a roll).
 function followAction() {
   const rs = touched.rects;
   touched.rects = [];
   if (!rs.length) return;
+  if (window.followAlso) rs.push(...window.followAlso());
   const x = Math.min(...rs.map(r => r.x)), y = Math.min(...rs.map(r => r.y));
   const x2 = Math.max(...rs.map(r => r.x + r.w)), y2 = Math.max(...rs.map(r => r.y + r.h));
   frameRect({ x, y, w: x2 - x, h: y2 - y });

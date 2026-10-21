@@ -645,6 +645,9 @@ function* playSituation(situation, act, label = act) {
     yield* troublePhase(rows, order, board, difficulty, target);
 
     // ---- The spin ----
+    // First the camera goes to the Fate deck, so the card turns over in view on the next step.
+    noteTouch(TABLE.fate.drawZone); noteTouch(TABLE.fate.discardZone);
+    yield { title: 'Time for the Fate card', html: '<p>Everyone has bet. Next, the top Fate card is turned over: it gives each approach a number from −2 to +2.</p>' };
     const { card, reshuffled } = drawFate();
     const fateOf = approach => (card.find(c => same(c.approach, approach)) || { value: 0 }).value;
     yield {
@@ -665,6 +668,7 @@ function* playSituation(situation, act, label = act) {
       // Each roll goes step by step: 1) who's rolling; 2) the cards that count come out under the
       // Board and every bonus is listed; 3) the human player spends Story Points / resources;
       // 4) the result; 5) tokens move, and the cards and pawns go back.
+      spotlightRow(row);
       yield rollIntro(row);
       const shown = showUsedCards(row); // the cards behind this roll, lined up under the Board
       yield rollBonuses(row, fateOf(row.approach), difficulty, board);
@@ -747,10 +751,13 @@ function* playSituation(situation, act, label = act) {
       if (SIM_RULES.freeApproach) dropApproachDie(row);
       if (row.main.initHome) { row.main.initToken.el.classList.remove('on-board'); glide(row.main.initToken, row.main.initHome.x, row.main.initHome.y); }
       returnUsedCards(shown);
+      clearRowSpotlight();
       yield rollWrapUp(row, moves);
       if (TABLE.pendingSwap) { // the human player drew a second Asset or Liability
         const sw = TABLE.pendingSwap;
         TABLE.pendingSwap = null;
+        if (sw.kind === 'AssetFull') { yield yield* chooseFullBoon(sw); continue; }
+        if (sw.kind === 'LiabilityFull') { yield yield* chooseFullBane(sw); continue; }
         const old = (sw.kind === 'Asset' ? sw.pl.zones.boon : sw.pl.zones.bane).occupant;
         const takeNew = yield ask(`Which ${sw.kind} do you keep?`, `<p>You can only hold one ${sw.kind}.</p>`,
           [{ label: `Keep ${old.card.text}`, hint: old.card.approaches.join(''), value: false }, { label: `Take ${sw.card.text}`, hint: sw.card.approaches.join(''), value: true }]);
@@ -1262,6 +1269,28 @@ const outcomeHtml = m => { const o = outcomeOf(m); return `<b class="outcome ${o
 const outcomeText = m => { const o = outcomeOf(m); return `${o.name}: ${o.what}`; };
 
 // Step 1 of a roll: who's rolling, and how.
+// While a row is being rolled and checked, the whole Board row lights up and its Main's pawn bobs.
+function spotlightRow(row) {
+  clearRowSpotlight();
+  if (!TABLE.boardAt) return;
+  const at = { x: TABLE.boardAt.x + MAT_PAD, y: TABLE.boardAt.y + MAT_TOP + row.index * MAT_ROW, w: MAT_W - MAT_PAD * 2, h: MAT_ROW };
+  const glow = addStatic(el('div', 'row-glow'), at.x, at.y);
+  glow.style.width = `${at.w}px`;
+  glow.style.height = `${at.h}px`;
+  noteTouch(at); // the camera frames the row
+  row.main.pawn.el.classList.add('rolling');
+  TABLE.rowGlow = { glow, pawn: row.main.pawn, at };
+}
+// While a row rolls, the camera keeps that row and the turned Fate card in view.
+window.followAlso = () => (TABLE.rowGlow && TABLE.fate ? [TABLE.rowGlow.at, TABLE.fate.discardZone] : []);
+function clearRowSpotlight() {
+  const g = TABLE.rowGlow;
+  if (!g) return;
+  g.glow.remove();
+  g.pawn.el.classList.remove('rolling');
+  TABLE.rowGlow = null;
+}
+
 function rollIntro(row) {
   const m = row.main;
   return {
@@ -1371,6 +1400,33 @@ function* humanEdgePlan(row, fate, difficulty, board) {
   if (k) plan.push([human, k]);
   if (human === row.main) plan.push(...botEdgePlan(row, before + k, bots, cap - k)); // bot helpers top up
   return { spend: plan, margin: before + plan.reduce((n, [, x]) => n + x, 0) };
+}
+
+// Put `card` in place of the player's Asset number `i` (0: the slot's card, then the extra ones).
+function replaceBoon(pl, i, card) {
+  const old = pl.zones.boon.occupant;
+  if (i > 0) { TABLE.boonDeck.push(pl.moreBoons[i - 1]); pl.moreBoons[i - 1] = card; renderStacks(pl); pulse(old); return; }
+  leaveZone(old); [...old.children].forEach(removePiece); removePiece(old);
+  TABLE.boonDeck.push(old.card);
+  placeBoon(pl, card);
+  renderStacks(pl);
+}
+
+// The human player, already holding the most Assets, drew another: replace one, or take a Story Point.
+function* chooseFullBoon({ pl, card }) {
+  const tag = c => `${esc(c.text)} (➕${c.approaches.join('')})`;
+  const held = boonsOf(pl);
+  const choice = yield ask('A new Asset, but your hands are full',
+    `<p>You drew <b>${tag(card)}</b>, but you already hold ${held.length} Assets. Replace one of them with it, or leave it and take <b>1 Story Point</b> instead.</p>`,
+    [...held.map((c, i) => ({ label: `Replace ${esc(c.text)}`, hint: `take ${esc(card.text)} instead`, value: i })),
+      { label: 'Take a Story Point', hint: atEdgeLimit(pl) ? 'you’re at the Story Point limit: nothing' : 'keep your Assets', value: 'sp' }]);
+  if (choice === 'sp') {
+    TABLE.boonDeck.push(card);
+    const got = gainEdge(pl);
+    return { title: 'You take a Story Point', html: `<p>${who(pl)} keeps their Assets${got ? ' and takes <b>1 Story Point</b>' : ' (no room for another Story Point)'}; ${tag(card)} goes back in the deck.</p>` };
+  }
+  replaceBoon(pl, choice, card);
+  return { title: 'You take the new Asset', html: `<p>${who(pl)} takes <b>${tag(card)}</b>, and ${tag(held[choice])} goes back in the deck.</p>` };
 }
 
 // The human player chooses between their Asset or Liability and the one they just drew.
@@ -1781,17 +1837,20 @@ function returnBane(piece) {
 // situation's rows use) and the other goes back in the deck.
 function giveBane(pl, rows) {
   const deck = TABLE.bane && TABLE.bane.deck;
-  if (!deck || !deck.length || !pl.zones.bane) return '';
-  const card = deck.splice(randInt(deck.length), 1)[0];
-  const name = baneName({ card });
+  if (!deck || !pl.zones.bane) return '';
   const old = pl.zones.bane.occupant;
   if (old && SIM_RULES.stackCards && SIM_RULES.stackMax && banesOf(pl).length >= SIM_RULES.stackMax) {
-    // At the limit: keep the less harmful of the new one and the extra one held (bots).
-    const i = pl.moreBanes.length - 1, held = pl.moreBanes[i];
-    if (baneBite({ card }, rows) < baneBite({ card: held }, rows)) { pl.moreBanes[i] = card; deck.push(held); renderStacks(pl); pulse(old); return `<p>${who(pl)} draws the Liability ${name} and lets go of ${baneName({ card: held })} (at most ${SIM_RULES.stackMax}). How did that happen?</p>`; }
-    deck.push(card); pulse(old);
-    return `<p>${who(pl)} draws the Liability ${name}, but keeps the ones they have (at most ${SIM_RULES.stackMax}): it goes back in the deck.</p>`;
+    // At the limit: no new Liability. Instead they lose an Asset, or lower one resource of their
+    // choice by 1. The human player chooses after the roll (chooseFullBane); bots see botFullBane.
+    if (pl.human && (boonsOf(pl).length || RESOURCES.some(r => pl.res[r] > 0))) {
+      TABLE.pendingSwap = { kind: 'LiabilityFull', pl };
+      return `<p>${who(pl)} already carries ${SIM_RULES.stackMax} Liabilities, so instead of a third: lose an Asset, or lower one of your resources by 1. How did that happen?</p>`;
+    }
+    return botFullBane(pl, rows);
   }
+  if (!deck.length) return '';
+  const card = deck.splice(randInt(deck.length), 1)[0];
+  const name = baneName({ card });
   if (old && SIM_RULES.stackCards) {
     pl.moreBanes.push(card);
     renderStacks(pl);
@@ -1815,6 +1874,56 @@ function giveBane(pl, rows) {
   return `<p>${who(pl)} draws the Liability ${name}${old ? `, replacing ${baneName(old)}` : ''}. How did that happen?</p>`;
 }
 
+// Lose the player's Asset number `i` (0: the slot's card, then the extra ones): it goes back in the
+// deck, and the next extra one moves into the slot.
+function loseBoon(pl, i) {
+  const top = pl.zones.boon.occupant;
+  if (i > 0) TABLE.boonDeck.push(pl.moreBoons.splice(i - 1, 1)[0]);
+  else {
+    leaveZone(top); [...top.children].forEach(removePiece); removePiece(top);
+    TABLE.boonDeck.push(top.card);
+    if (pl.moreBoons.length) placeBoon(pl, pl.moreBoons.shift());
+  }
+  renderStacks(pl);
+  updateSceneBoard();
+}
+
+// Bots at the Liability limit: give up an Asset none of this situation's rows use; otherwise lower
+// their highest resource if it can spare a point (above 2), else give up their least useful Asset,
+// else lower their highest resource anyway.
+function botFullBane(pl, rows) {
+  const fit = c => rows.filter(r => has(c.approaches, r.approach)).length;
+  const boons = boonsOf(pl);
+  const highest = RESOURCES.filter(r => pl.res[r] > 0).sort((a, b) => pl.res[b] - pl.res[a])[0];
+  const worst = boons.length ? boons.reduce((a, b) => (fit(b) < fit(a) ? b : a)) : null;
+  const intro = `${who(pl)} already carries ${SIM_RULES.stackMax} Liabilities, so instead of a third`;
+  if (worst && (fit(worst) === 0 || !highest || pl.res[highest] <= 2)) {
+    loseBoon(pl, boons.indexOf(worst));
+    return `<p>${intro}, they lose their Asset <b>${esc(worst.text)}</b>. How did that happen?</p>`;
+  }
+  if (!highest) return `<p>${intro}, they have nothing left to lose.</p>`;
+  const was = pl.res[highest];
+  setResource(pl, highest, was - 1);
+  return `<p>${intro}, their ${resourceLabel(highest)} goes down by 1 (${was} → ${was - 1}). How did that happen?</p>`;
+}
+
+// The human player at the Liability limit chooses: lose one of their Assets, or lower a resource by 1.
+function* chooseFullBane({ pl }) {
+  const boons = boonsOf(pl);
+  const choice = yield ask('A third Liability: what does it cost you instead?',
+    `<p>You already carry ${SIM_RULES.stackMax} Liabilities, so you don’t take another. Instead, lose one of your Assets, or lower one of your resources by 1. Say how it happens.</p>`,
+    [...boons.map((c, i) => ({ label: `Lose ${esc(c.text)}`, hint: `your Asset (➕${c.approaches.join('')})`, value: { boon: i } })),
+      ...RESOURCES.filter(r => pl.res[r] > 0).map(r => ({ label: `Lower ${resourceLabel(r)}`, hint: `${pl.res[r]} → ${pl.res[r] - 1}${pl.res[r] === 1 ? ' (used up)' : ''}`, value: { res: r } }))]);
+  if (choice.boon !== undefined) {
+    const card = boons[choice.boon];
+    loseBoon(pl, choice.boon);
+    return { title: 'You lose an Asset', html: `<p>${who(pl)} loses their Asset <b>${esc(card.text)}</b>; it goes back in the deck.</p>` };
+  }
+  const was = pl.res[choice.res];
+  setResource(pl, choice.res, was - 1);
+  return { title: 'You lower a resource', html: `<p>${who(pl)} lowers their ${resourceLabel(choice.res)} by 1 (${was} → ${was - 1}).</p>` };
+}
+
 // ---------------------------------------------------------------------------
 // ✔️ Earned Assets (SIM_RULES.boonsEarned)
 // ---------------------------------------------------------------------------
@@ -1829,11 +1938,22 @@ function giveBoon(pl, rows) {
   const name = c => `<b>${esc(c.text)}</b> (➕${c.approaches.join('')})`;
   const zone = pl.zones.boon, old = zone.occupant;
   if (old && SIM_RULES.stackCards && SIM_RULES.stackMax && boonsOf(pl).length >= SIM_RULES.stackMax) {
-    // At the limit: keep the better of the new one and the extra one held (bots).
-    const i = pl.moreBoons.length - 1, held = pl.moreBoons[i];
-    if (fit(card) > fit(held)) { pl.moreBoons[i] = card; deck.push(held); renderStacks(pl); pulse(old); return `<p>${who(pl)} earns the Asset ${name(card)}, swapping out ${name(held)} (at most ${SIM_RULES.stackMax}).</p>`; }
+    // At the limit: replace one of the Assets held with the new one, or take a Story Point instead
+    // (the new one goes back). The human player chooses after the roll (see applyFullBoon); bots
+    // replace their least useful Asset if the new one fits this situation's rows better.
+    if (pl.human) {
+      TABLE.pendingSwap = { kind: 'AssetFull', pl, card };
+      return `<p>${who(pl)} draws the Asset ${name(card)}, but already holds ${SIM_RULES.stackMax}: replace one, or take a Story Point instead?</p>`;
+    }
+    const held = boonsOf(pl), worst = held.reduce((a, b) => (fit(b) < fit(a) ? b : a));
+    if (fit(card) > fit(worst)) {
+      replaceBoon(pl, held.indexOf(worst), card);
+      return `<p>${who(pl)} earns the Asset ${name(card)}, replacing ${name(worst)} (at most ${SIM_RULES.stackMax}).</p>`;
+    }
     deck.push(card); pulse(old);
-    return `<p>${who(pl)} draws the Asset ${name(card)}, but keeps the ones they have (at most ${SIM_RULES.stackMax}).</p>`;
+    return gainEdge(pl)
+      ? `<p>${who(pl)} draws the Asset ${name(card)}, but keeps the ones they have and takes <b>1 Story Point</b> instead.</p>`
+      : `<p>${who(pl)} draws the Asset ${name(card)}, but keeps the ones they have (at most ${SIM_RULES.stackMax}).</p>`;
   }
   if (old && SIM_RULES.stackCards) {
     pl.moreBoons.push(card);
@@ -2175,6 +2295,7 @@ simAutoBtn.addEventListener('click', () => {
 // starts a new one on whatever is on the table (dealing first if slots are empty).
 function abandonSim() {
   stopAuto();
+  clearRowSpotlight();
   sim = null;
   simLog.innerHTML = '';
   simTitle.textContent = 'The table changed';

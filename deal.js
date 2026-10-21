@@ -1237,6 +1237,7 @@ function deal(mode = 'deal') {
   edgeName.style.width = `${DIE_SIZE}px`;
   TABLE.sceneNoteEl = document.querySelector('.mat .mat-scene');
   TABLE.cell = cell;
+  TABLE.boardAt = { x: BOARD_X, y: ROW2 }; // the Board's top left corner (for lighting up a row)
   const boardBottom = ROW2 + MAT_TOP + MAT_ROW * 3 + MAT_FOOT + MAT_PAD;
   TABLE.lostAt = { x: BOARD_X + 130, y: boardBottom + 12 };
   // Where a resolved roll's cards are shown: a line centred under the Board, overlapping its bottom edge.
