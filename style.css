@@ -1823,7 +1823,7 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
 .ref-sub { margin-top: 4px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
 .ref-results li > span b { color: var(--accent); }
 
-/* The card set a card comes from (Film Noir, Star Wars, Lord of the Rings): tiny and faint, at the very bottom. */
+/* The card set a card comes from (Blade Runner, Star Wars, ...): tiny and faint, at the very bottom. */
 .set-tag {
   position: absolute;
   left: 0;
