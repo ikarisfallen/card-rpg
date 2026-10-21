@@ -130,6 +130,9 @@ const SIM_RULES = {
   compelOnly: true,
   // ...true (2026-10-18): only the Storyteller compels, once per round (the others don't).
   compelByStoryteller: true,
+  // With compelOnly: a Main player may also compel their own matching Trouble or Liability
+  // (-1 on the roll, Story Points from the pile) before the Storyteller does. ON 2026-10-21.
+  selfCompel: true,
   // A Trouble also matches a roll whose row risks the resource shown on the Trouble (ON
   // 2026-10-18: your approach alone no longer keeps you clear of it).
   compelRiskMatch: true,

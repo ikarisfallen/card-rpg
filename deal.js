@@ -7,8 +7,29 @@
 const THEMES = {
   noir: { label: 'Film Noir', data: window.GAME_DATA },
   starwars: { label: 'Star Wars', data: window.STAR_WARS_DATA },
+  lotr: { label: 'Lord of the Rings', data: window.LOTR_DATA },
 };
-let DATA = THEMES.noir.data;
+// The sets in play (one or more, for mash-ups), and DATA: their cards merged, each tagged with
+// its set's name (`set`). Decks are still built set by set (buildFromSets) so a card's back
+// names come from its own set.
+let SETS = ['noir'];
+let DATA = mergeSets(SETS);
+function mergeSets(keys) {
+  const base = window.GAME_DATA;
+  const sets = keys.map(k => ({ set: THEMES[k].label, d: THEMES[k].data }));
+  const group = name => ({ icons: base[name].icons, cards: sets.flatMap(({ set, d }) => d[name].cards.map(c => ({ ...c, set, icons: d[name].icons }))) });
+  return {
+    approaches: base.approaches, resources: base.resources, players: base.players, sets,
+    situations: sets.flatMap(({ set, d }) => d.situations.map(s => ({ ...s, set }))),
+    banes: sets.flatMap(({ set, d }) => (d.banes || []).map(b => ({ ...b, set }))),
+    macguffins: group('macguffins'), allies: group('allies'), villains: group('villains'), locations: group('locations'),
+  };
+}
+// One deck from every set in play: `build(setData)` makes a set's cards, which are tagged and shuffled together.
+const buildFromSets = build => shuffle(DATA.sets.flatMap(({ set, d }) => build(d).map(c => ({ ...c, set }))));
+const buildBoonDeck = () => buildFromSets(d => buildPcDeck('boon', d.boons, d.boonStates, '➕', 1));
+// The set a card comes from, in small faint text at the very bottom of its face.
+const setTag = card => (card && card.set ? `<div class="set-tag">${esc(card.set)}</div>` : '');
 const APPROACHES = window.GAME_DATA.approaches;
 // The approaches' names, small and in capitals under their icons on cards and dice.
 const APPROACH_NAMES = ['Bold', 'Wise', 'Calm', 'Loud', 'Swift', 'Subtle']; // in APPROACHES order
@@ -165,7 +186,7 @@ function pcFront(card) {
   return `
     <div class="kind-label">${sign ? `<span class="sign">${sign}</span>` : ''}${KIND_LABEL[card.kind]}</div>
     <div class="pc-text${card.text.length > 30 ? ' long' : ''}">${esc(card.text)}</div>
-    <div class="approach-row">${card.approaches.map(a => (card.kind === 'relationship' ? a : approachTag(a))).join('')}${card.resource ? `<span class="resource">${resourceBadge(card.resource)}</span>` : ''}</div>`;
+    <div class="approach-row">${card.approaches.map(a => (card.kind === 'relationship' ? a : approachTag(a))).join('')}${card.resource ? `<span class="resource">${resourceBadge(card.resource)}</span>` : ''}</div>${setTag(card)}`;
 }
 
 function namesBack(label, names) {
@@ -251,9 +272,9 @@ function elementFront(card) {
     const left = Math.floor(card.lines.length / 2);
     return `
     <div class="loc-col">${head}<ul class="el-lines">${items(0, left)}</ul></div>
-    <div class="loc-col"><ul class="el-lines">${items(left)}</ul></div>`;
+    <div class="loc-col"><ul class="el-lines">${items(left)}</ul></div>${setTag(card)}`;
   }
-  return `${head}<ul class="el-lines">${items(0)}</ul>`;
+  return `${head}<ul class="el-lines">${items(0)}</ul>${setTag(card)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -655,7 +676,7 @@ function situationFront(situation, result = null) {
       ${['A', 'B', 'C'].map((k, i) => `
         <div class="sit-choice${winnerOn(i) ? ' won' : ''}"><span class="sit-choice-text">${madLib(choices[k])}</span>${choiceRiskHtml(situation.risks[i])}${winnerOn(i) ? `<span class="sit-stamp" style="--c:${winnerOn(i).color}">★ ${esc(winnerOn(i).name)}</span>` : ''}</div>`).join('')}
     </div>
-    <div class="sit-escs">${escalations}</div>`;
+    <div class="sit-escs">${escalations}</div>${setTag(situation)}`;
 }
 
 // An initiative token has two sides: the player's place in the turn order, and OUT for a
@@ -1119,18 +1140,16 @@ function deal(mode = 'deal') {
   TABLE = { players: [], relZones: [], rows: [{}, {}, {}] };
 
   const players = DATA.players.slice(0, PLAYER_COUNT); // W, X, Y, Z: as many as are playing
-  const concepts = buildPcDeck('concept', DATA.concepts, DATA.firstNames, '✔️', SIM_RULES.charApproaches || 2, true);
-  const troubles = buildPcDeck('trouble', DATA.troubles, DATA.lastNames, '✖️', SIM_RULES.charApproaches || 2, true);
-  const boons = buildPcDeck('boon', DATA.boons, DATA.boonStates, '➕', 1);
-  const portraits = makePortraits(DATA.relationships.length);
-  const relationships = shuffle(DATA.relationships).map((text, i) => ({
-    kind: 'relationship', text, sign: '', approaches: pickApproaches(2),
-    portrait: portraits[i % portraits.length], // printed on the back
-  }));
-  const macguffins = buildElementDeck('macguffin', 'Object', DATA.macguffins); // the MacGuffin, called an Object on the card
-  const allies = buildElementDeck('ally', 'Ally', DATA.allies);
-  const villains = buildElementDeck('villain', 'Villain', DATA.villains);
-  const locations = buildElementDeck('location', 'Location', DATA.locations, DATA.placeAdjectives);
+  const concepts = buildFromSets(d => buildPcDeck('concept', d.concepts, d.firstNames, '✔️', SIM_RULES.charApproaches || 2, true));
+  const troubles = buildFromSets(d => buildPcDeck('trouble', d.troubles, d.lastNames, '✖️', SIM_RULES.charApproaches || 2, true));
+  const boons = buildBoonDeck();
+  const relationships = buildFromSets(d => d.relationships.map(text => ({ kind: 'relationship', text, sign: '', approaches: pickApproaches(2) })));
+  const portraits = makePortraits(relationships.length);
+  relationships.forEach((r, i) => { r.portrait = portraits[i % portraits.length]; }); // printed on the back
+  const macguffins = buildFromSets(d => buildElementDeck('macguffin', 'Object', d.macguffins)); // the MacGuffin, called an Object on the card
+  const allies = buildFromSets(d => buildElementDeck('ally', 'Ally', d.allies));
+  const villains = buildFromSets(d => buildElementDeck('villain', 'Villain', d.villains));
+  const locations = buildFromSets(d => buildElementDeck('location', 'Location', d.locations, d.placeAdjectives));
   TABLE.locationCards = [...locations]; // the whole Location deck, for drawing a new one each act
   const situation = DATA.situations[randInt(DATA.situations.length)];
 
@@ -1281,7 +1300,7 @@ function deal(mode = 'deal') {
 
   // The Liability deck isn't on the table (assume it's nearby): a Liability card only appears when a
   // player draws one, at random, and leaves the table when it goes back in the deck.
-  TABLE.bane = { deck: shuffle((DATA.banes || []).map(b => ({ kind: 'bane', text: b.text, sign: '➖', approaches: b.approaches }))) };
+  TABLE.bane = { deck: shuffle((DATA.banes || []).map(b => ({ kind: 'bane', text: b.text, sign: '➖', approaches: b.approaches, set: b.set }))) };
 
   // ---- Bottom row: the characters ----
   // Under the whole top row: the Elements, the
@@ -1510,21 +1529,27 @@ let savedPlayers = '4';
 try { savedPlayers = localStorage.getItem('card-rpg-players') || '4'; } catch { /* storage unavailable */ }
 setPlayerCount(savedPlayers);
 
-// ---- Theme picker: switching theme re-deals with the new card set ----
+// ---- Card set picker: tick one or more sets; changing them re-deals with their cards mixed ----
 
-const themeSelect = document.getElementById('theme-select');
+const setPicker = document.getElementById('set-picker');
+const setButton = document.getElementById('set-btn');
+const setMenu = document.getElementById('set-menu');
 
-function setTheme(key) {
-  const theme = THEMES[key] ? key : 'noir';
-  DATA = THEMES[theme].data;
-  themeSelect.value = theme;
-  document.body.dataset.theme = theme;
-  try { localStorage.setItem('card-rpg-theme', theme); } catch { /* storage unavailable */ }
+function setSets(keys) {
+  SETS = Object.keys(THEMES).filter(k => keys.includes(k));
+  if (!SETS.length) SETS = ['noir'];
+  DATA = mergeSets(SETS);
+  setMenu.querySelectorAll('input').forEach(box => { box.checked = SETS.includes(box.value); box.disabled = box.checked && SETS.length === 1; }); // keep at least one
+  setButton.textContent = SETS.map(k => THEMES[k].label).join(' + ');
+  document.body.dataset.theme = SETS.length === 1 ? SETS[0] : 'mix'; // a set's own table colour only when it's alone
+  try { localStorage.setItem('card-rpg-sets', JSON.stringify(SETS)); } catch { /* storage unavailable */ }
 }
 
-themeSelect.innerHTML = Object.entries(THEMES).map(([key, t]) => `<option value="${key}">${t.label}</option>`).join('');
-themeSelect.addEventListener('change', () => {
-  setTheme(themeSelect.value);
+setMenu.innerHTML = Object.entries(THEMES).map(([key, t]) => `<label class="set-option"><input type="checkbox" value="${key}"><span>${esc(t.label)}</span></label>`).join('');
+setButton.addEventListener('click', () => { setMenu.hidden = !setMenu.hidden; });
+document.addEventListener('pointerdown', e => { if (!setPicker.contains(e.target)) setMenu.hidden = true; });
+setMenu.addEventListener('change', () => {
+  setSets([...setMenu.querySelectorAll('input:checked')].map(box => box.value));
   deal('deal');
   fitView();
 });
@@ -1534,9 +1559,9 @@ themeSelect.addEventListener('change', () => {
 setGameLength(1, 1);
 try { localStorage.removeItem('card-rpg-length'); } catch { /* storage unavailable */ }
 
-let savedTheme = 'noir';
-try { savedTheme = localStorage.getItem('card-rpg-theme') || 'noir'; } catch { /* storage unavailable */ }
-setTheme(savedTheme);
+let savedSets = ['noir']; // Film Noir alone unless other sets were picked before
+try { savedSets = JSON.parse(localStorage.getItem('card-rpg-sets')) || savedSets; } catch { /* storage unavailable */ }
+setSets(Array.isArray(savedSets) ? savedSets : ['noir']);
 
 deal();
 fitView();

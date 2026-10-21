@@ -490,12 +490,12 @@ function* simGame() {
       [...piece.children].forEach(removePiece);
       removePiece(piece);
     });
-    TABLE.boonDeck = shuffle(buildPcDeck('boon', DATA.boons, DATA.boonStates, '➕', 1));
+    TABLE.boonDeck = buildBoonDeck();
     updateSceneBoard();
   } else if (SIM_RULES.boonUpgrades || SIM_RULES.boonShield) {
     // Asset upgrades: the Assets nobody was dealt make an off-table deck to draw from.
     const dealt = new Set(players.map(pl => pl.zones.boon.occupant && pl.zones.boon.occupant.card.text));
-    TABLE.boonDeck = shuffle(buildPcDeck('boon', DATA.boons, DATA.boonStates, '➕', 1).filter(c => !dealt.has(c.text)));
+    TABLE.boonDeck = buildBoonDeck().filter(c => !dealt.has(c.text));
   }
   players.forEach(pl => {
     pl.human = HUMAN_SEAT && pl.index === 0; // you play W
@@ -1690,19 +1690,21 @@ function* invokeOrCompel(pl, row, { kind, sign, piece }, order, rows, board, dif
   const hit = rollValue(row, -1, pl.edge.length, board, difficulty, target);
   pulse(piece);
 
-  // With compelOnly a card can't be invoked by its owner: only the others bring it up.
+  // With compelOnly a card can't be invoked by its owner: only the others bring it up
+  // (unless selfCompel: the owner may bring it up first, and the pile pays).
   const free = bane || SIM_RULES.compelOnly; // the pile pays the Edge, not the compeller
-  const invoke = SIM_RULES.compelOnly ? false : pl.human
-    ? yield ask(`Invoke your ${kind}?`,
-      `<p>${rowTag(row)} matches your ${what}. Invoke it: <b>−1</b> on this roll, and ${storyPts(reward)} from the pile (yours once the roll is over). If you don\u2019t, the others may compel it${bane ? ' (for free)' : ''}.</p>`,
-      [{ label: 'Invoke it', hint: `−1 now, +${storyPts(reward)} after the roll`, value: true }, { label: 'Not now', hint: 'keep your roll clean', value: false }])
+  const self = SIM_RULES.compelOnly && SIM_RULES.selfCompel; // the owner's own compel
+  const invoke = SIM_RULES.compelOnly && !SIM_RULES.selfCompel ? false : pl.human
+    ? yield ask(self ? `Compel your own ${kind}?` : `Invoke your ${kind}?`,
+      `<p>${rowTag(row)} matches your ${what}. ${self ? 'Compel it yourself, and say how it gets in the way' : 'Invoke it'}: <b>−1</b> on this roll, and ${storyPts(reward)} from the pile (yours once the roll is over). If you don\u2019t, ${SIM_RULES.compelByStoryteller && SIM_RULES.obstacle ? 'the Storyteller' : 'the others'} may compel it${bane && !SIM_RULES.compelOnly ? ' (for free)' : ''}.</p>`,
+      [{ label: self ? 'Compel it' : 'Invoke it', hint: `−1 now, +${storyPts(reward)} after the roll`, value: true }, { label: 'Not now', hint: 'keep your roll clean', value: false }])
     : hit + worth >= now;
   if (invoke) {
-    row.hits.push(`${sign} ${kind} (invoked)`);
+    row.hits.push(`${sign} ${kind} (${self ? 'compelled' : 'invoked'})`);
     const got = fromPile(reward);
     yield {
-      title: `${pl.letter} invokes their ${kind}`,
-      html: `<p>${who(pl)} brings their ${what} into it: <b>−1</b> on this roll.</p>
+      title: self ? `${pl.letter} compels their own ${kind}` : `${pl.letter} invokes their ${kind}`,
+      html: `<p>${who(pl)} brings their ${what} into it${self ? ', and says how it gets in the way' : ''}: <b>−1</b> on this roll.</p>
         <p>${storyPts(got)} from the pile ${got === 1 ? 'goes' : 'go'} on the card, theirs once the roll is over.${sceneNote}</p>`,
     };
     return;
@@ -2074,7 +2076,11 @@ function startSim(fresh) {
 function simStep(choice) {
   if (!sim) startSim(false);
   if (sim.asking && choice === undefined) return; // waiting for you to choose
-  const { value, done } = sim.gen.next(choice);
+  touched.rects = [];
+  touched.on = true; // note the pieces this step moves, to frame them after
+  let step;
+  try { step = sim.gen.next(choice); } finally { touched.on = false; }
+  const { value, done } = step;
   if (done) {
     simStepBtn.disabled = true;
     simChoices.innerHTML = '';
@@ -2095,6 +2101,7 @@ function simStep(choice) {
   sim.asking = !!value.ask;
   simChoices.innerHTML = '';
   simStepBtn.disabled = sim.asking;
+  followAction(); // the camera moves to what this step is about
   if (value.spend) { sim.asking = true; simStepBtn.disabled = true; stopAuto(); renderSpendPicker(value.spend); return; }
   if (sim.asking) {
     stopAuto();
@@ -2176,5 +2183,5 @@ function abandonSim() {
   simChoices.innerHTML = '';
 }
 ['reset-btn', 'new-game-btn'].forEach(id => document.getElementById(id).addEventListener('click', abandonSim));
-document.getElementById('theme-select').addEventListener('change', abandonSim);
+document.getElementById('set-menu').addEventListener('change', abandonSim);
 document.getElementById('players-select').addEventListener('change', abandonSim);

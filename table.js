@@ -37,6 +37,48 @@ function fitView() {
   applyView();
 }
 
+// ---- Following the action ----
+// While `touched.on` (one simulator step), every piece that's added, moved, snapped, flipped or
+// pulsed is noted, where it was and where it ends up; followAction() then frames them all.
+const touched = { on: false, rects: [] };
+function noteTouch(piece) {
+  if (touched.on && piece) touched.rects.push({ x: piece.x, y: piece.y, w: piece.w, h: piece.h });
+}
+
+// The camera glides to show world rectangle `r` (with some table around it), as large as fits
+// beside the button bars and the simulator, but never past MAX_FOLLOW_ZOOM or wider than Fit.
+const MAX_FOLLOW_ZOOM = 1, FOLLOW_MIN = { w: 1000, h: 650 }, FOLLOW_PAD = 40;
+function frameRect(r) {
+  const bars = ['hud', 'theme-hud'].map(id => document.getElementById(id)).filter(Boolean);
+  const top = Math.max(90, ...bars.map(b => b.getBoundingClientRect().bottom + 10));
+  const side = document.getElementById('sim-panel');
+  const right = side && !side.hidden ? side.offsetWidth + 24 : 0;
+  const W = table.clientWidth - right, H = table.clientHeight - top;
+  const fitZoom = Math.min((W - 40) / worldSize.w, (H - 20) / worldSize.h);
+  // Grow a small target to FOLLOW_MIN round its centre, so a lone die still shows where it is.
+  const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+  const w = Math.max(r.w, FOLLOW_MIN.w), h = Math.max(r.h, FOLLOW_MIN.h);
+  const z = Math.min(MAX_FOLLOW_ZOOM, (W - FOLLOW_PAD * 2) / w, (H - FOLLOW_PAD * 2) / h);
+  world.classList.add('camera-move');
+  clearTimeout(frameRect.timer);
+  frameRect.timer = setTimeout(() => world.classList.remove('camera-move'), 650);
+  if (z <= fitZoom) { fitView(); return; } // it's most of the table anyway
+  view.zoom = z;
+  view.x = W / 2 - cx * z;
+  view.y = top + H / 2 - cy * z;
+  applyView();
+}
+
+// Frame everything noted since the step began (nothing noted: the camera stays put).
+function followAction() {
+  const rs = touched.rects;
+  touched.rects = [];
+  if (!rs.length) return;
+  const x = Math.min(...rs.map(r => r.x)), y = Math.min(...rs.map(r => r.y));
+  const x2 = Math.max(...rs.map(r => r.x + r.w)), y2 = Math.max(...rs.map(r => r.y + r.h));
+  frameRect({ x, y, w: x2 - x, h: y2 - y });
+}
+
 function zoomAt(clientX, clientY, factor) {
   const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom * factor));
   view.x = clientX - (clientX - view.x) * (z / view.zoom);
@@ -109,6 +151,7 @@ function addPiece({ kind, className = '', w, h, lift, x = 0, y = 0, rot = 0 }) {
   node.style.zIndex = ++zTop;
   pieces.push(piece);
   setPos(piece);
+  noteTouch(piece);
   return piece;
 }
 
@@ -156,7 +199,9 @@ function removePiece(piece) {
 function glide(piece, x, y) {
   animateOnce(piece, 'animating', 450);
   raise(piece);
+  noteTouch(piece);
   moveBy(piece, x - piece.x, y - piece.y);
+  noteTouch(piece);
   if (window.onPieceMoved) window.onPieceMoved();
 }
 
@@ -192,6 +237,7 @@ function flipCard(piece) {
 }
 
 function setFaceUp(piece, up) {
+  noteTouch(piece);
   piece.faceUp = up;
   piece.el.classList.toggle('face-down', !up);
 }
@@ -245,6 +291,7 @@ function leaveZone(piece) {
 }
 
 function snapTo(piece, zone, animate = true) {
+  noteTouch(piece);
   leaveZone(piece);
   if (animate) animateOnce(piece, 'animating', 450);
   zone.occupant = piece;
@@ -258,6 +305,7 @@ function snapTo(piece, zone, animate = true) {
     piece.rot = zone.rot || 0;
   }
   moveBy(piece, zone.x - piece.x, zone.y - piece.y);
+  noteTouch(piece);
 
   if (zone.tucked) {
     const parent = zone.parentZone.occupant;
@@ -404,6 +452,7 @@ function createPawn({ color, label, x, y }) {
 createPawn.n = 0;
 
 function pulse(piece) {
+  noteTouch(piece);
   piece.el.classList.remove('pulse');
   void piece.el.offsetWidth; // restart the animation
   animateOnce(piece, 'pulse', 280);

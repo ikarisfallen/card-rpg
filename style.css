@@ -893,12 +893,12 @@ html, body {
   position: fixed;
   top: 16px;
   left: 16px;
-  z-index: 50000;
+  z-index: 50001; /* above #hud, so the card set list opens over the buttons */
   display: flex;
   gap: 10px;
 }
 
-#theme-select, #players-select {
+#set-btn, #players-select {
   min-height: 60px;
   padding: 0 48px 0 20px;
   border: 0;
@@ -911,15 +911,45 @@ html, body {
   cursor: pointer;
 }
 
-#theme-select option, #players-select option { color: #111; background: #fff; }
+#players-select option { color: #111; background: #fff; }
+
+/* The card sets: a button showing the sets in play, opening a list of checkboxes (one or more). */
+#set-picker { position: relative; }
+#set-btn { text-align: left; }
+#set-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 100%;
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.82);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+#set-menu[hidden] { display: none; }
+.set-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font: 600 20px "Segoe UI", system-ui, sans-serif;
+  color: #fff;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.set-option:hover { background: rgba(255, 255, 255, 0.12); }
+.set-option input { width: 26px; height: 26px; margin: 0; accent-color: #e8c66a; cursor: pointer; }
+.set-option input:disabled { cursor: default; }
 
 /* On narrow screens the button bar drops below the pickers instead of overlapping them. */
 @media (max-width: 1120px) {
   #hud { top: 88px; }
 }
 
-/* Space Opera plays on a deep-space table instead of green felt. */
-body[data-theme="space"] #table {
+/* Star Wars plays on a deep-space table instead of green felt. */
+body[data-theme="starwars"] #table {
   background: radial-gradient(ellipse at center, #2a3566 0%, #1a2048 55%, #0b0f26 100%);
 }
 
@@ -1792,3 +1822,22 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
 .ref-list li:last-child { border-bottom: none; }
 .ref-sub { margin-top: 4px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
 .ref-results li > span b { color: var(--accent); }
+
+/* The card set a card comes from (Film Noir, Star Wars, Lord of the Rings): tiny and faint, at the very bottom. */
+.set-tag {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  font: 600 7px/1 "Segoe UI", system-ui, sans-serif; /* fits the ~8px left under the small cards' text */
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  opacity: 0.4;
+  pointer-events: none;
+}
+/* The big cards have more room under their text (all but the Location). */
+.el-card:not(.kind-location) .set-tag, .situation-card .set-tag { bottom: 2px; font-size: 9px; }
+
+/* The camera gliding to follow a simulator step (only then: dragging and zooming stay instant). */
+#world.camera-move { transition: transform 0.6s ease; }

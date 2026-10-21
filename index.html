@@ -10,7 +10,10 @@
   <div id="table"><div id="world"></div></div>
 
   <div id="theme-hud">
-    <select id="theme-select" aria-label="Card set"></select>
+    <div id="set-picker">
+      <button id="set-btn" type="button" aria-haspopup="true" aria-label="Card sets">Film Noir</button>
+      <div id="set-menu" role="group" aria-label="Card sets" hidden></div>
+    </div>
     <select id="players-select" aria-label="Number of players"></select>
   </div>
 
@@ -54,6 +57,7 @@
   <script src="noir-locations.js"></script>
   <script src="noir-banes.js"></script>
   <script src="star-wars.js"></script>
+  <script src="lord-of-the-rings.js"></script>
   <script src="table.js"></script>
   <script src="portraits.js"></script>
   <script src="rules.js"></script>
