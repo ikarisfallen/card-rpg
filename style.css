@@ -1653,8 +1653,8 @@ body[data-theme="space"] #table {
 .res-badge { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; }
 .res-grid { display: grid; grid-template-columns: auto auto; column-gap: 6px; row-gap: 2px; font-family: var(--emoji); line-height: 1; }
 .res-name { font-family: "Segoe UI", system-ui, sans-serif; font-weight: 700; color: #2b2b2b; line-height: 1.1; white-space: nowrap; }
-.sheet-label { height: 74px; align-items: flex-end; } /* SHEET_LABEL */
-.sheet-label .res-grid { font-size: 26px; }
+.sheet-label { height: 62px; align-items: flex-end; } /* SHEET_LABEL */
+.sheet-label .res-grid { font-size: 22px; }
 .sheet-label .res-name { font-size: 13px; }
 .sit-risk.mod.badge { display: flex; align-items: center; justify-content: flex-end; margin-left: auto; }
 .sit-risk.mod.badge .res-badge { align-items: center; } /* the block sits against the card's right edge; its name centred under the emoji */
@@ -1755,3 +1755,25 @@ body[data-theme="space"] #table {
 s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
 .roll-parts li.cancelled small { opacity: 0.7; margin-left: 4px; }
 .cancel-note { opacity: 0.75; font-size: 0.92em; }
+/* Resource labels in the story panel: inline with the text. */
+#sim-panel .res-name { min-width: 0; font-size: 0.85em; padding: 0.05em 0.45em; vertical-align: 0.05em; }
+/* The Concept's and Trouble's places on the player board: a dashed outline with the sign and name. */
+.zone.card-place { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-color: rgba(255, 255, 255, 0.75); color: #fff; text-transform: none; letter-spacing: 0; }
+.zone.card-place .place-sign { font-family: var(--emoji); font-size: 30px; line-height: 1; }
+.zone.card-place .place-name { font-size: 24px; font-weight: 500; }
+/* The Asset / Liability places down the board's sides: a dashed strip, open on the card's side, with the sign and a vertical name. */
+.side-slot { box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 3px dashed rgba(255, 255, 255, 0.75); color: #fff; pointer-events: none; }
+.side-slot.open-left { border-left: none; border-radius: 0 14px 14px 0; }
+.side-slot.open-right { border-right: none; border-radius: 14px 0 0 14px; }
+.side-slot .side-sign { font-family: var(--emoji); font-size: 22px; line-height: 1; }
+.side-slot .side-name { writing-mode: vertical-rl; font-size: 18px; font-weight: 500; white-space: nowrap; }
+.sheet .sheet-cell .sheet-box { width: 88px; margin: 0 auto; flex: 1 0 auto; } /* hugs its die; the columns space the dice out */
+/* The player area's counters (This scene, Scored spotlight, Story Points): big enough to read. */
+.pair-label.big-count { font-size: 22px; color: rgba(255, 255, 255, 0.85); line-height: 1.2; }
+.pair-label.big-count .pile-count { font-size: 26px; font-weight: 800; opacity: 1; color: #fff; }
+/* A Concept's / Trouble's name card sits under the player board: just its name shows above the board's edge. */
+.piece.tucked-name { z-index: 0 !important; }
+.zone.name-zone { z-index: 0; }
+/* A portrait card's back: a square picture over a big "Relationship" strip (tucked under the board). */
+.back-strip { height: 60px; font-size: 20px; font-weight: 500; letter-spacing: 0.02em; text-transform: none; color: #fff; }
+.zone.tucked-zone { z-index: 0; }
