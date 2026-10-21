@@ -136,8 +136,7 @@
 
 <header class="cover">
   <h1>Card RPG</h1>
-  <p class="tag">A story game of bets, bad luck and stolen spotlights · Film Noir &amp; Space Opera</p>
-  <img src="manual-img/overview.png" alt="The whole table during a four-player game">
+  <p class="tag">A story game of bold moves, bad luck and stolen spotlights · Film Noir &amp; Space Opera</p>
   <div class="facts"><span>2–4 players</span><span>Three acts</span><span>Film Noir or Space Opera</span></div>
 </header>
 
@@ -151,25 +150,26 @@
   <a href="#setup">4. Setting up</a>
   <a href="#act">5. Playing an act</a>
   <a href="#round">6. A round, step by step</a>
-  <a href="#roll">7. Rolling: effort and the Fate card</a>
-  <a href="#results">8. Success, close call, failure</a>
-  <a href="#troubles">9. Troubles and Banes</a>
-  <a href="#minus">10. Minus dice and the Clear box</a>
-  <a href="#winning">11. Winning a situation</a>
-  <a href="#end">12. The end of the game</a>
-  <a href="#example">13. A round in play</a>
-  <a href="#quick">14. Quick reference</a>
+  <a href="#roll">7. Rolling</a>
+  <a href="#results">8. Four ways a roll can land</a>
+  <a href="#storyteller">9. The Storyteller: Obstacles and compels</a>
+  <a href="#cards">10. Assets and Liabilities</a>
+  <a href="#tension">11. Tension dice and the Clear seat</a>
+  <a href="#winning">12. Winning a situation</a>
+  <a href="#end">13. Between acts and the end of the game</a>
+  <a href="#example">14. A round in play</a>
+  <a href="#quick">15. Quick reference</a>
 </nav>
 
 <!-- ==================================================================== -->
 <h2 id="idea"><span class="num">1</span>The idea</h2>
 
-<p class="lead">You and your friends are the cast of a story told in three acts. Every act is a <b>Situation</b>: a body in the rain, a bridge chase, a showdown at the docks. Each round you bet your pawns on how your character will handle it, one card of <b>Fate</b> decides how it goes, and the best moments earn you <b>spotlight</b>.</p>
+<p class="lead">You and your friends are the cast of a story told in three acts: the <b>Beginning</b>, the <b>Middle</b> and the <b>Ending</b>. Every act is a <b>Situation</b>: a body in the rain, a shakedown at the office, a last train out. Each round you choose how your character tackles it, one card of <b>Fate</b> decides how it goes, and the best moments earn you <b>spotlight</b>.</p>
 
 <p>It plays like two games at once:</p>
 <ul>
-  <li><b>Roulette.</b> Everyone bets on a row (A, B or C), then a single Fate card is turned and every row reads its own number from it. Bold bets, cautious bets, helping a friend or stepping back to steady the scene are all on the table.</li>
-  <li><b>Mad Libs.</b> Situations are story templates with blanks like 🏠, 👿 or 😇. The Element cards on the table fill them in: <i>“A body turns up near the elevator shaft at the Rain-Slicked Hotel, clutching a clue to the emerald-green murder weapon.”</i> Every game tells a different story.</li>
+  <li><b>A shared puzzle.</b> Everyone picks one of the Situation’s three choices and an approach to go in with. A single Fate card is turned for everyone, and each roll reads its own number from it.</li>
+  <li><b>A mad lib.</b> Situations are story templates with blanks: <i>“____ (Villain) is getting out of town tonight with ____ (Object)…”</i>. The Element cards on the table fill them in, so every game tells a different story. Say how your character does it.</li>
 </ul>
 
 <p>You work together to get through each Situation, because a lost situation scores nothing. But only one of you can be <b>the star of the story</b>: the player with the most spotlight at the end.</p>
@@ -178,318 +178,294 @@
 <h2 id="table"><span class="num">2</span>What’s on the table</h2>
 
 <h3>The Situation card</h3>
-<div class="split wide-left">
-  <figure><img src="manual-img/situation.png" alt="A Situation card"><figcaption>Act I: “Body in the rain”. The three choices are marked with the shapes of the Board’s rows.</figcaption></figure>
-  <div>
-    <p>The story of the act. Its description sets the scene, then offers three choices. Each choice ends with its <b>approach</b> and, in brackets, the <b>resource at risk</b>: <i>“search the body fast, before they get here ⚡ (⌛)”</i> is a quick action that risks your time.</p>
-    <p>Each choice is marked with its row’s shape: <span class="shapes">▲ A · ■ B · ● C</span>. The same shapes are on the Board, so you can always tell which choice a row is.</p>
-    <p>At the bottom are two <b>Escalations</b>: what goes wrong when someone fails.</p>
-  </div>
-</div>
+<p>The story of the act. Its opening text sets the scene, then offers <b>three choices</b>, one per row of the Board. The blanks (“____” with a small label under it, like <b>VILLAIN</b> or <b>VILLAIN’S SECRET</b>) are filled in from the Element cards when you read it aloud.</p>
+<p>Each choice has a <b>Risk</b>: the resource it puts on the line, shown as a coloured label (<b>Momentum</b>, <b>Reputation</b>…) with two approaches above it. Going in with the approach under the <b>🔺</b> is <b>+1</b> on that row; the one under the <b>🔻</b> is <b>−1</b>.</p>
+<p>At the bottom are two <b>Escalations</b>: what goes wrong when someone fails badly.</p>
 
 <h3>The Board</h3>
-<figure><img src="manual-img/board.png" alt="The Board"><figcaption>The Board mid-round: three players have bet as Main, and two spotlight tokens are already on the Successes.</figcaption></figure>
-<p>The Board is where you bet. Each row (▲A, ■B, ●C) has:</p>
+<p>The Board is where you play your choices. Each row has:</p>
 <table>
   <tr><th>Column</th><th>What goes there</th></tr>
-  <tr><td><b>Main</b></td><td>The pawn of the player taking the lead on that choice. One per row.</td></tr>
+  <tr><td><b>Main</b></td><td>The pawn of the player taking the lead on that choice (one per row), with their initiative number.</td></tr>
   <tr><td><b>Help</b></td><td>Pawns of players backing them up.</td></tr>
-  <tr><td><b>Approach</b></td><td>The row’s approach: which Fate number the row reads.</td></tr>
-  <tr><td><b>Minus</b></td><td>The Minus box for Escalation dice (rows A–B), and the <b>Clear</b> box under it (row C).</td></tr>
-  <tr><td><b>Risk</b></td><td>The resource lost on a failure.</td></tr>
-  <tr><td><b>Successes</b></td><td>Spotlight tokens earned on that row. Enough of them wins the situation.</td></tr>
+  <tr><td><b>Approach</b></td><td>The Main player’s own approach die, turned to how they go in.</td></tr>
+  <tr><td><b>Edge</b></td><td>The <b>Edge die</b>, when the Main player claims it (see <a href="#act">5</a>). An arrow on each row points from Approach to Edge.</td></tr>
+  <tr><td><b>Tension</b></td><td>One tall box for all three rows: Tension dice from Escalations, and the <b>Clear seat</b> at its foot (see <a href="#tension">11</a>).</td></tr>
+  <tr><td><b>Obstacle</b></td><td>The Storyteller’s Obstacle die, on one row (see <a href="#storyteller">9</a>).</td></tr>
+  <tr><td><b>Successes</b></td><td>A stack of spotlight tokens. Each success takes one; empty a row’s stack and you’ve finished the situation.</td></tr>
 </table>
-<p>The banner across the top shows how many successes win (one per player), the <b>Scene die</b> (the green die on the left, see <a href="#act">5</a>), and a small table of the numbers for your player count: difficulty, Edge at the start of each act and the act-win bonus. The current act is highlighted.</p>
+<p>The banner across the top shows the <b>Edge die</b> at its left end, and a small table for your player count: the successes each act needs (the size of each row’s stack), the difficulty, and the winner’s Story Points. The current act is highlighted.</p>
 
 <h3>The Elements</h3>
-<div class="split">
-  <figure><img src="manual-img/elements.png" alt="Element cards"><figcaption>MacGuffin, Ally, Villain and Location, each with a name card tucked above it.</figcaption></figure>
-  <div>
-    <p>Four cards fill the blanks in every Situation:</p>
-    <ul>
-      <li>🛠️ <b>MacGuffin</b>: the thing everybody wants.</li>
-      <li>😇 <b>Ally</b>: someone on your side, more or less.</li>
-      <li>👿 <b>Villain</b>: the one behind it all.</li>
-      <li>🏠 <b>Location</b>: where it happens. A new Location is drawn at the start of every act.</li>
-    </ul>
-    <p>Each card has <b>lines</b>, each with an icon and an approach. A Situation can name a line directly: 👿🔒 is the Villain’s secret, 🌉 is the Location’s crossing. When you read a Situation aloud, fill each symbol in from these cards.</p>
-  </div>
-</div>
+<p>Four cards fill the blanks in every Situation:</p>
+<ul>
+  <li><b>Location</b>: where it happens. A new Location is drawn for the Middle and the Ending. Its lines are places to use: Climb, Cover, Pit, Crossing, Obstacle, Hidden entry, Slick, Hazard, Enemies.</li>
+  <li><b>Ally</b>: someone on your side, more or less. <b>Villain</b>: the one behind it all. Both have a Fear, a Goal, a Secret and a Connection.</li>
+  <li><b>Object</b>: the thing everybody wants. Its Material, Where it’s from, What it’s for and Its flaw.</li>
+</ul>
+<p>Each line has a small label (FEAR, CROSSING…) and an approach. People get their names from the name cards tucked above them; the Location gets a describing word (“Rain-slicked Hotel”).</p>
 
 <h3>Fate</h3>
-<div class="split">
-  <figure class="small"><img src="manual-img/fate-card.png" alt="A Fate card"><figcaption>One Fate card: a number for every approach.</figcaption></figure>
-  <div>
-    <p>The <b>Fate deck</b> is the game’s dice. Each card gives a number from −2 to +2 to <b>every</b> approach. Only <b>one</b> card is turned per round, and every row reads the number for its own approach.</p>
-    <p>The deck sits right of the Board, with its discard pile underneath. When it runs out, shuffle the discards back in.</p>
-  </div>
-</div>
+<p>The <b>Fate deck</b> is the game’s dice. Each card gives a number from −2 to +2 to <b>every</b> approach; across the deck each approach gets each number equally often. Only <b>one</b> card is turned per round, and every roll reads the number for its own approach. When the deck runs out, shuffle the discards back in.</p>
 
-<h3>The Relationship wheel and Edge</h3>
-<div class="split">
-  <figure><img src="manual-img/wheel.png" alt="The Relationship wheel"><figcaption>The wheel: pawns, initiative tokens (one flipped to OUT), Relationship cards and the Edge pile in the middle.</figcaption></figure>
-  <div>
-    <p>Your pawn starts each round on the wheel. Between every two neighbours lies a <b>Relationship</b> card (“Childhood runaways…”) showing two approaches. You may <b>help</b> on a row whose approach is on one of the Relationship cards next to you. With two players, there’s a single Relationship card in the middle.</p>
-    <p>Each player has a numbered <b>initiative token</b>: the order you bet in. Its back says <b>OUT</b>, for a player losing their turn (see <a href="#results">8</a>).</p>
-    <p>In the centre is the shared <b>Edge</b> pile. Each Edge token is a +1 you can spend on a roll after seeing the Fate card. Its label shows how many are left.</p>
-  </div>
-</div>
+<h3>The Relationship wheel and Story Points</h3>
+<p>Your pawn starts each round on the wheel. Between every two neighbours lies a <b>Relationship</b> card (“Childhood runaways…”) showing two approaches. You may <b>help</b> a row if one of the Relationship cards next to you shows that row’s approach. With two players, there’s a single Relationship card in the middle.</p>
+<p>Each player has a numbered <b>initiative token</b>: the order you play in. In the centre is the pile of <b>Story Points</b>: each one is a +1 you can spend on a roll after seeing the Fate card.</p>
+
+<h3>The Storyteller token</h3>
+<p>Each round one player is the <b>Storyteller</b>, shown by the Storyteller token with the <b>Obstacle die</b> on it. The token passes clockwise every round. The Storyteller still plays as usual; they also place the Obstacle and make compels (see <a href="#storyteller">9</a>).</p>
 
 <!-- ==================================================================== -->
 <h2 id="characters"><span class="num">3</span>Your character</h2>
-<div class="split">
-  <figure><img src="manual-img/character.png" alt="A character"><figcaption>Duke Dietrich, a Hard-boiled Detective with a drinking problem, wearing a coal-black Trench Coat. The “+1” beside the X badge means the Scene favours him.</figcaption></figure>
-  <div>
-    <p>Your character is built from cards, and their names come from the name cards tucked above:</p>
-    <ul>
-      <li><b>➕ Concept</b> (“A Hard-boiled Detective”): what you are. <b>+1</b> to any roll using one of its two approaches. Its resource starts 1 higher.</li>
-      <li><b>➖ Trouble</b> (“…with a drinking problem”): what gets you in trouble. It never costs you anything unless it’s <b>invoked</b> or <b>compelled</b> (see <a href="#troubles">9</a>). Its resource starts 1 lower.</li>
-      <li><b>✔️ Boon</b> (“Trench Coat”): an item or edge. <b>+1</b> to rolls using its approach. You can trade up to a better one, or burn it to get out of trouble (see <a href="#results">8</a> and <a href="#troubles">9</a>).</li>
-      <li><b>✖️ Bane</b>: an empty slot until something goes wrong (see <a href="#troubles">9</a>).</li>
-      <li><b>Portrait</b>: a Relationship card turned face-down.</li>
-    </ul>
-    <p>The grey sheet holds your six <b>resources</b>, each a die showing its value: 🩸 health, 📦 gear, ⌛ time, 🎯 focus, ⭐ reputation and 🔥 motivation. Each starts at 2.</p>
-    <p>Above your portrait is your stack of <b>spotlight</b> tokens. Below your sheet are your banked <b>Edge</b> and your <b>Scored spotlight</b>.</p>
-  </div>
-</div>
+<p>Your character is a grey <b>player board</b> with cards around it:</p>
+<ul>
+  <li><b>✔️ Concept</b> (“A Hard-boiled Detective…”), on the board’s left place: what you are. It shows <b>one approach</b> (+1 when you go in with it) and <b>one resource</b> (starts 1 higher). Your first name is on the card tucked under it.</li>
+  <li><b>✖️ Trouble</b> (“…with a drinking problem”), on the right place: what gets you in trouble. One approach and one resource (starts 1 lower). It only hurts when the Storyteller <b>compels</b> it (see <a href="#storyteller">9</a>). Your last name is tucked under it.</li>
+  <li><b>➕ Assets</b>, down the left side (Asset 1 left of the Concept, Asset 2 below it): an item or advantage, +1 on its approach. You hold up to two.</li>
+  <li><b>➖ Liabilities</b>, down the right side (Liability 1 right of the Trouble, Liability 2 below it): something that went wrong. They can be compelled. You hold up to two.</li>
+  <li><b>Portrait</b>: a Relationship card turned picture-side up, tucked behind the board above your names. Your <b>approach die</b> sits on its corner until you play as Main.</li>
+</ul>
+<p>The board holds your six <b>resources</b>, each a die showing its value. They start at <b>3</b> (4 for your Concept’s resource, 2 for your Trouble’s) and can go up to 6. You spend them to <b>succeed at a cost</b> (see <a href="#roll">7</a>). Above each die are the approaches that guard it (🔺) and squander it (🔻).</p>
+<p>Above your area: your badge and your <b>This scene</b> stack (spotlight taken this act, not yet scored), your <b>Story Points</b>, and your <b>Scored spotlight</b>.</p>
 
 <h4>The six approaches</h4>
 <table>
-  <tr><th class="c">💪</th><td>Forceful</td><th class="c">🧠</th><td>Clever</td><th class="c">🐢</th><td>Careful</td></tr>
-  <tr><th class="c">📢</th><td>Flashy</td><th class="c">⚡</th><td>Quick</td><th class="c">🕶️</th><td>Sneaky</td></tr>
+  <tr><th class="c">💪</th><td>Bold</td><th class="c">🧠</th><td>Wise</td><th class="c">🐢</th><td>Calm</td></tr>
+  <tr><th class="c">📢</th><td>Loud</td><th class="c">⚡</th><td>Swift</td><th class="c">🕶️</th><td>Subtle</td></tr>
+</table>
+
+<h4>The six resources</h4>
+<table>
+  <tr><th>Resource</th><th>Guarded by (🔺 +1)</th><th>Squandered by (🔻 −1)</th></tr>
+  <tr><td><b>Information</b></td><td>🕶️ Subtle</td><td>📢 Loud</td></tr>
+  <tr><td><b>Reputation</b></td><td>📢 Loud</td><td>🕶️ Subtle</td></tr>
+  <tr><td><b>Resources</b></td><td>🧠 Wise</td><td>⚡ Swift</td></tr>
+  <tr><td><b>Motivation</b></td><td>💪 Bold</td><td>🧠 Wise</td></tr>
+  <tr><td><b>Control</b></td><td>🐢 Calm</td><td>💪 Bold</td></tr>
+  <tr><td><b>Momentum</b></td><td>⚡ Swift</td><td>🐢 Calm</td></tr>
 </table>
 
 <!-- ==================================================================== -->
 <h2 id="setup"><span class="num">4</span>Setting up</h2>
 <ol class="steps">
   <li>Choose a theme: <b>Film Noir</b> or <b>Space Opera</b>. Each has its own cards; the Fate deck, approaches and resources are shared.</li>
-  <li>Deal each player a <b>Concept</b>, a <b>Trouble</b> and a <b>Boon</b>, with name cards tucked above them, and a face-down Relationship card as a <b>portrait</b>. Set each resource die to 2, then +1 for the resource on your Concept and −1 for the one on your Trouble.</li>
-  <li>Give each player 20 <b>spotlight</b> tokens in their colour, a pawn and an initiative token. Shuffle the initiative numbers.</li>
-  <li>Lay out the <b>Relationship</b> cards between neighbours on the wheel, and the Edge pile in its centre.</li>
-  <li>Deal the four <b>Elements</b>: MacGuffin, Ally, Villain and Location.</li>
-  <li>Shuffle the Fate deck. Keep the <b>Bane</b> deck shuffled nearby; it isn’t on the table until someone needs it.</li>
+  <li>Deal each player a <b>Concept</b> and a <b>Trouble</b>, each with a name card tucked under it, an <b>Asset</b>, and a <b>portrait</b>. Set every resource die to 3, then +1 for your Concept’s resource and −1 for your Trouble’s.</li>
+  <li>Give each player a pawn, an approach die and an initiative token. Shuffle the initiative numbers. The first player takes the Storyteller token and the Obstacle die.</li>
+  <li>Lay out the <b>Relationship</b> cards between neighbours on the wheel, and the Story Point pile in its centre.</li>
+  <li>Deal the four <b>Elements</b>: Location, Ally, Villain and Object.</li>
+  <li>Shuffle the Fate deck. Keep the Asset and Liability decks shuffled nearby.</li>
 </ol>
 
 <h4>Numbers for your player count</h4>
 <table>
   <tr><th></th><th class="c">2 players</th><th class="c">3 players</th><th class="c">4 players</th></tr>
-  <tr><td>Successes on one row to win</td><td class="c">2</td><td class="c">3</td><td class="c">4</td></tr>
-  <tr><td>Difficulty, Act I / II / III</td><td class="c">1 / 2 / <b>4</b></td><td class="c">1 / 2 / 3</td><td class="c">1 / 2 / 3</td></tr>
-  <tr><td>Edge for everyone as each act begins</td><td class="c">0 / 0 / 2</td><td class="c">2 / 1 / 1</td><td class="c">1 / 0 / 1</td></tr>
-  <tr><td>Act-win bonus: winner (and each other player on the row)</td><td class="c">2 · 3 (1) · 4 (2)</td><td class="c">2 · 2 (1) · 4 (2)</td><td class="c">2 · 3 (1) · 4 (2)</td></tr>
+  <tr><td>Successes to finish (each row’s stack), Beginning / Middle / Ending</td><td class="c">2 / 3 / 4</td><td class="c">2 / 2 / 3</td><td class="c">3 / 3 / 5</td></tr>
+  <tr><td>Difficulty</td><td class="c">1 / 3 / 3</td><td class="c">1 / 3 / 3</td><td class="c">1 / 3 / 3</td></tr>
+  <tr><td>Winner’s Story Points</td><td class="c">1 / 2 / 4</td><td class="c">1 / 2 / 4</td><td class="c">1 / 2 / 4</td></tr>
+  <tr><td>Resource points back between acts</td><td class="c">1</td><td class="c">2</td><td class="c">2</td></tr>
 </table>
 <p>The Board’s banner shows the same numbers, so you rarely need this table.</p>
 
 <!-- ==================================================================== -->
 <h2 id="act"><span class="num">5</span>Playing an act</h2>
-<p>The game has three acts, each harder than the last. At the start of each act:</p>
+<p>At the start of each act:</p>
 <ol class="steps">
-  <li><b>Draw a Situation</b> for this act and read it aloud, filling in the symbols from the Element cards.</li>
-  <li><b>Draw a new Location</b> (from Act II on). The story moves somewhere new.</li>
-  <li><b>Set the Scene die.</b> Every Situation is built around one Element line named in its description, like “the elevator shaft” or “the Villain’s secret”. Set the green Scene die to that line’s approach. For the whole act, any character whose <b>Concept or Boon</b> shows that approach gets <b>+1 on any row</b> they bet on as Main. Mark their badge.</li>
-  <li><b>Take Edge</b>: everyone takes the act’s Edge from the pile.</li>
+  <li><b>Draw a Situation</b> for this act and read it aloud, filling in the blanks from the Element cards.</li>
+  <li><b>Draw a new Location</b> (for the Middle and the Ending). The story moves somewhere new.</li>
+  <li><b>Fill the rows:</b> put a stack of spotlight tokens in each row’s Successes box, as many as the act needs.</li>
+  <li><b>Set the Edge die.</b> Every Situation is built around one Element line named in it, like “the cargo hull hatch” or “the Villain’s secret”. Turn the Edge die to that line’s approach and put it at the left of the banner. Each round, the <b>first Main player to go in with that approach</b> takes it into their Edge box: <b>+1</b> on their roll. It goes back at the end of the round.</li>
 </ol>
-<p>Then play rounds until someone fills a row with successes (the situation is won) or the situation is lost.</p>
+<p>Then play rounds until the situation is won (someone empties a row’s stack) or lost.</p>
 
 <!-- ==================================================================== -->
 <h2 id="round"><span class="num">6</span>A round, step by step</h2>
 <ol class="steps">
-  <li><b>Bets.</b> In initiative order, each player puts their pawn in one place:
+  <li><b>The Obstacle.</b> Before anyone plays, the Storyteller sets the Obstacle die to an approach, puts it in one row’s Obstacle box, and says how the other side saw it coming (see <a href="#storyteller">9</a>).</li>
+  <li><b>Choose your move.</b> In initiative order, each player does one of these:
     <ul>
-      <li><b>Main</b> on a free row: you’ll make that roll.</li>
-      <li><b>Help</b> on a row that already has a Main, if one of your neighbouring Relationship cards shows that row’s approach. You add +1, you can spend your Edge on the roll, and you share both the reward and the risk.</li>
-      <li><b>Clear</b>: put your pawn in the Clear box to remove a Minus die at the end of the round (see <a href="#minus">10</a>).</li>
-      <li><b>Pass</b>, or <b>patch yourself up</b> instead: give up your bet to put your Bane back in the deck.</li>
+      <li><b>Main</b> on a free row: choose your approach, turn your approach die to it and put it in the row’s Approach box, and put your pawn (with your initiative token) in Main.</li>
+      <li><b>Help</b> a row that already has a Main, if one of your neighbouring Relationship cards shows the Main’s approach: +1 to their roll, and a spotlight token of your own if it succeeds.</li>
+      <li><b>Hold the line</b> in the Clear seat (see <a href="#tension">11</a>).</li>
+      <li><b>Pass</b>, or <b>patch yourself up</b>: give up your move to discard a Liability.</li>
     </ul>
-    A Main player may also <b>stake</b> up to 2 tokens from their Scored spotlight. If the roll succeeds, they get the stake back plus <b>double</b> (stake 2, bank 6). Otherwise the stake goes to the <b>Lost stakes</b> pile for good.
+    Before choosing, you may also spend <b>2 Story Points</b> to discard a Liability.
   </li>
-  <li><b>Troubles and Banes.</b> Before the Fate card, Main players may <b>invoke</b> their Trouble or Bane, and other players may <b>compel</b> them (see <a href="#troubles">9</a>).</li>
+  <li><b>Compels.</b> The Storyteller may compel one Main player’s Trouble or Liability (see <a href="#storyteller">9</a>).</li>
   <li><b>Turn the Fate card.</b> One card for everyone.</li>
-  <li><b>Resolve each row</b> that has a Main, A then B then C: add up the effort, spend Edge if you want, and compare with the difficulty (see <a href="#roll">7</a> and <a href="#results">8</a>). When a row is done, its pawns go back to the wheel, so the pawns still on the Board show who hasn’t gone yet.</li>
-  <li><b>Clear.</b> If someone is in the Clear box, they remove one Minus die now, take 1 Edge and go back to the wheel.</li>
-  <li><b>Check the situation:</b> is a row full (won), or has it been lost?</li>
-  <li><b>End of the round.</b> Minus dice that went in this round start counting now. Then set the new initiative: whoever placed the <b>fewest</b> spotlight tokens this round bets first next round. Break ties in favour of whoever has less spotlight overall, then whoever went earlier.</li>
+  <li><b>Resolve each Main</b>, in initiative order. One at a time:
+    <ol>
+      <li>Say whose roll it is and how they go in.</li>
+      <li>The cards that count (Concept, Assets, a compelled Trouble or Liability, helpers’ Relationships) come out under the Board. Add up every bonus and penalty.</li>
+      <li>The Main player decides whether to spend Story Points or resource points.</li>
+      <li>See how it lands (see <a href="#results">8</a>).</li>
+      <li>Take any spotlight earned, put the cards back, and return the pawns to the wheel.</li>
+    </ol>
+  </li>
+  <li><b>Clear seat.</b> If someone holds it, they remove one Tension die now.</li>
+  <li><b>Did it end?</b> If anyone emptied a row this round, the situation is won (see <a href="#winning">12</a>). If it was lost, it ends unscored.</li>
+  <li><b>End of the round.</b> Tension dice that went in this round start counting now. The Edge die goes back to the banner, and the Storyteller token passes clockwise. Then set the new <b>initiative</b>: whoever has the <b>least spotlight</b> on the table (Scored plus This scene) goes first. Ties go to whoever has fewer Story Points.</li>
 </ol>
-<div class="callout"><span class="label">Why that order?</span>A player who scored big this round bets <i>last</i> next round, after everyone else has claimed the rows they want. A player who whiffed gets first pick. Initiative follows the last round, not the overall standings.</div>
+<div class="callout"><span class="label">Why that order?</span>Whoever is behind picks first, and rolls first: they get the first choice of rows and the first chance to finish the situation.</div>
 
 <!-- ==================================================================== -->
-<h2 id="roll"><span class="num">7</span>Rolling: effort and the Fate card</h2>
-<p>A row’s <b>effort</b> is the sum of:</p>
+<h2 id="roll"><span class="num">7</span>Rolling</h2>
+<p>A roll is the sum of:</p>
 <table>
-  <tr><td>➕ Concept shows the row’s approach</td><td class="c">+1</td></tr>
-  <tr><td>✔️ Boon shows the row’s approach</td><td class="c">+1</td></tr>
-  <tr><td>The Scene die favours the Main player</td><td class="c">+1</td></tr>
+  <tr><td>✔️ Concept shows your approach</td><td class="c">+1</td></tr>
+  <tr><td>➕ Each Asset showing your approach</td><td class="c">+1 each</td></tr>
+  <tr><td>The Edge die, if you claimed it</td><td class="c">+1</td></tr>
+  <tr><td>Your approach is the row’s 🔺 / 🔻</td><td class="c">+1 / −1</td></tr>
   <tr><td>Each helper</td><td class="c">+1 each</td></tr>
-  <tr><td>Each Minus die showing the row’s approach (not counting dice that went in this round)</td><td class="c">−1 each</td></tr>
-  <tr><td>Trouble or Bane, if invoked or compelled</td><td class="c">−1 each</td></tr>
-  <tr><td>The Fate card’s number for the row’s approach</td><td class="c">−2 to +2</td></tr>
-  <tr><td><b>Edge</b>, spent after seeing the Fate card</td><td class="c">+1 each, at most 2 per roll</td></tr>
+  <tr><td>Each Tension die showing your approach (not counting dice that went in this round)</td><td class="c">−1 each</td></tr>
+  <tr><td>A compelled Trouble or Liability</td><td class="c">−1</td></tr>
+  <tr><td>The Fate card’s number for your approach</td><td class="c">−2 to +2</td></tr>
 </table>
-<p>Then compare the effort with the act’s <b>difficulty</b>. The Main player pays for Edge first, and helpers can chip in their own, as long as the roll gets no more than 2 Edge in total.</p>
+<p>Compare it with the act’s <b>difficulty</b>. The difference is your <b>margin</b>.</p>
+<p>If the <b>Obstacle</b> is on your row and set to your approach, every bonus above for that approach (Concept, Assets, Edge die and 🔺) is <b>cancelled</b>: cross them out. Helpers and penalties still count.</p>
 
-<div class="callout important"><span class="label">Only banked Edge</span>You can only spend Edge that’s already in your pile. Edge you earn during this roll (from a Trouble, a Bane or a compel) waits on the card until the roll is over.</div>
-
-<!-- ==================================================================== -->
-<h2 id="results"><span class="num">8</span>Success, close call, failure</h2>
-
-<h3>Success: beat the difficulty</h3>
-<p>Beat the difficulty by <b>N</b> and the Main player places <b>N spotlight tokens</b> on the row’s Successes. Each helper adds 1. Tokens on the board only score if the situation is won.</p>
-<p><b>Overflow:</b> a row only takes the tokens it still needs to win. Every point of margin it can’t use becomes <b>1 Edge</b> from the pile instead, for the Main player. A helper whose token wouldn’t fit takes 1 Edge too.</p>
-<p><b>Boon upgrade:</b> beat the difficulty by <b>2 or more</b> as Main and draw a Boon from the ones nobody holds. Keep it or your old one (one Boon at a time), and put the other back. If your Boon slot is empty, just take it.</p>
-
-<h3>Close call: miss by 1, or a tie</h3>
-<p>Nothing happens: no progress and nothing lost (except a stake).</p>
-
-<h3>Failure: miss by 2 or more</h3>
+<h3>After the Fate card: spending</h3>
+<p>Once you see the roll, the Main player may push it up, +1 for each point spent:</p>
 <ul>
-  <li>The Main player and each helper <b>lose 1</b> of the row’s Risk resource.</li>
-  <li>Helpers take <b>1 Edge</b>. The Main player takes 1 Edge <b>plus 1 for each Minus die already out</b>: up to 3 when things are at their worst. That’s <b>desperation</b>.</li>
-  <li>The Main player <b>draws a Bane</b> (see <a href="#troubles">9</a>), unless they burn their Boon.</li>
-  <li>The next <b>Escalation</b> happens: read it from the Situation card and put its Minus die in the Minus box. It only starts counting <b>next round</b> (see <a href="#minus">10</a>).</li>
+  <li><b>Story Points:</b> up to 2 per roll.</li>
+  <li><b>Succeed at a cost:</b> lower the die of the row’s Risk resource by up to 2 points. A die spent down to 0 leaves your sheet: that resource is used up until you get points back.</li>
 </ul>
-<div class="callout"><span class="label">Burn your Boon</span>When you fail as Main, you may discard your Boon to shrug it off. You still lose the resource, but you <b>draw no Bane</b>, and if you’re carrying one, you <b>shake it off</b> too. Your Boon slot stays empty until your next Boon upgrade.</div>
-
-<h3>Out of a resource</h3>
-<p>A resource that drops to 0 costs you your <b>next turn</b>. Flip your initiative token to <b>OUT</b>. At the end of the round you sit out, flip it back; on your next turn the resource comes back at 1.</p>
+<p>The spend picker shows where the roll will land as you add points.</p>
+<div class="callout important"><span class="label">Only banked Story Points</span>You can only spend Story Points you already have. Story Points earned during this roll (from a compel) are yours once the roll is over.</div>
 
 <!-- ==================================================================== -->
-<h2 id="troubles"><span class="num">9</span>Troubles and Banes</h2>
-<p>Your <b>Trouble</b> never hurts on its own: someone has to bring it into play, either you (invoking) or another player (compelling). After the bets and before the Fate card, if your row as Main shows one of your Trouble’s approaches:</p>
-
+<h2 id="results"><span class="num">8</span>Four ways a roll can land</h2>
 <table>
-  <tr><th></th><th>What happens</th><th>Edge paid by</th></tr>
-  <tr><td><b>You invoke it</b></td><td>−1 on your roll, +1 Edge</td><td>the pile</td></tr>
-  <tr><td><b>Someone compels it</b>, you accept</td><td>−1 on your roll, +1 Edge</td><td>the compeller</td></tr>
-  <tr><td><b>Someone compels it</b>, you refuse</td><td>no −1; you pay 1 Edge to the pile, and so does the compeller</td><td>you both</td></tr>
-  <tr><td>The Scene die shows one of your Trouble’s approaches</td><td>+1 more Edge</td><td>the pile</td></tr>
+  <tr><th>Margin</th><th>Result</th><th>What happens</th></tr>
+  <tr><td class="c">−2 or worse</td><td><b>Epic Failure</b></td><td>The Main player draws a <b>Liability</b>, and the situation <b>escalates</b>: they choose one of the Situation’s two Escalations, narrate it, and its Tension die goes in the Tension box.</td></tr>
+  <tr><td class="c">−1 or 0</td><td><b>Failure</b></td><td>No progress, but nothing lost.</td></tr>
+  <tr><td class="c">+1</td><td><b>Success</b></td><td>The Main player takes <b>1 spotlight token</b> from the row’s stack into This scene. Each helper takes 1 too.</td></tr>
+  <tr><td class="c">+2 or more</td><td><b>Epic Success</b></td><td>As a Success, and the Main player draws an <b>Asset</b>.</td></tr>
 </table>
-
-<div class="split">
-  <figure class="mid"><img src="manual-img/trouble-invoked.png" alt="Edge waiting on a Trouble card"><figcaption>Duke invoked his drinking problem (🐢) while the Scene die showed 🧠, also on his Trouble: two Edge wait on the card until the roll is over.</figcaption></figure>
-  <div>
-    <p>The Edge goes <b>onto the Trouble card</b>, not your pile, and becomes yours <b>once the roll is over</b>. You can’t use it to cancel its own −1.</p>
-    <p>Each card counts once per roll. Why invoke? A −1 you can afford now buys Edge for the roll that really matters. Why compel? To stop a rival who’s about to finish the situation, or to drain their Edge if they refuse.</p>
-  </div>
-</div>
-
-<h3>Banes</h3>
-<div class="split">
-  <figure class="mid"><img src="manual-img/boon-bane.png" alt="A Boon and a Bane"><figcaption>Frank failed to shake down Verna, drew “Front-Page Scandal” and had to explain how it happened.</figcaption></figure>
-  <div>
-    <p>A <b>Bane</b> is something bad that happens to you: a Broken Leg, Out of Ammo, Shaky Hands. When you fail as Main, draw one <b>at random</b> and tell the table how it happened.</p>
-    <ul>
-      <li>It shows <b>two approaches</b> and works like a Trouble: invoke it for −1 and Edge.</li>
-      <li>But anyone can <b>compel it for free</b>: the Edge comes from the pile. You can still refuse by paying 1 Edge to the pile.</li>
-      <li>You hold <b>one Bane</b> at a time. If you draw another, keep whichever you prefer.</li>
-      <li>It stays from act to act until you get rid of it: give up your bet for a round, spend <b>2 Edge</b> on your turn, or burn your Boon the next time you fail (see <a href="#results">8</a>).</li>
-    </ul>
-  </div>
-</div>
+<p>Nobody loses resources on a failure: resources only go down when you spend them to succeed at a cost. Only the Main player draws a Liability; helping is safe.</p>
 
 <!-- ==================================================================== -->
-<h2 id="minus"><span class="num">10</span>Minus dice and the Clear box</h2>
-<figure><img src="manual-img/board-clear.png" alt="Two Minus dice and a pawn in the Clear box"><figcaption>Both Minus dice are out (🕶️ and 🧠). Y gave up their bet to sit in the Clear box and hold the line. Z staked a token on row A.</figcaption></figure>
-<p>Every failure triggers the next <b>Escalation</b> on the Situation card. Its Minus die goes in the Minus box: <b>−1 to every roll using that approach, on any row</b>.</p>
-<p>A new die only starts counting <b>from the next round</b>. Leave it a little to the side (on the table it’s shown dimmed) until the round ends. That way every row in a round rolls against the same Minus box, the one everyone saw when they bet, and row A’s failure can’t drag down rows B and C in the same round.</p>
-<p>The box holds two dice. With both out, <b>the next failure loses the situation</b>: every spotlight token on the board goes back to its owner, unscored. A new die already counts toward that limit, even before it starts counting on rolls.</p>
+<h2 id="storyteller"><span class="num">9</span>The Storyteller: Obstacles and compels</h2>
+<h3>The Obstacle</h3>
+<p>Before anyone plays, the Storyteller puts the Obstacle die on one row, set to one approach: the other side was ready for that. Going into that row with that approach <b>cancels all its bonuses</b> this round. It never pushes a roll below what it would be with no bonuses, so it hurts most the player leaning hardest on that approach.</p>
 
+<h3>Compels</h3>
+<p>Your ✖️ Trouble and ➖ Liabilities never count on their own, and you can’t bring them up yourself. Once per round, after the moves and before the Fate card, the Storyteller may <b>compel</b> one of them when a Main player:</p>
+<ul>
+  <li>goes in with their Trouble’s or a Liability’s approach, or</li>
+  <li>plays a row that risks their Trouble’s resource.</li>
+</ul>
+<p>The Storyteller says how it gets in the way. The Main player either <b>accepts</b> (<b>−1</b> on the roll, and <b>1 Story Point</b> from the pile, theirs once the roll is over) or <b>refuses</b> by paying 1 Story Point to the pile.</p>
+<div class="callout"><span class="label">Where Story Points come from</span>Accepting compels, holding the Clear seat, and winning a situation. That’s all: they’re scarce, so spend them on the roll that matters.</div>
+
+<!-- ==================================================================== -->
+<h2 id="cards"><span class="num">10</span>Assets and Liabilities</h2>
+<ul>
+  <li><b>➕ Assets.</b> Earned on an Epic Success (draw one from the deck). Each gives +1 on its approach. You hold at most two; if you’d have a third, keep the two you prefer.</li>
+  <li><b>➖ Liabilities.</b> Drawn on an Epic Failure: something bad happens to you (a Broken Leg, Out of Ammo, Shaky Hands); tell the table how. Each shows one approach and can be compelled. You hold at most two.</li>
+  <li><b>Getting rid of a Liability:</b> spend 2 Story Points on your turn, or give up your move to patch yourself up. If you already carry a Liability when you fail epically, you may discard an Asset instead of drawing another.</li>
+</ul>
+<p>Assets and Liabilities stay from act to act.</p>
+
+<!-- ==================================================================== -->
+<h2 id="tension"><span class="num">11</span>Tension dice and the Clear seat</h2>
+<p>Every Escalation puts a <b>Tension die</b> in the Tension box: <b>−1 to every roll using that approach, on any row</b>. A new die only starts counting <b>from the next round</b>, so every roll in a round faces the same box.</p>
+<p>The box holds two dice. With both out, <b>the next Epic Failure loses the situation</b>: everyone’s This scene tokens go back to the pool, unscored.</p>
 <h3>Holding the line</h3>
 <ul>
-  <li>One player may put their pawn in the <b>Clear</b> box instead of betting.</li>
-  <li>At the <b>end of the round</b>, after every row has rolled, they remove one Minus die and take <b>1 Edge</b>. This round’s rolls still feel the dice.</li>
-  <li>While they sit there, <b>one failure can’t lose the situation</b>: its die goes in anyway, and the clearer takes one out at the end of the round.</li>
+  <li>Instead of playing a row, one player may put their pawn in the <b>Clear seat</b> at the foot of the Tension box.</li>
+  <li>At the <b>end of the round</b> they remove one Tension die, take <b>1 Story Point</b>, and go <b>first</b> next round.</li>
+  <li>While they sit there, <b>one failure can’t lose the situation</b>.</li>
 </ul>
-<div class="callout"><span class="label">Tip</span>Clearing costs you a chance to score, but a lost situation costs <i>everyone</i> their tokens on the board. When both dice are out, someone should probably hold the line.</div>
+<div class="callout"><span class="label">Tip</span>Holding the line costs you a chance to score, but a lost situation costs <i>everyone</i> their tokens. When both dice are out, someone should probably sit in the Clear seat.</div>
 
 <!-- ==================================================================== -->
-<h2 id="winning"><span class="num">11</span>Winning a situation</h2>
-<p>When one row reaches its target (2, 3 or 4 tokens for 2, 3 or 4 players), the situation is <b>won</b>:</p>
+<h2 id="winning"><span class="num">12</span>Winning a situation</h2>
+<p>When a row’s stack is <b>emptied</b>, that row has finished the situation. The round carries on as usual: rows still to roll still roll (and can still fail), and anyone else who empties a row this round finishes it too. At the end of the round the situation is <b>won</b>:</p>
 <ol class="steps">
-  <li><b>Every spotlight token on the board scores</b>, on every row: move them to their owners’ Scored spotlight.</li>
-  <li><b>Act-win bonus</b> for the winning row (see the Board’s banner): one player banks the big bonus, and everyone else on the row banks the helper share.</li>
-  <li>Stamp the Situation with a ★ for the Main player who finished it. Then start the next act.</li>
+  <li><b>Everyone’s This scene tokens score</b>: move them to Scored spotlight.</li>
+  <li><b>The winner</b> is the <b>first</b> Main player to finish. Stamp the Situation with their name, and they take the <b>winner’s Story Points</b> (1 / 2 / 4 for the Beginning / Middle / Ending).</li>
+  <li><b>The Underdog Bonus:</b> if the winner wasn’t leading in Scored spotlight going into this act’s scoring, their Story Points are <b>doubled</b>.</li>
 </ol>
-<div class="callout important"><span class="label">The Spotlight Shift</span>The big bonus doesn’t automatically go to the Main player. It goes to whoever <b>on the winning row</b> has the <b>least scored spotlight</b> (ties go to the Main), and the Main player takes the helper share. Joining a row that’s about to finish, as a helper who’s behind, is how you <b>steal the spotlight</b>.</div>
+<p>Anyone else who finished keeps the spotlight they took, but gets no bonus.</p>
 
 <!-- ==================================================================== -->
-<h2 id="end"><span class="num">12</span>The end of the game</h2>
-<div class="split wide-left">
-  <div>
-    <p>After Act III, cash in your leftover <b>Edge</b>: every <b>2 Edge</b> buy <b>1 spotlight</b> for your Scored row. An odd Edge left over is worth nothing.</p>
-    <p>Then whoever has the most <b>Scored spotlight</b> is <b>the star of the story</b>. Spotlight still sitting in your stack or lost as stakes doesn’t count.</p>
-    <p><b>Tiebreaker:</b> whoever won Act III.</p>
-    <p>Then flip back through the acts on the Situation card (the Act buttons beside its title) and re-tell the story you made.</p>
-  </div>
-  <figure><img src="manual-img/scored.png" alt="Edge and Scored spotlight"><figcaption>Before cashing in: 8 scored spotlight and 5 Edge. The 5 Edge buy 2 more spotlight, for a final 10.</figcaption></figure>
-</div>
+<h2 id="end"><span class="num">13</span>Between acts and the end of the game</h2>
+<h3>Catching your breath</h3>
+<p>Between acts, everyone gets back <b>2 resource points</b> (1 with two players), put on any resources you like, up to 6 each. A die you’d used up comes back to your sheet.</p>
+<h3>The end</h3>
+<p>After the Ending, cash in your leftover Story Points: every <b>2 Story Points</b> buy <b>1 spotlight</b>. Then whoever has the most <b>Scored spotlight</b> is <b>the star of the story</b>. <b>Tiebreaker:</b> whoever won the Ending, if they’re one of the tied players.</p>
+<p>Afterwards, flip back through the acts (the Act buttons beside the Situation card) and re-tell the story you made.</p>
 
 <!-- ==================================================================== -->
-<h2 id="example"><span class="num">13</span>A round in play</h2>
-<p>From a four-player Film Noir game, Act II, difficulty 2. Frank (W), Duke (X), Sam (Y) and Mickey (Z) are trying to work out whether Verna, the Loyal Secretary, is lying to them.</p>
+<h2 id="example"><span class="num">14</span>A round in play</h2>
+<p>From a three-player Film Noir game. It’s the Middle: difficulty 3, and each row’s stack holds 2 tokens. Kitty (W) leads with 4 scored spotlight; Duke (X) and Sam (Y) have 2 each. Sam is the Storyteller this round. The Edge die shows 🧠 Wise.</p>
 
-<div class="callout example"><span class="label">The bets</span>
-  <p>Duke takes row ▲A, 🐢: <i>“believe Verna and plan the next move together”</i>. Sam helps him: one of Sam’s Relationship cards shows 🐢. Frank takes ■B, 💪: <i>“shake Verna down”</i>. Mickey takes ●C, 🕶️: <i>“let Verna go and follow her”</i>, and stakes 1 scored spotlight.</p>
-  <p>The Scene die shows 🧠 (the MacGuffin’s flaw, a ballistic mismatch). Duke’s Concept shows 🧠, so he gets +1 on any row.</p>
+<div class="callout example"><span class="label">The Obstacle</span>
+  <p>Sam puts the Obstacle on row C (<i>“trace where ____ (Villain)’s call came from”</i>), set to 🧠 Wise: <i>“they’ve already wiped the line.”</i> That’s the row’s 🔺 approach, and Kitty’s Concept is Wise too.</p>
 </div>
 
-<div class="callout example"><span class="label">Troubles</span>
-  <p>Duke’s Trouble, <i>“…with a drinking problem”</i>, shows 🐢, his row’s approach. He invokes it: −1 on his roll. And since his Trouble also shows 🧠, the Scene die’s approach, <b>2 Edge</b> go on the card instead of 1.</p>
+<div class="callout example"><span class="label">The moves</span>
+  <p>Duke has the least spotlight on the table, so he goes first. He takes row A, <i>“make ____ (Villain) believe you already have ____ (Object)”</i>, going in 📢 Loud: that’s the row’s 🔺 (it risks Reputation) and his Concept’s approach. Sam helps him: a Relationship card between them shows 📢.</p>
+  <p>Kitty sees the Obstacle on C and takes row B instead, going in 🕶️ Subtle, the 🔺 for its Information risk.</p>
+</div>
+
+<div class="callout example"><span class="label">The compel</span>
+  <p>Duke’s Trouble, <i>“…with misplaced loyalty”</i>, shows 📢. Sam compels it: Duke can’t lie to save the man who once saved him. Duke accepts: −1 on his roll, and a Story Point once it’s over.</p>
 </div>
 
 <div class="callout example"><span class="label">The Fate card</span>
-  <p class="roll">💪 −2 · 🧠 +1 · 🐢 +1 · 📢 −2 · ⚡ −1 · 🕶️ −1</p>
-  <p><b>▲A (Duke, 🐢):</b></p>
-  <p class="roll">Scene +1 · Help +1 · Trouble −1 · Fate 🐢 +1 = 2 → ties the difficulty. Sam spends 1 banked Edge: <span class="total">3, beats it by 1</span>.</p>
-  <p>Duke places 1 token and Sam adds 1: row A is at 2/4. Now the roll is over, so the 2 Edge waiting on Duke’s Trouble card go into his bank.</p>
-  <p><b>■B (Frank, 💪):</b></p>
-  <p class="roll">Concept +1 · Fate 💪 −2 = <span class="total">−1, misses by 3: a failure</span>.</p>
-  <p>Frank loses 1 ⭐. That was his last one, so he flips his initiative token to OUT and sits out next round. He takes 1 Edge and draws a Bane: <i>Front-Page Scandal</i>. (He could have burned his Boon, the Dark Sunglasses, to avoid the Bane, but he keeps them.) The first Escalation hits (<i>“Verna slips away into the night”</i>), and a 🕶️ Minus die goes in the box, set aside until the round ends.</p>
-  <p><b>●C (Mickey, 🕶️):</b></p>
-  <p class="roll">Boon +1 · Scene +1 · Fate 🕶️ −1 = <span class="total">1, misses by 1: a close call</span>.</p>
-  <p>Frank’s new 🕶️ die doesn’t count yet, so it can’t drag Mickey down. He makes no progress and loses his stake, but nothing else happens.</p>
+  <p class="roll">💪 0 · 🧠 −1 · 🐢 +2 · 📢 +2 · ⚡ −2 · 🕶️ +1</p>
+  <p><b>Duke, row A (📢):</b></p>
+  <p class="roll">✔️ Concept +1 · 🔺 Reputation +1 · Help +1 · ✖️ Trouble (compelled) −1 · Fate +2 = 4 vs 3 → <span class="total">+1: Success</span></p>
+  <p>Duke spends his one Story Point: <span class="total">+2, an Epic Success</span>. He takes a token from row A’s stack, Sam takes the other, and Duke draws an Asset. Row A is empty: the situation is finished.</p>
+  <p><b>Kitty, row B (🕶️):</b></p>
+  <p class="roll">🔺 Information +1 · Fate +1 = 2 vs 3 → <span class="total">−1: Failure</span></p>
+  <p>The situation is already finished, but Kitty still rolls as usual. She spends 2 points of Information (3 → 1): <span class="total">+1, a Success</span>. She takes a token from row B.</p>
 </div>
 
-<div class="callout example"><span class="label">Next round</span>
-  <p>The 🕶️ Minus die now counts: −1 to anyone rolling 🕶️. Frank sits out, his token showing OUT. With one Minus die out, one more failure brings the second, and then the situation is one failure from being lost. That’s the moment for someone to give up their bet and sit in the Clear box.</p>
+<div class="callout example"><span class="label">The end of the round</span>
+  <p>The situation is won. Everyone’s This scene tokens score: Kitty 5, Duke 3, Sam 3. Duke finished first, so he’s the winner: the Middle is worth 2 Story Points, and since he wasn’t leading, the <b>Underdog Bonus</b> doubles them to 4. Next act, he has plenty to spend.</p>
 </div>
 
 <!-- ==================================================================== -->
-<h2 id="quick"><span class="num">14</span>Quick reference</h2>
+<h2 id="quick"><span class="num">15</span>Quick reference</h2>
 <div class="quickref">
   <h3>Each act</h3>
   <ol>
-    <li>New Situation (and a new Location from Act II on). Read it aloud.</li>
-    <li>Set the Scene die. Mark the characters it favours.</li>
-    <li>Everyone takes the act’s Edge.</li>
+    <li>New Situation (and a new Location for the Middle and Ending). Read it aloud, filling in the blanks.</li>
+    <li>Fill each row’s stack with spotlight tokens. Set the Edge die.</li>
   </ol>
   <h3>Each round</h3>
   <ol>
-    <li><b>Bet</b> in initiative order: Main · Help (needs a Relationship showing the row’s approach) · Clear · Pass / patch up. Main may stake up to 2 scored spotlight.</li>
-    <li><b>Invoke or compel</b> Troubles and Banes: −1, +Edge (it waits on the card).</li>
+    <li><b>Obstacle:</b> the Storyteller puts it on a row and an approach.</li>
+    <li><b>Moves</b> in initiative order: Main (choose an approach, set your die) · Help (needs a Relationship showing the Main’s approach) · Clear seat · Pass / patch up. 2 Story Points discard a Liability.</li>
+    <li><b>Compel</b> (Storyteller, once): Trouble or Liability matches the approach, or the row risks the Trouble’s resource. −1 and +1 Story Point, or refuse for 1 Story Point.</li>
     <li><b>Turn one Fate card.</b></li>
-    <li><b>Resolve</b> rows A → B → C. Edge after the reveal, at most 2 per roll. When a row is done, its pawns go back to the wheel.
+    <li><b>Resolve</b> each Main in initiative order. After the card: up to 2 Story Points and up to 2 points of the row’s resource, +1 each.
       <ul>
-        <li>Beat the difficulty by N: N tokens (only what the row needs, the rest as Edge); each helper +1. Beat it by 2+: draw a Boon, keep either.</li>
-        <li>Miss by 1 or tie: nothing happens.</li>
-        <li>Miss by 2+: lose the Risk resource; Edge (Main: 1 + Minus dice out); Main draws a Bane (or burns their Boon: no Bane, and heal the one they carry); next Escalation, whose die counts from next round.</li>
+        <li>−2 or worse, <b>Epic Failure</b>: draw a Liability; choose an Escalation; its Tension die counts from next round.</li>
+        <li>−1 or 0, <b>Failure</b>: nothing happens.</li>
+        <li>+1, <b>Success</b>: take a token from the row; each helper takes one too.</li>
+        <li>+2 or more, <b>Epic Success</b>: a token, and draw an Asset.</li>
       </ul>
     </li>
-    <li><b>Clear box:</b> remove a Minus die, +1 Edge.</li>
-    <li><b>Won?</b> A full row scores the whole board, plus the act bonus (Spotlight Shift). <b>Lost?</b> A failure with 2 Minus dice out (unless someone holds the line): the board’s tokens go back unscored.</li>
-    <li><b>End of round:</b> new Minus dice start counting. Initiative: fewest tokens placed this round goes first.</li>
+    <li><b>Clear seat:</b> remove a Tension die, +1 Story Point, go first next round.</li>
+    <li><b>Won?</b> A row emptied this round: everyone’s This scene scores; the first to finish wins (stamp, Story Points 1/2/4, doubled for an underdog). <b>Lost?</b> An Epic Failure with 2 Tension dice out (unless someone holds the line).</li>
+    <li><b>End of round:</b> new Tension dice start counting; Edge die back; Storyteller passes clockwise; least spotlight goes first.</li>
   </ol>
   <h3>Remember</h3>
   <ul>
-    <li>A resource at 0: flip your token to OUT and lose your next turn.</li>
-    <li>One Boon and one Bane at a time. Remove a Bane with 2 Edge, by giving up a bet, or by burning your Boon when you fail.</li>
-    <li>After Act III, every 2 leftover Edge buy 1 spotlight. Most Scored spotlight is the star; tiebreaker: whoever won Act III.</li>
+    <li>Bonuses: Concept +1, each Asset +1, Edge die +1, row 🔺 +1 / 🔻 −1, each helper +1. The Obstacle cancels them for its approach on its row.</li>
+    <li>Up to two Assets and two Liabilities. Resources start at 3 and go up to 6.</li>
+    <li>Between acts: 2 resource points back (1 with two players), anywhere.</li>
+    <li>After the Ending, every 2 leftover Story Points buy 1 spotlight. Most Scored spotlight is the star; tiebreaker: whoever won the Ending.</li>
   </ul>
 </div>
 
 </main>
 
 <footer>
-  Rules as of 15 October 2026. The numbers come from playtesting thousands of simulated games and will change as the game does. Screenshots from the playtest table (<code>index.html</code>).
+  Rules as of 20 October 2026. The numbers come from playtesting thousands of simulated games and will change as the game does.
 </footer>
 
 </body>
