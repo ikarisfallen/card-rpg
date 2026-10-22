@@ -1940,3 +1940,7 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
 .madlib-fill { display: block; padding: 0 2px; border-bottom: 1.5px solid currentColor; color: #1b7a3a; font-size: 0.85em; font-weight: 400; line-height: 1.1; text-align: center; } /* a long name wraps rather than spill out */
 .madlib.filled { max-width: 100%; }
 .madlib.filled .madlib-label { opacity: 0.55; }
+
+/* "Camera follows each step", under the simulator's buttons. */
+.sim-option { display: flex; align-items: center; gap: 10px; padding: 0 18px 10px; font: 600 16px "Segoe UI", system-ui, sans-serif; color: #e9eef5; cursor: pointer; }
+.sim-option input { width: 22px; height: 22px; margin: 0; accent-color: #f0a919; cursor: pointer; }

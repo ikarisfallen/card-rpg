@@ -2360,6 +2360,10 @@ const simStepBtn = document.getElementById('sim-step');
 const simChoices = el('div', 'sim-choices');
 simText.after(simChoices);
 const simAutoBtn = document.getElementById('sim-auto');
+// "Camera follows each step": on unless turned off (remembered on this device).
+const simFollow = document.getElementById('sim-follow');
+try { simFollow.checked = localStorage.getItem('card-rpg-follow') !== 'off'; } catch { /* storage unavailable */ }
+simFollow.addEventListener('change', () => { try { localStorage.setItem('card-rpg-follow', simFollow.checked ? 'on' : 'off'); } catch { /* storage unavailable */ } });
 
 simPanel.querySelector('.sim-rules ol').innerHTML = RULES_TEXT.filter(Boolean).map(r => `<li>${r}</li>`).join('');
 
@@ -2449,7 +2453,8 @@ function simStep(choice) {
   sim.asking = !!value.ask;
   simChoices.innerHTML = '';
   simStepBtn.disabled = sim.asking;
-  followAction(); // the camera moves to what this step is about
+  if (simFollow.checked) followAction(); // the camera moves to what this step is about
+  else touched.rects = [];
   if (value.spend) { sim.asking = true; simStepBtn.disabled = true; stopAuto(); renderSpendPicker(value.spend); return; }
   if (sim.asking) {
     stopAuto();
