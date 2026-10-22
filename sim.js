@@ -191,6 +191,9 @@ function showUsedCards(row) {
   if (hits.some(h => /Trouble/.test(h))) add(pl.zones.trouble.occupant);
   if (hits.some(h => /Liability/.test(h))) [pl.zones.bane && pl.zones.bane.occupant, ...extras('bane')].forEach(p => p && has(p.card.approaches, a) && add(p));
   row.helpers.forEach(h => { const rel = relFor(h, a); const z = (TABLE.relZones || []).find(z => z.occupant && z.occupant.card === rel); if (z) add(z.occupant); });
+  // The cards that help on the left, a compelled Trouble or Liability (−1) on the right.
+  const minus = p => (p.card.kind === 'trouble' || p.card.kind === 'bane' ? 1 : 0);
+  list.sort((p, q) => minus(p) - minus(q)); // stable: each side keeps its order
   const gap = 12, w = PC_CARD.w, x0 = TABLE.showcaseAt.x - (list.length * w + (list.length - 1) * gap) / 2;
   // Name cards (first / last name, an Asset's description) stay behind: unhook them while on show.
   list.forEach((p, i) => {
