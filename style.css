@@ -1859,7 +1859,7 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
    tile lies, face down (?) until the bets are in, then showing the resource. */
 .sit-risk-slot { flex: none; width: 132px; }
 .risk-tile .card-face { border-radius: 12px; align-items: center; justify-content: center; padding: 0; }
-.risk-tile .card-front { border-width: 3px; }
+.risk-tile .card-front { border-width: 3px; background: #fffdf6; } /* white, like the choices' speech bubbles */
 .risk-tile .card-back { border-width: 3px; background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.06) 0 8px, transparent 8px 16px), #36304a; }
 .risk-tile .res-grid { font-size: 28px; column-gap: 8px; }
 .risk-tile .res-name { font-size: 13px; }
