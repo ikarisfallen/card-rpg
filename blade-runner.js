@@ -135,7 +135,7 @@ window.BLADE_RUNNER_DATA = (() => {
       {
         name: 'Beginning: The empathy test',
         key: '😇🔒',
-        description: 'In a dim office at 🏠, you have to give 😇 the empathy test. 😇 is hiding something: 😇🔒. Do you try to:\nA) ask the questions slowly and watch their eyes 🐢 (📏)\nB) catch the lie before they reach for a gun ⚡ (⌛)\nC) read the results without tipping them off 🕶️ (ℹ️)',
+        description: 'In a dim office at 🏠, you have to give 😇 the empathy test. 😇 is hiding something: 😇🔒.\nA) I ask the questions slowly and watch their eyes 🐢 (📏)\nB) I catch the lie before they reach for a gun ⚡ (⌛)\nC) I read the results without tipping them off 🕶️ (ℹ️)',
         escalations: ['They pull a gun under the table ➖⚡', 'Your hands start shaking ➖🐢'],
         approaches: ['🐢', '⚡', '🕶️'],
         risks: ['📏', '⌛', 'ℹ️'],
@@ -143,7 +143,7 @@ window.BLADE_RUNNER_DATA = (() => {
       {
         name: 'Beginning: Noodle bar stakeout',
         key: '🚪',
-        description: 'Rain hammers 🏠. A contact says 🛠️ changes hands tonight, through the 🚪, and 👿’s people are already watching. Do you try to:\nA) blend in and wait for the handoff 🕶️ (ℹ️)\nB) bargain with the vendor who knows who’s selling 🧠 (📦)\nC) flash your badge and take charge 📢 (⭐)',
+        description: 'Rain hammers 🏠. A contact says 🛠️ changes hands tonight, through the 🚪, and 👿’s people are already watching.\nA) I blend in and wait for the handoff 🕶️ (ℹ️)\nB) I bargain with the vendor who knows who’s selling 🧠 (📦)\nC) I flash my badge and take charge 📢 (⭐)',
         escalations: ['Someone spots your badge ➖🕶️', 'The vendor’s price goes up ➖🧠'],
         approaches: ['🕶️', '🧠', '📢'],
         risks: ['ℹ️', '📦', '⭐'],
@@ -151,7 +151,7 @@ window.BLADE_RUNNER_DATA = (() => {
       {
         name: 'Middle: Enhance',
         key: '🛠️📍',
-        description: 'Back at 🏠, you run 🛠️ through the photo enhancer. The trail leads to where it came from: 🛠️📍. Do you try to:\nA) zoom in on every corner until you find the clue 🧠 (📦)\nB) get there before 👿 does ⚡ (⌛)\nC) keep the find off the police records 🕶️ (ℹ️)',
+        description: 'Back at 🏠, you run 🛠️ through the photo enhancer. The trail leads to where it came from: 🛠️📍.\nA) I zoom in on every corner until I find the clue 🧠 (📦)\nB) I get there before 👿 does ⚡ (⌛)\nC) I keep the find off the police records 🕶️ (ℹ️)',
         escalations: ['The file corrupts as you watch ➖🧠', '👿 gets a copy too ➖⚡'],
         approaches: ['🧠', '⚡', '🕶️'],
         risks: ['📦', '⌛', 'ℹ️'],
@@ -159,7 +159,7 @@ window.BLADE_RUNNER_DATA = (() => {
       {
         name: 'Middle: Across the rooftops',
         key: '🪜',
-        description: 'The replicant bolts from 🏠, and you follow them up the 🪜 into the rain. Do you try to:\nA) leap the gap between the rooftops ⚡ (⌛)\nB) keep your nerve when they turn and wait for you 🐢 (📏)\nC) take them down hand to hand 💪 (🔥)',
+        description: 'The replicant bolts from 🏠, and you follow them up the 🪜 into the rain.\nA) I leap the gap between the rooftops ⚡ (⌛)\nB) I keep my nerve when they turn and wait for me 🐢 (📏)\nC) I take them down hand to hand 💪 (🔥)',
         escalations: ['Your grip slips on the wet ledge ➖⚡', 'They break your fingers ➖💪'],
         approaches: ['⚡', '🐢', '💪'],
         risks: ['⌛', '📏', '🔥'],
@@ -167,7 +167,7 @@ window.BLADE_RUNNER_DATA = (() => {
       {
         name: 'Middle: The snake dancer',
         key: '💀',
-        description: 'The snake dancer at 🏠 knows where 😇 is hiding, but the 💀 are watching her every move. Do you try to:\nA) pose as a union official and get backstage 📢 (⭐)\nB) slip through the crowd unnoticed 🕶️ (ℹ️)\nC) stay cool when the dancer turns on you 🐢 (📏)',
+        description: 'The snake dancer at 🏠 knows where 😇 is hiding, but the 💀 are watching her every move.\nA) I pose as a union official and get backstage 📢 (⭐)\nB) I slip through the crowd unnoticed 🕶️ (ℹ️)\nC) I stay cool when the dancer turns on me 🐢 (📏)',
         escalations: ['She runs out through the crowd ➖🕶️', 'The bouncers recognise you ➖📢'],
         approaches: ['📢', '🕶️', '🐢'],
         risks: ['⭐', 'ℹ️', '📏'],
@@ -175,7 +175,7 @@ window.BLADE_RUNNER_DATA = (() => {
       {
         name: 'Ending: Meet your maker',
         key: '👿🔒',
-        description: 'At the top of 🏠, 👿 waits behind locked doors. You know 👿’s secret: 👿🔒. Do you try to:\nA) talk your way into the penthouse 📢 (⭐)\nB) make 👿 answer for what was done 💪 (🔥)\nC) find the guards’ blind spot 🕶️ (ℹ️)',
+        description: 'At the top of 🏠, 👿 waits behind locked doors. You know 👿’s secret: 👿🔒.\nA) I talk my way into the penthouse 📢 (⭐)\nB) I make 👿 answer for what was done 💪 (🔥)\nC) I find the guards’ blind spot 🕶️ (ℹ️)',
         escalations: ['Security locks the building down ➖🕶️', '👿 calls for help ➖📢'],
         approaches: ['📢', '💪', '🕶️'],
         risks: ['⭐', '🔥', 'ℹ️'],
@@ -183,7 +183,7 @@ window.BLADE_RUNNER_DATA = (() => {
       {
         name: 'Ending: Tears in rain',
         key: '😇🚩',
-        description: 'On the roof of 🏠, in the pouring rain, it all comes down to you and 😇. All 😇 ever wanted was to 😇🚩. Do you try to:\nA) hold on as the roof gives way 💪 (🔥)\nB) reach 😇 before their time runs out ⚡ (⌛)\nC) let go of your anger and listen 🐢 (📏)',
+        description: 'On the roof of 🏠, in the pouring rain, it all comes down to you and 😇. All 😇 ever wanted was to 😇🚩.\nA) I hold on as the roof gives way 💪 (🔥)\nB) I reach 😇 before their time runs out ⚡ (⌛)\nC) I let go of my anger and listen 🐢 (📏)',
         escalations: ['The roof crumbles under your feet ➖💪', 'Their time is almost out ➖⚡'],
         approaches: ['💪', '⚡', '🐢'],
         risks: ['🔥', '⌛', '📏'],

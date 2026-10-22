@@ -135,7 +135,7 @@ window.GHOSTBUSTERS_DATA = (() => {
       {
         name: 'Beginning: The first call',
         key: '😇🔒',
-        description: 'The phone rings at the firehouse: 😇 has something in their place at 🏠, and it’s not mice. 😇 is hiding something about it: 😇🔒. Do you try to:\nA) trap the ghost before it wrecks the place 💪 (🔥)\nB) calm 😇 down and find out what really happened 🐢 (📏)\nC) creep up on it with the PKE meter 🕶️ (ℹ️)',
+        description: 'The phone rings at the firehouse: 😇 has something in their place at 🏠, and it’s not mice. 😇 is hiding something about it: 😇🔒.\nA) I trap the ghost before it wrecks the place 💪 (🔥)\nB) I calm 😇 down and find out what really happened 🐢 (📏)\nC) I creep up on it with the PKE meter 🕶️ (ℹ️)',
         escalations: ['The ghost slimes everyone in the room ➖💪', 'The neighbours call the police ➖🐢'],
         approaches: ['💪', '🐢', '🕶️'],
         risks: ['🔥', '📏', 'ℹ️'],
@@ -143,7 +143,7 @@ window.GHOSTBUSTERS_DATA = (() => {
       {
         name: 'Beginning: The hotel ballroom',
         key: '🧱',
-        description: 'A green ghost is eating everything in the ballroom of 🏠, and the manager wants it gone before the big dinner. It’s hiding behind the 🧱. Do you try to:\nA) catch it fast, before the guests arrive ⚡ (⌛)\nB) convince the manager the damage is worth the fee 📢 (⭐)\nC) work out a plan that doesn’t wreck the room 🧠 (📦)',
+        description: 'A green ghost is eating everything in the ballroom of 🏠, and the manager wants it gone before the big dinner. It’s hiding behind the 🧱.\nA) I catch it fast, before the guests arrive ⚡ (⌛)\nB) I convince the manager the damage is worth the fee 📢 (⭐)\nC) I work out a plan that doesn’t wreck the room 🧠 (📦)',
         escalations: ['The chandelier comes down ➖⚡', 'The guests start screaming to the press ➖📢'],
         approaches: ['⚡', '📢', '🧠'],
         risks: ['⌛', '⭐', '📦'],
@@ -151,7 +151,7 @@ window.GHOSTBUSTERS_DATA = (() => {
       {
         name: 'Middle: Don’t cross the streams',
         key: '🛠️❌',
-        description: 'At 🏠, the ghost is wrapped round 🛠️, and the only shot means crossing the streams. Worse: 🛠️❌. Do you try to:\nA) hold your beam steady while the others aim 🐢 (📏)\nB) take the shot no one else would dare 💪 (🔥)\nC) figure out the angle that won’t end all life as we know it 🧠 (📦)',
+        description: 'At 🏠, the ghost is wrapped round 🛠️, and the only shot means crossing the streams. Worse: 🛠️❌.\nA) I hold my beam steady while the others aim 🐢 (📏)\nB) I take the shot no one else would dare 💪 (🔥)\nC) I figure out the angle that won’t end all life as we know it 🧠 (📦)',
         escalations: ['The streams spark dangerously close ➖🐢', 'The ghost splits in two ➖💪'],
         approaches: ['🐢', '💪', '🧠'],
         risks: ['📏', '🔥', '📦'],
@@ -159,7 +159,7 @@ window.GHOSTBUSTERS_DATA = (() => {
       {
         name: 'Middle: Shut down by the city',
         key: '👿🔗',
-        description: '👿 has sent 👿🔗 to switch off the containment grid at 🏠, and every trapped ghost is about to get out. Do you try to:\nA) talk them out of pulling the plug 📢 (⭐)\nB) get to the grid before they flip the switch ⚡ (⌛)\nC) keep the press from finding out 🕶️ (ℹ️)',
+        description: '👿 has sent 👿🔗 to switch off the containment grid at 🏠, and every trapped ghost is about to get out.\nA) I talk them out of pulling the plug 📢 (⭐)\nB) I get to the grid before they flip the switch ⚡ (⌛)\nC) I keep the press from finding out 🕶️ (ℹ️)',
         escalations: ['The grid blows and ghosts pour into the city ➖⚡', 'The reporters are already outside ➖🕶️'],
         approaches: ['📢', '⚡', '🕶️'],
         risks: ['⭐', '⌛', 'ℹ️'],
@@ -167,7 +167,7 @@ window.GHOSTBUSTERS_DATA = (() => {
       {
         name: 'Middle: Slime under the city',
         key: '🕳️',
-        description: 'A river of slime runs under 🏠, feeding something big. To find where it goes, you have to climb down into the 🕳️. Do you try to:\nA) follow it quietly to its source 🕶️ (ℹ️)\nB) stay calm while the slime feeds on your fear 🐢 (📏)\nC) take a sample and get out before it rises 🧠 (📦)',
+        description: 'A river of slime runs under 🏠, feeding something big. To find where it goes, you have to climb down into the 🕳️.\nA) I follow it quietly to its source 🕶️ (ℹ️)\nB) I stay calm while the slime feeds on my fear 🐢 (📏)\nC) I take a sample and get out before it rises 🧠 (📦)',
         escalations: ['The slime rises and turns nasty ➖🐢', 'Something in the slime notices you ➖🕶️'],
         approaches: ['🕶️', '🐢', '🧠'],
         risks: ['ℹ️', '📏', '📦'],
@@ -175,7 +175,7 @@ window.GHOSTBUSTERS_DATA = (() => {
       {
         name: 'Ending: Choose the destroyer',
         key: '👿🚩',
-        description: 'On the roof of 🏠, the gate is open, and 👿 has come through to 👿🚩. Whatever you think of next is the shape it will take. Do you try to:\nA) clear your mind and think of nothing at all 🐢 (📏)\nB) blast it back through the gate with everything you’ve got 💪 (🔥)\nC) dive for 🛠️ before the gate opens wider ⚡ (⌛)',
+        description: 'On the roof of 🏠, the gate is open, and 👿 has come through to 👿🚩. Whatever you think of next is the shape it will take.\nA) I clear my mind and think of nothing at all 🐢 (📏)\nB) I blast it back through the gate 💪 (🔥)\nC) I dive for 🛠️ before the gate opens wider ⚡ (⌛)',
         escalations: ['A giant figure stomps across the city ➖🐢', 'The roof starts to crumble ➖⚡'],
         approaches: ['🐢', '💪', '⚡'],
         risks: ['📏', '🔥', '⌛'],
@@ -183,7 +183,7 @@ window.GHOSTBUSTERS_DATA = (() => {
       {
         name: 'Ending: Good vibrations',
         key: '💀',
-        description: '👿 has wrapped 🏠 in a shell of slime, and the 💀 are pouring out into the streets. Only the whole city’s good mood can break the shell. Do you try to:\nA) get the crowd singing 📢 (⭐)\nB) fight through the 💀 before the shell hardens 💪 (🔥)\nC) work out where the shell is weakest 🧠 (📦)',
+        description: '👿 has wrapped 🏠 in a shell of slime, and the 💀 are pouring out into the streets. Only the whole city’s good mood can break the shell.\nA) I get the crowd singing 📢 (⭐)\nB) I fight through the 💀 before the shell hardens 💪 (🔥)\nC) I work out where the shell is weakest 🧠 (📦)',
         escalations: ['The crowd turns ugly and the slime grows ➖📢', 'The shell closes behind you ➖💪'],
         approaches: ['📢', '💪', '🧠'],
         risks: ['⭐', '🔥', '📦'],

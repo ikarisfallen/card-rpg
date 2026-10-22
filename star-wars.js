@@ -135,7 +135,7 @@ window.STAR_WARS_DATA = (() => {
       {
         name: 'Beginning: Boarded in orbit',
         key: '👿🔗',
-        description: 'Above 🏠, 👿’s troopers blast through the doors of your ship, sent by 👿🔗. 🛠️ must not fall into their hands. Do you try to:\nA) hide 🛠️ where they won’t think to look 🕶️ (ℹ️)\nB) get to the escape pods before the troopers ⚡ (⌛)\nC) hold the corridor long enough for the others 💪 (🔥)',
+        description: 'Above 🏠, 👿’s troopers blast through the doors of your ship, sent by 👿🔗. 🛠️ must not fall into their hands.\nA) I hide 🛠️ where they won’t think to look 🕶️ (ℹ️)\nB) I get to the escape pods before the troopers ⚡ (⌛)\nC) I hold the corridor long enough for the others 💪 (🔥)',
         escalations: ['More troopers pour in through the breach ➖💪', 'A tractor beam drags the ship into a Star Destroyer’s hangar ➖⚡'],
         approaches: ['🕶️', '⚡', '💪'],
         risks: ['ℹ️', '⌛', '🔥'],
@@ -143,7 +143,7 @@ window.STAR_WARS_DATA = (() => {
       {
         name: 'Beginning: The cantina deal',
         key: '🧱',
-        description: 'In a smoky cantina at 🏠, you need a ship to get 🛠️ off-world, and 😇 might be the way out. But 👿’s spies are watching from behind the 🧱. Do you try to:\nA) strike a deal with 😇 you can actually afford 🧠 (📦)\nB) slip away before the spies make you 🕶️ (ℹ️)\nC) stare down the thug who picks a fight with you 📢 (⭐)',
+        description: 'In a smoky cantina at 🏠, you need a ship to get 🛠️ off-world, and 😇 might be the way out. But 👿’s spies are watching from behind the 🧱.\nA) I strike a deal with 😇 I can actually afford 🧠 (📦)\nB) I slip away before the spies make me 🕶️ (ℹ️)\nC) I stare down the thug who picks a fight with me 📢 (⭐)',
         escalations: ['A blaster goes off and the whole cantina erupts ➖📢', 'Stormtroopers start checking papers at the door ➖🕶️'],
         approaches: ['🧠', '🕶️', '📢'],
         risks: ['📦', 'ℹ️', '⭐'],
@@ -151,7 +151,7 @@ window.STAR_WARS_DATA = (() => {
       {
         name: 'Middle: The trash compactor',
         key: '🕳️',
-        description: 'Running from 👿’s troopers deep inside 🏠, you dive down a garbage chute and land in a trash compactor. Then the walls start to move. Do you try to:\nA) brace the walls with whatever is floating in the muck 💪 (🔥)\nB) get 😇 on the comlink to shut it down 📢 (⭐)\nC) find a way out before something in the water finds you 🐢 (📏)',
+        description: 'Running from 👿’s troopers deep inside 🏠, you dive down a garbage chute and land in a trash compactor. Then the walls start to move.\nA) I brace the walls with whatever is floating in the muck 💪 (🔥)\nB) I get 😇 on the comlink to shut it down 📢 (⭐)\nC) I find a way out before something in the water finds me 🐢 (📏)',
         escalations: ['Something in the muck drags someone under ➖🐢', 'The walls speed up ➖💪'],
         approaches: ['💪', '📢', '🐢'],
         risks: ['🔥', '⭐', '📏'],
@@ -159,7 +159,7 @@ window.STAR_WARS_DATA = (() => {
       {
         name: 'Middle: The asteroid field',
         key: '🛠️❌',
-        description: '👿’s fighters are on your tail near 🏠, and you’re still carrying 🛠️. The only way out is straight into the asteroid field. Do you try to:\nA) fly through faster than they dare to follow ⚡ (⌛)\nB) hide inside a giant asteroid until they pass 🕶️ (ℹ️)\nC) keep the ship in one piece until the hyperdrive is fixed 🐢 (📏)',
+        description: '👿’s fighters are on your tail near 🏠, and you’re still carrying 🛠️. The only way out is straight into the asteroid field.\nA) I fly through faster than they dare to follow ⚡ (⌛)\nB) I hide inside a giant asteroid until they pass 🕶️ (ℹ️)\nC) I keep the ship in one piece until the hyperdrive is fixed 🐢 (📏)',
         escalations: ['The cave you hid in starts to move: it’s alive ➖🕶️', 'An asteroid clips the hull ➖🐢'],
         approaches: ['⚡', '🕶️', '🐢'],
         risks: ['⌛', 'ℹ️', '📏'],
@@ -167,7 +167,7 @@ window.STAR_WARS_DATA = (() => {
       {
         name: 'Middle: The detention block',
         key: '😇🔒',
-        description: '😇 is locked in a detention block at 🏠, and 👿 means to make an example of them. You’re disguised as troopers, and 😇 knows something 👿 must never learn: 😇🔒. Do you try to:\nA) bluff your way past the officer on duty 📢 (⭐)\nB) blast your way in and out again 💪 (🔥)\nC) find another way out of the cell block 🧠 (📦)',
+        description: '😇 is locked in a detention block at 🏠, and 👿 means to make an example of them. You’re disguised as troopers, and 😇 knows something 👿 must never learn: 😇🔒.\nA) I bluff my way past the officer on duty 📢 (⭐)\nB) I blast my way in and out again 💪 (🔥)\nC) I find another way out of the cell block 🧠 (📦)',
         escalations: ['The alarm goes up across the whole station ➖📢', 'A squad of troopers cuts off the way back ➖🧠'],
         approaches: ['📢', '💪', '🧠'],
         risks: ['⭐', '🔥', '📦'],
@@ -175,7 +175,7 @@ window.STAR_WARS_DATA = (() => {
       {
         name: 'Ending: The trench run',
         key: '🛠️✨',
-        description: 'The only way to stop 👿 is to hit the weak spot of 🏠, the one 🛠️ revealed. Fighters scream down the trench behind you. Do you try to:\nA) stay on target down the trench, whatever comes 🐢 (📏)\nB) draw 👿’s escort away from the others 📢 (⭐)\nC) take the shot before the superweapon fires ⚡ (⌛)',
+        description: 'The only way to stop 👿 is to hit the weak spot of 🏠, the one 🛠️ revealed. Fighters scream down the trench behind you.\nA) I stay on target down the trench, whatever comes 🐢 (📏)\nB) I draw 👿’s escort away from the others 📢 (⭐)\nC) I take the shot before the superweapon fires ⚡ (⌛)',
         escalations: ['Another wingmate goes down ➖🐢', 'The superweapon is charging ➖⚡'],
         approaches: ['🐢', '📢', '⚡'],
         risks: ['📏', '⭐', '⌛'],
@@ -183,7 +183,7 @@ window.STAR_WARS_DATA = (() => {
       {
         name: 'Ending: Duel above the shaft',
         key: '🕳️',
-        description: 'On a narrow gantry high over the 🕳️ of 🏠, 👿 offers you a choice: join them, or lose everything, 😇 included. Do you try to:\nA) refuse and fight on, whatever it costs 💪 (🔥)\nB) reach 😇 before 👿 can hurt them ⚡ (⌛)\nC) find the good in 👿 and turn them 🐢 (📏)',
+        description: 'On a narrow gantry high over the 🕳️ of 🏠, 👿 offers you a choice: join them, or lose everything, 😇 included.\nA) I refuse and fight on, whatever it costs 💪 (🔥)\nB) I reach 😇 before it’s too late ⚡ (⌛)\nC) I find the good in 👿 and turn them 🐢 (📏)',
         escalations: ['The gantry gives way beneath you ➖⚡', 'For a moment, the dark side has you ➖🐢'],
         approaches: ['💪', '⚡', '🐢'],
         risks: ['🔥', '⌛', '📏'],

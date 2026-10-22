@@ -90,7 +90,7 @@ const SIM_RULES = {
   // Asset shield (test): a Main player who fails may discard their Asset to keep the resource and
   // skip the Liability (the Escalation, Edge and any lost stake still happen).
   boonShield: 'heal', // 'heal': still lose the resource, but no new Liability and the carried one is discarded; true: keep the resource too  // true: Liabilities clear at the end of each act; false: a Liability stays until removed
-  edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 }, // Story Points every player takes as an act begins (none since 2026-10-18)
+  edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 0 }, // Story Points every player takes as an act begins (1 to start the game since 2026-10-21, to swap risks)
   maxStake: 0,        // spotlight tokens a Main player may stake on their bet (stakes removed 2026-10-18: 0)
   stakeLostOn: 'miss', // 'miss': lost unless the bet succeeds; 'failure': only lost on a failure
   stakeNeedsMargin: false, // true: a stake of N only pays off if the bet beats the difficulty by N or more
@@ -177,11 +177,22 @@ const SIM_RULES = {
   // Storyteller (the seat passes clockwise every round). Before anyone bets, they set the
   // Obstacle die to an approach and put it in one row's Obstacle box: going into that row with
   // that approach is −1. The Storyteller still bets as usual.
-  obstacle: true,
+  // OFF 2026-10-21: the risks drawn from a bag (riskDraw) replace it.
+  obstacle: false,
   // ...true: instead of −1, the Obstacle cancels the bonuses for its approach on its row (Concept,
   // Asset, the Scene die), so it only hurts characters leaning on that approach.
   obstacleCancels: true,
+  // Risks from a bag (2026-10-21, so rows are chosen for what they say, not their symbols): each
+  // round the Storyteller draws 3 of the 6 resource tiles and lays one face down on each row. After
+  // the bets they're turned over; in reverse initiative order each Main may pay riskSwapCost Story
+  // Points (to the pile) to swap their row's risk with another row's; then each Main picks their
+  // approach. A helper's +1 only counts if the Main's approach is on one of their Relationships.
+  riskDraw: true,
+  riskSwapCost: 1,
 };
+
+// A Storyteller seat passes round the table (for the Obstacle or for drawing the risks).
+function hasStoryteller() { return !!(SIM_RULES.obstacle || SIM_RULES.riskDraw); }
 
 // Settings that change with the number of players. Anything not listed for a player count
 // falls back to SIM_RULES above. `target` is the successes on one row that win a situation.
@@ -201,15 +212,15 @@ const PLAYER_COUNT_RULES = {
     difficulty: { 'Beginning': 1, 'Middle': 3, 'Ending': 3 },
     extraMiddleEdge: 3, // long games: 3 Story Points at Middle 2, 3, ... (1 wasn't enough at 2 players)
     actEndHeal: 1, // test 2026-10-19: heal 1 point between acts at 2 players (2 made Acts II-III too easy)
-    edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 }, // no Story Points at act start (2026-10-18)
+    edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 0 }, // 1 Story Point to start the game (2026-10-21), none at later acts
     // In the Ending a Main player may spend up to 3 Edge on a roll, not 2 (2026-10-18, for the
     // Obstacle: two players start the Ending with plenty of Edge the 2-per-roll limit kept unused).
   },
   3: {
     target: { 'Beginning': 3, 'Middle': 4, 'Ending': 5 },
-    edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 }, // no Story Points at act start (2026-10-18)
+    edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 0 }, // 1 Story Point to start the game (2026-10-21), none at later acts
   },
-  4: { target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 0, 'Middle': 0, 'Ending': 0 } }, // no Story Points at act start (2026-10-18)
+  4: { target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 0 } }, // 1 Story Point to start the game (2026-10-21), none at later acts
 };
 
 // Story Points (called Edge in the code): "1 Story Point", "2 Story Points".

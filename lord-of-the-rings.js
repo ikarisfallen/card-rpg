@@ -135,7 +135,7 @@ window.LOTR_DATA = (() => {
       {
         name: 'Beginning: Riders on the road',
         key: '👿🔗',
-        description: 'On the road to 🏠, hooves thunder behind you: 👿 has sent 👿🔗 to take 🛠️ from you. Do you try to:\nA) hide under the roots by the road until they pass 🕶️ (ℹ️)\nB) run for the ferry before they catch you ⚡ (⌛)\nC) stand and face them with fire and steel 💪 (🔥)',
+        description: 'On the road to 🏠, hooves thunder behind you: 👿 has sent 👿🔗 to take 🛠️ from you.\nA) I hide under the roots by the road until they pass 🕶️ (ℹ️)\nB) I run for the ferry before they catch me ⚡ (⌛)\nC) I stand and face them with fire and steel 💪 (🔥)',
         escalations: ['A rider sniffs the air right above your hiding place ➖🕶️', 'The ferry is on the far bank ➖⚡'],
         approaches: ['🕶️', '⚡', '💪'],
         risks: ['ℹ️', '⌛', '🔥'],
@@ -143,7 +143,7 @@ window.LOTR_DATA = (() => {
       {
         name: 'Beginning: The council',
         key: '😇🔒',
-        description: 'At 🏠, 😇 has called a council over 🛠️, and everyone there has a claim on it. 😇 is keeping something back: 😇🔒. Do you try to:\nA) convince the council you should carry 🛠️ 📢 (⭐)\nB) work out what 😇 isn’t telling them 🧠 (📦)\nC) keep the peace before swords are drawn 🐢 (📏)',
+        description: 'At 🏠, 😇 has called a council over 🛠️, and everyone there has a claim on it. 😇 is keeping something back: 😇🔒.\nA) I convince the council I should carry 🛠️ 📢 (⭐)\nB) I work out what 😇 isn’t telling them 🧠 (📦)\nC) I keep the peace before swords are drawn 🐢 (📏)',
         escalations: ['A Dwarf swings an axe at 🛠️ ➖🐢', 'Someone storms out, swearing to take 🛠️ by force ➖📢'],
         approaches: ['📢', '🧠', '🐢'],
         risks: ['⭐', '📦', '📏'],
@@ -151,7 +151,7 @@ window.LOTR_DATA = (() => {
       {
         name: 'Middle: Drums in the deep',
         key: '🕳️',
-        description: 'Deep under 🏠, the drums begin. 👿’s goblins pour out of the dark, and something worse is waking below the 🕳️. Do you try to:\nA) hold the chamber door while the others run 💪 (🔥)\nB) race for the bridge before it’s cut off ⚡ (⌛)\nC) find the way out through the dark from memory 🧠 (📦)',
+        description: 'Deep under 🏠, the drums begin. 👿’s goblins pour out of the dark, and something worse is waking below the 🕳️.\nA) I hold the chamber door while the others run 💪 (🔥)\nB) I race for the bridge before it’s cut off ⚡ (⌛)\nC) I find the way out through the dark from memory 🧠 (📦)',
         escalations: ['A shadow of flame rises from the pit ➖⚡', 'The goblins break the door ➖💪'],
         approaches: ['💪', '⚡', '🧠'],
         risks: ['🔥', '⌛', '📦'],
@@ -159,7 +159,7 @@ window.LOTR_DATA = (() => {
       {
         name: 'Middle: The spider’s tunnel',
         key: '🛠️❌',
-        description: 'The only way into 🏠 is a tunnel that reeks of something old and hungry, and 🛠️ is getting harder to carry: 🛠️❌. Do you try to:\nA) creep through without waking what lives there 🕶️ (ℹ️)\nB) hold up a light and walk on, steady 🐢 (📏)\nC) cut through the webs before they close behind you 💪 (🔥)',
+        description: 'The only way into 🏠 is a tunnel that reeks of something old and hungry, and 🛠️ is getting harder to carry: 🛠️❌.\nA) I creep through without waking what lives there 🕶️ (ℹ️)\nB) I hold up a light and walk on, steady 🐢 (📏)\nC) I cut through the webs before they close behind me 💪 (🔥)',
         escalations: ['Someone is stung and wrapped in silk ➖🕶️', 'The light gutters out ➖🐢'],
         approaches: ['🕶️', '🐢', '💪'],
         risks: ['ℹ️', '📏', '🔥'],
@@ -167,7 +167,7 @@ window.LOTR_DATA = (() => {
       {
         name: 'Middle: Siege at the gorge',
         key: '🧱',
-        description: 'Night falls on 🏠, and 👿’s army fills the valley below. You have the 🧱 and not much else, and 😇 hasn’t come back. Do you try to:\nA) rally the frightened defenders on the wall 📢 (⭐)\nB) keep the gate shut however hard they hit it 🐢 (📏)\nC) slip through the enemy lines to bring help 🕶️ (ℹ️)',
+        description: 'Night falls on 🏠, and 👿’s army fills the valley below. You have the 🧱 and not much else, and 😇 hasn’t come back.\nA) I rally the frightened defenders on the wall 📢 (⭐)\nB) I keep the gate shut however hard they hit it 🐢 (📏)\nC) I slip through the enemy lines to bring help 🕶️ (ℹ️)',
         escalations: ['A blast breaches the wall ➖🐢', 'The defenders lose heart and fall back ➖📢'],
         approaches: ['📢', '🐢', '🕶️'],
         risks: ['⭐', '📏', 'ℹ️'],
@@ -175,7 +175,7 @@ window.LOTR_DATA = (() => {
       {
         name: 'Ending: The mountain of fire',
         key: '🛠️✨',
-        description: '🛠️ must reach the fire at the heart of 🏠: it’s the only way to 🛠️✨. 👿’s great eye is searching for you. Do you try to:\nA) keep climbing, step after step, whatever it costs 🐢 (📏)\nB) draw 👿’s eye away with a show of force at the gates 📢 (⭐)\nC) sneak past the patrols on the road up 🕶️ (ℹ️)',
+        description: '🛠️ must reach the fire at the heart of 🏠: it’s the only way to 🛠️✨. 👿’s great eye is searching for you.\nA) I keep climbing, step after step, whatever it costs 🐢 (📏)\nB) I draw 👿’s eye away with a show of force at the gates 📢 (⭐)\nC) I sneak past the patrols on the road up 🕶️ (ℹ️)',
         escalations: ['The burden grows too heavy to bear ➖🐢', 'The eye turns toward the mountain ➖🕶️'],
         approaches: ['🐢', '📢', '🕶️'],
         risks: ['📏', '⭐', 'ℹ️'],
@@ -183,7 +183,7 @@ window.LOTR_DATA = (() => {
       {
         name: 'Ending: The last stand at the gate',
         key: '💀',
-        description: 'Before the black gates of 🏠, the last army of the free peoples faces 👿’s endless host. 😇 is with you, and so is 🛠️. Do you try to:\nA) charge into the 💀 to buy the others time 💪 (🔥)\nB) get round their flank before the trap closes ⚡ (⌛)\nC) bargain with 👿’s herald for one more hour 🧠 (📦)',
+        description: 'Before the black gates of 🏠, the last army of the free peoples faces 👿’s endless host. 😇 is with you, and so is 🛠️.\nA) I charge into the 💀 to buy the others time 💪 (🔥)\nB) I get round their flank before the trap closes ⚡ (⌛)\nC) I bargain with 👿’s herald for one more hour 🧠 (📦)',
         escalations: ['The great host surges forward ➖💪', 'Winged shadows fill the sky ➖⚡'],
         approaches: ['💪', '⚡', '🧠'],
         risks: ['🔥', '⌛', '📦'],

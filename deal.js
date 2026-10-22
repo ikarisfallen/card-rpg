@@ -610,6 +610,7 @@ function rowShape(i, size = 34) {
 // the risk (and, with freeApproach, its ✓ / ✗ approaches) is drawn beside the choice instead.
 const APPROACH_AND_RISK = new RegExp(`\\s*(?:(?:${APPROACHES.map(a => noVS16(a) + '\\uFE0F?').join('|')})\\s*)?\\([^)]*\\)\\s*$`, 'u');
 function choiceRiskHtml(risk) {
+  if (SIM_RULES.riskDraw) return '<span class="sit-risk-slot"></span>'; // the round's risk tile lies here
   const r = RISKS[risk];
   if (!r) return '';
   // Risks as bonuses: +1 / −1 approaches on the left, the resource and what a failure costs right.
@@ -678,7 +679,7 @@ function situationFront(situation, result = null) {
     </div>
     <div class="sit-choices">
       ${['A', 'B', 'C'].map((k, i) => `
-        <div class="sit-choice${winnerOn(i) ? ' won' : ''}"><span class="sit-choice-text">${madLib(choices[k])}</span>${choiceRiskHtml(situation.risks[i])}${winnerOn(i) ? `<span class="sit-stamp" style="--c:${winnerOn(i).color}">★ ${esc(winnerOn(i).name)}</span>` : ''}</div>`).join('')}
+        <div class="sit-choice${winnerOn(i) ? ' won' : ''}">${choiceRiskHtml(situation.risks[i])}<span class="sit-choice-text">${madLib(choices[k])}</span>${winnerOn(i) ? `<span class="sit-stamp" style="--c:${winnerOn(i).color}">★ ${esc(winnerOn(i).name)}</span>` : ''}</div>`).join('')}
     </div>
     <div class="sit-escs">${escalations}</div>${setTag(situation)}`;
 }
@@ -1438,10 +1439,10 @@ function deal(mode = 'deal') {
   // The Storyteller token starts by the first player's Trouble (they're the first Storyteller),
   // with the Obstacle die in its slot.
   TABLE.obstacleDie = TABLE.storyToken = null;
-  if (SIM_RULES.obstacle) {
+  if (hasStoryteller()) {
     const home = TABLE.players[0].obstacleHome;
     TABLE.storyToken = createToken({ className: 'storyteller', size: STORY_SIZE, html: STORY_FACE, x: home.x - STORY_SIZE / 2, y: home.y - STORY_SIZE / 2 });
-    TABLE.obstacleDie = createDie({ className: 'die-obstacle', size: OBSTACLE_SIZE, faces: APPROACHES, value: 1, x: home.x - OBSTACLE_SIZE / 2, y: home.y - OBSTACLE_SIZE / 2 - OBSTACLE_RIDE });
+    if (SIM_RULES.obstacle) TABLE.obstacleDie = createDie({ className: 'die-obstacle', size: OBSTACLE_SIZE, faces: APPROACHES, value: 1, x: home.x - OBSTACLE_SIZE / 2, y: home.y - OBSTACLE_SIZE / 2 - OBSTACLE_RIDE });
   }
 
   // The shared spotlight pool, under the Fate deck, and the first stacks on the Board.
