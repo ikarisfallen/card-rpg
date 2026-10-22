@@ -1944,3 +1944,7 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
 /* "Camera follows each step", under the simulator's buttons. */
 .sim-option { display: flex; align-items: center; gap: 10px; padding: 0 18px 10px; font: 600 16px "Segoe UI", system-ui, sans-serif; color: #e9eef5; cursor: pointer; }
 .sim-option input { width: 22px; height: 22px; margin: 0; accent-color: #f0a919; cursor: pointer; }
+/* On a card's back (dark), the set's name is light. */
+.card-back .set-tag { color: #fff; opacity: 0.5; }
+/* On a back with a name at each end (Concept, Trouble, Location...), the set's name sits just above the lower name. */
+.card-back .name-end.upside-down ~ .set-tag { bottom: 37px; }

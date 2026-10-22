@@ -21,7 +21,7 @@ let SETS = DEFAULT_SETS;
 let DATA = mergeSets(SETS);
 function mergeSets(keys) {
   const base = window.GAME_DATA;
-  const sets = keys.map(k => ({ set: THEMES[k].label, d: THEMES[k].data }));
+  const sets = keys.map(k => ({ key: k, set: THEMES[k].label, d: THEMES[k].data }));
   const group = name => ({ icons: base[name].icons, cards: sets.flatMap(({ set, d }) => d[name].cards.map(c => ({ ...c, set, icons: d[name].icons }))) });
   return {
     approaches: base.approaches, resources: base.resources, players: base.players, sets,
@@ -30,8 +30,8 @@ function mergeSets(keys) {
     macguffins: group('macguffins'), allies: group('allies'), villains: group('villains'), locations: group('locations'),
   };
 }
-// One deck from every set in play: `build(setData)` makes a set's cards, which are tagged and shuffled together.
-const buildFromSets = build => shuffle(DATA.sets.flatMap(({ set, d }) => build(d).map(c => ({ ...c, set }))));
+// One deck from every set in play: `build(setData, setKey)` makes a set's cards, which are tagged and shuffled together.
+const buildFromSets = build => shuffle(DATA.sets.flatMap(({ key, set, d }) => build(d, key).map(c => ({ ...c, set }))));
 const buildBoonDeck = () => buildFromSets(d => buildPcDeck('boon', d.boons, d.boonStates, '➕', 1));
 // The set a card comes from, in small faint text at the very bottom of its face.
 const setTag = card => (card && card.set ? `<div class="set-tag">${esc(card.set)}</div>` : '');
@@ -326,9 +326,10 @@ function queuePileCounts() {
 window.onPieceMoved = queuePileCounts;
 
 function placePcCard(card, x, y, faceUp = true) {
-  const back = card.kind === 'relationship' ? portraitBack(card.portrait)
+  let back = card.kind === 'relationship' ? portraitBack(card.portrait)
     : card.names && card.kind !== 'boon' ? namesBack(KIND_LABEL[card.kind], card.names) : plainBack(KIND_LABEL[card.kind]); // an Asset has no names on its back
   const { w, h } = PC_CARD;
+  back += setTag(card); // the set's name on the back too
   const piece = createCard({
     className: `pc-card kind-${card.kind}`,
     w, h, x, y, faceUp,
@@ -367,7 +368,7 @@ function placeElementCard(card, x, y, faceUp = true) {
     className: `el-card kind-${card.kind}`,
     w, h, x, y, faceUp,
     front: elementFront(card),
-    back: card.names ? namesBack(card.label, card.names) : plainBack(card.label),
+    back: (card.names ? namesBack(card.label, card.names) : plainBack(card.label)) + setTag(card),
   });
   piece.card = card;
   piece.cardKind = card.kind;
@@ -677,6 +678,8 @@ function madLib(text, words = null, seen = new Set()) {
 function drawSituation(card, situation, result = null, words = null) {
   const front = card.el.querySelector('.card-front');
   front.innerHTML = situationFront(situation, result, words);
+  const back = card.el.querySelector('.card-back');
+  if (back) { back.querySelectorAll('.set-tag').forEach(t => t.remove()); back.insertAdjacentHTML('beforeend', setTag(situation)); }
   const fit = (node, tooBig) => {
     for (let pct = 100; pct > 70 && tooBig(); pct -= 5) node.style.fontSize = `${pct - 5}%`;
   };
@@ -1198,9 +1201,11 @@ function deal(mode = 'deal') {
   const concepts = buildFromSets(d => buildPcDeck('concept', d.concepts, d.firstNames, '✔️', SIM_RULES.charApproaches || 2, true));
   const troubles = buildFromSets(d => buildPcDeck('trouble', d.troubles, d.lastNames, '✖️', SIM_RULES.charApproaches || 2, true));
   const boons = buildBoonDeck();
-  const relationships = buildFromSets(d => d.relationships.map(text => ({ kind: 'relationship', text, sign: '', approaches: pickApproaches(2) })));
-  const portraits = makePortraits(relationships.length);
-  relationships.forEach((r, i) => { r.portrait = portraits[i % portraits.length]; }); // printed on the back
+  // Each Relationship's back shows a portrait in the style of its own set (portraits.js).
+  const relationships = buildFromSets((d, key) => {
+    const portraits = makePortraits(d.relationships.length, key);
+    return d.relationships.map((text, i) => ({ kind: 'relationship', text, sign: '', approaches: pickApproaches(2), portrait: portraits[i] }));
+  });
   const macguffins = buildFromSets(d => buildElementDeck('macguffin', 'Object', d.macguffins)); // the MacGuffin, called an Object on the card
   const allies = buildFromSets(d => buildElementDeck('ally', 'Ally', d.allies));
   const villains = buildFromSets(d => buildElementDeck('villain', 'Villain', d.villains));
