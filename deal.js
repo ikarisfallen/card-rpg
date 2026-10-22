@@ -38,7 +38,7 @@ const APPROACHES = window.GAME_DATA.approaches;
 // The approaches' names, small and in capitals under their icons on cards and dice.
 const APPROACH_NAMES = ['Bold', 'Wise', 'Calm', 'Loud', 'Swift', 'Subtle']; // in APPROACHES order
 const approachName = a => APPROACH_NAMES[APPROACHES.findIndex(x => x.replace(/️/g, '') === (a || '').replace(/️/g, ''))] || '';
-const approachTag = a => `<span class="ap-icon">${a}<span class="ap-name">${approachName(a)}</span></span>`;
+const approachTag = a => `<span class="ap-icon" data-ap="${noVS16(a)}">${a}<span class="ap-name">${approachName(a)}</span></span>`;
 const approachFace = a => approachTag(a); // an approach die's face
 // The six resources on the character sheet. A failure costs the row's resource ("Lost Momentum"),
 // and the approach used changes how much (Cost vs. Approaches): `good` guards it, `bad`
@@ -190,7 +190,7 @@ function pcFront(card) {
   return `
     <div class="kind-label">${sign ? `<span class="sign">${sign}</span>` : ''}${KIND_LABEL[card.kind]}</div>
     <div class="pc-text${card.text.length > 30 ? ' long' : ''}">${esc(card.text)}</div>
-    <div class="approach-row">${card.approaches.map(a => (card.kind === 'relationship' ? a : approachTag(a))).join('')}${card.resource ? `<span class="resource">${resourceBadge(card.resource)}</span>` : ''}</div>${setTag(card)}`;
+    <div class="approach-row">${card.approaches.map(a => (card.kind === 'relationship' ? `<span class="ap-rel" data-ap="${noVS16(a)}">${a}</span>` : approachTag(a))).join('')}${card.resource ? `<span class="resource">${resourceBadge(card.resource)}</span>` : ''}</div>${setTag(card)}`;
 }
 
 function namesBack(label, names) {

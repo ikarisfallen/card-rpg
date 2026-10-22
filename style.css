@@ -1889,3 +1889,11 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
 .situation-card .sit-risk-slot { width: 128px; }
 .situation-card .sit-risk.mod.badge { margin-left: 0; margin-right: 0; justify-content: flex-start; } /* risks printed on the card: left too */
 .situation-card .sit-risk-head { right: auto; left: 10px; } /* "Risk" over the left column */
+
+/* On the cards shown for a roll, the approach that counts gets the same gold ring as the rolling row. */
+.ap-rel { display: inline-block; line-height: 1; }
+.ap-used {
+  border-radius: 10px;
+  background: rgba(255, 200, 60, 0.28);
+  box-shadow: 0 0 0 4px #e3a400, 0 0 16px rgba(255, 190, 40, 0.85); /* deeper gold than the row's glow, to show on cream cards */
+}

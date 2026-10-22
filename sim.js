@@ -200,6 +200,7 @@ function showUsedCards(row) {
     // Story Points waiting on a compelled Trouble or Liability (parkEdge) ride along with it.
     p.showRiders = (row.troubleEdge || []).filter(t => onCard(t, p)).map(t => ({ t, dx: t.x - p.x, dy: t.y - p.y }));
     glide(p, x0 + i * (w + gap), TABLE.showcaseAt.y); raise(p);
+    p.el.querySelectorAll(`[data-ap="${noVS16(a)}"]`).forEach(e => e.classList.add('ap-used')); // the approach that counts, ringed
     p.showRiders.forEach(({ t, dx, dy }) => { glide(t, p.x + dx, p.y + dy); raise(t); });
   });
   return list;
@@ -216,6 +217,7 @@ function returnUsedCards(list) {
       riders.forEach(({ t, dx, dy }) => { glide(t, p.x + dx, p.y + dy); raise(t); });
     }
     p.showRiders = null;
+    p.el.querySelectorAll('.ap-used').forEach(e => e.classList.remove('ap-used'));
     if (p.showChildren) { p.children = p.showChildren; p.showChildren = null; }
   });
   // The slot's Asset / Liability back on top of any stacked under it.
@@ -498,16 +500,18 @@ function* revealAndGoIn(rows, order, board) {
       html: `<p>${who(pl)} pays ${storyPts(cost)} to swap: ${rowTag(row)} now risks ${resourceLabel(row.risk)}, and ${rowTag(other)}${other.main ? ` (${who(other.main)})` : ''} risks ${resourceLabel(other.risk)}.</p>`,
     };
   }
-  // Approaches, in initiative order. Helpers whose Relationships don't show it step back.
+  // Approaches, in initiative order. A helper whose Relationships don't show it stays, adding +0
+  // and taking no spotlight.
   for (const pl of order) {
     const row = rows.find(r => r.main === pl);
     if (!row) continue;
     const approach = pl.human ? yield* askApproach(pl, row, board) : botApproach(pl, row, board);
     const step = goIn(pl, row, board, '', 0, approach);
-    const out = row.helpers.filter(h => !relFor(h, row.approach));
-    out.forEach(h => { row.helpers.splice(row.helpers.indexOf(h), 1); glide(h.pawn, h.pawnHome.x, h.pawnHome.y); });
-    row.helpers.forEach(h => { step.html += `<p>${who(h)}’s Relationship “${esc(relFor(h, row.approach).text)}” has ${row.approach}: their help counts (+1).</p>`; });
-    out.forEach(h => { step.html += `<p>None of ${who(h)}’s Relationships has ${row.approach}, so their help doesn’t count: they step back.</p>`; });
+    row.helpers.forEach(h => {
+      const rel = relFor(h, row.approach);
+      step.html += rel ? `<p>${who(h)}’s Relationship “${esc(rel.text)}” has ${row.approach}: their help counts (+1).</p>`
+        : `<p>None of ${who(h)}’s Relationships has ${row.approach}: they stay, but add nothing to the roll and take no spotlight if it works.</p>`;
+    });
     yield step;
   }
 }
@@ -520,7 +524,7 @@ function botBetRow(pl, rows, board, difficulty, isLast, recovered) {
   const free = rows.filter(r => !r.main);
   const mine = best(pl);
   const fits = r => APPROACHES.some(a => relFor(pl, a) && total(bonusParts(r.main, a)) - minusFor(board, a) >= best(r.main) - 1);
-  const helpable = rows.filter(r => r.main && fits(r));
+  const helpable = rows.filter(r => r.main && helpRoom(r) && fits(r));
   const seatRule = SIM_RULES.clearTiming === 'end';
   const seatFree = board.minus.length > 0 && !(seatRule && board.clearer);
   if (seatFree && board.minus.length >= SIM_RULES.maxEscalations && (((!free.length || mine <= 0) && !helpable.length) || (seatRule && isLast))) return takeClearSeat(pl, rows, board, recovered);
@@ -1061,6 +1065,11 @@ function narrationFor(text) {
 // A question for the human player: the panel shows `options` ({ label, hint, value }) as
 // buttons, and the game gets the chosen value back from `yield`.
 const ask = (title, html, options) => ({ title, html, ask: options });
+// +1 for each helper whose Relationship shows the Main's approach; a helper without one stays on
+// the row but adds nothing and takes no spotlight.
+const helpBonus = row => row.helpers.filter(h => relFor(h, row.approach)).length;
+// Whether a row can take another helper (SIM_RULES.maxHelpers, 0 = no limit).
+const helpRoom = row => !SIM_RULES.maxHelpers || row.helpers.length < SIM_RULES.maxHelpers;
 
 // Losing a turn (a resource at 0), or coming back from one. Returns { step } if the player sits
 // this round out, else { recovered } (the "back in the game" note, if any).
@@ -1274,7 +1283,7 @@ function betHelp(pl, row, recovered) {
     return {
       title: `${pl.letter} helps`,
       html: `${recovered}<p>${who(pl)} helps ${who(row.main)} <i>${row.action}</i> (${rowTag(row)} as <b>Help</b>).</p>
-        <p>It counts (+1, and a share of the spotlight) if ${who(row.main)} goes in with an approach on one of their Relationships: ${shows}.</p>`,
+        <p>If ${who(row.main)} goes in with an approach on one of their Relationships (${shows}), they add +1 and share the spotlight if it works; otherwise they add nothing and take nothing.</p>`,
     };
   }
   const rel = relFor(pl, row.approach);
@@ -1314,7 +1323,7 @@ function bet(pl, rows, board, difficulty, isLast = false) {
   const pick = scored.length ? scored.reduce((a, b) => (b.v > a.v ? b : a)) : null;
   const best = pick && pick.row;
   const score = () => (pick ? Math.round(pick.v) : 0);
-  const helpable = rows.filter(r => r.main && relFor(pl, r.approach));
+  const helpable = rows.filter(r => r.main && helpRoom(r) && relFor(pl, r.approach));
 
   const seatRule = SIM_RULES.clearTiming === 'end';
   const seatFree = board.minus.length > 0 && !(seatRule && board.clearer);
@@ -1402,7 +1411,7 @@ function* humanBet(pl, rows, board, difficulty) {
   const seatRule = SIM_RULES.clearTiming === 'end';
   for (;;) {
     const free = rows.filter(r => !r.main);
-    const helpable = rows.filter(r => r.main && (SIM_RULES.riskDraw || relFor(pl, r.approach)));
+    const helpable = rows.filter(r => r.main && helpRoom(r) && (SIM_RULES.riskDraw || relFor(pl, r.approach)));
     const seatFree = board.minus.length > 0 && !(seatRule && board.clearer);
     const bane = SIM_RULES.banes && pl.zones.bane && pl.zones.bane.occupant;
     const cards = r => total(bonusParts(pl, r.approach)) - minusFor(board, r.approach);
@@ -1416,7 +1425,7 @@ function* humanBet(pl, rows, board, difficulty) {
           : `${r.action} · your cards ${signed(cards(r))} · risks ${r.risk}${has(pl.info.trouble.approaches, r.approach) ? ' · matches your Trouble' : ''}${bane && has(bane.card.approaches, r.approach) ? ' · matches your Liability' : ''}`,
         value: ['main', r.index],
       })),
-      ...helpable.map(r => ({ label: `Help ${rowTag(r)}`, hint: SIM_RULES.riskDraw ? `back up ${r.main.letter}: +1 and a token if it works, if they go in with ${relShows}` : `back up ${r.main.letter}: +1 to their roll, 1 token if it works · risks ${r.risk}`, value: ['help', r.index] })),
+      ...helpable.map(r => ({ label: `Help ${rowTag(r)}`, hint: SIM_RULES.riskDraw ? `back up ${r.main.letter}: +1, and a token if it works, if they go in with ${relShows}` : `back up ${r.main.letter}: +1 to their roll, 1 token if it works · risks ${r.risk}`, value: ['help', r.index] })),
       ...(seatFree ? [{ label: 'Clear box', hint: 'hold the line, and remove a Minus die at the end of the round (+1 Story Point)', value: ['clear'] }] : []),
       ...(bane && pl.edge.length >= SIM_RULES.baneRemoveEdge ? [{ label: `Shake off your Liability (${storyPts(SIM_RULES.baneRemoveEdge)})`, hint: `discard ${bane.card.text}, then bet`, value: ['shake'] }] : []),
       ...(bane ? [{ label: 'Patch yourself up', hint: `give up your bet to discard ${bane.card.text}`, value: ['patch'] }] : []),
@@ -1529,7 +1538,9 @@ function rowParts(row, fate, board) {
   // The Obstacle on this row and approach cancels its bonuses: they stay on the list, crossed out.
   const ob = obstacleFor(board, row, row.approach, row.main) > 0;
   const parts = [...bonusParts(row.main, row.approach, row), ...riskPart(row, row.approach)].map(([l, v]) => (ob && v > 0 ? [l, 0, v] : [l, v]));
-  if (row.helpers.length) parts.push([`Help ×${row.helpers.length}`, row.helpers.length]);
+  const helping = helpBonus(row);
+  if (helping) parts.push([`Help ×${helping}`, helping]);
+  row.helpers.filter(h => !relFor(h, row.approach)).forEach(h => parts.push([`Help from ${h.letter} (no Relationship with ${row.approach})`, 0]));
   const minus = minusFor(board, row.approach);
   if (minus) parts.push([`Minus ➖${row.approach} ×${minus}`, -minus]);
   if (row.invoke) parts.push([`Invoke “${row.invoke.text}”`, 1]);
@@ -1732,6 +1743,7 @@ function resolveRow(row, fate, difficulty, target, board) {
     if (margin > cap && SIM_RULES.overflowToEdge) for (let i = cap; i < margin; i++) overflow += gainEdge(main) ? 1 : 0;
     const boonNote = (SIM_RULES.boonsEarned || SIM_RULES.boonUpgrades) && margin >= SIM_RULES.boonMargin ? giveBoon(main, board.rows || []) : '';
     const helped = row.helpers.map(h => {
+      if (!relFor(h, row.approach)) return `${who(h)} takes nothing (no Relationship with ${row.approach})`; // only a matching helper shares the spotlight
       let n = 0;
       let e = 0;
       for (let i = 0; i < SIM_RULES.helperShare; i++) {
@@ -1879,7 +1891,7 @@ function botWantsPush(row, margin, board) {
 // with `delta` added to the roll and `edge` Edge in hand to spend the way resolveRow does.
 function rollValue(row, delta, edge, board, difficulty, target) {
   const parts = [...bonusParts(row.main, row.approach, row), ...riskPart(row, row.approach)];
-  const base = total(parts) + row.helpers.length - minusFor(board, row.approach) - obstacleFor(board, row, row.approach, row.main) + (row.invoke ? 1 : 0) - (row.hits || []).length + delta - difficulty;
+  const base = total(parts) + helpBonus(row) - minusFor(board, row.approach) - obstacleFor(board, row, row.approach, row.main) + (row.invoke ? 1 : 0) - (row.hits || []).length + delta - difficulty;
   const can = Math.min(edge, edgeCap());
   const stake = (row.stake || []).length;
   let sum = 0;

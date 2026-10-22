@@ -134,8 +134,9 @@ const SIM_RULES = {
   // (-1 on the roll, Story Points from the pile) before the Storyteller does. ON 2026-10-21.
   selfCompel: true,
   // A Trouble also matches a roll whose row risks the resource shown on the Trouble (ON
-  // 2026-10-18: your approach alone no longer keeps you clear of it).
-  compelRiskMatch: true,
+  // 2026-10-18: your approach alone no longer keeps you clear of it). OFF 2026-10-22: compels
+  // match on the approach only.
+  compelRiskMatch: false,
   // Bots: the Storyteller compels every match it gets (a human probably would), not only when
   // the -1 could change the roll.
   storytellerAlwaysCompels: true, // ON 2026-10-18
@@ -189,6 +190,7 @@ const SIM_RULES = {
   // approach. A helper's +1 only counts if the Main's approach is on one of their Relationships.
   riskDraw: true,
   riskSwapCost: 1,
+  maxHelpers: 1, // helpers a row can take (0 = no limit); one since 2026-10-22
 };
 
 // A Storyteller seat passes round the table (for the Obstacle or for drawing the risks).
