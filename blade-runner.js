@@ -109,7 +109,7 @@ window.BLADE_RUNNER_DATA = (() => {
         { name: 'Abandoned Apartment Block', lines: ['Iron staircase', 'Mannequins and toys', 'Collapsed floor', 'Broken balcony', 'Piles of junk', 'Hole in the wall', 'Dripping water', 'Rotting ceiling', 'A replicant in the dark'] },
         { name: 'Snake Pit Nightclub', lines: ['Stage scaffolding', 'Dancing crowd', 'Orchestra pit', 'Bar along the balcony', 'Bouncers at the door', 'Dressing room exit', 'Spilled drinks', 'Strobe lights', 'The owner’s thugs'] },
         { name: 'Wasteland Junkyard', lines: ['Mountains of scrap', 'Rusted hulls', 'Pit of molten metal', 'Cable bridge', 'Crashed spinner', 'Tunnel under the scrap', 'Oily mud', 'Scavengers’ traps', 'Scavenger gangs'] },
-        { name: 'The Sea Wall', lines: ['Wall ladders', 'Concrete pylons', 'Crashing surf below', 'Top of the wall', 'Floodgates', 'Drain outlet', 'Spray-soaked concrete', 'Giant waves', 'Corporate enforcers'] },
+        { name: 'Sea Wall', lines: ['Wall ladders', 'Concrete pylons', 'Crashing surf below', 'Top of the wall', 'Floodgates', 'Drain outlet', 'Spray-soaked concrete', 'Giant waves', 'Corporate enforcers'] },
       ],
     },
 

@@ -83,19 +83,39 @@ const failWords = row => (SIM_RULES.failLiabilityOnly ? 'a Liability' : lossWord
 const lossWords = (row, approach = row.approach) => { const n = riskCost(row.risk, approach); return n ? `${n} ${resourceLabel(row.risk)}` : 'nothing'; };
 
 // "Jax Starling, the Smuggler with a Fast Ship, with a price on their head, equipped with a
-// salvaged Plasma Blade. Their relationship with …" in plain words (the cards show the symbols).
+// salvaged Plasma Blade." in plain words (the cards show the symbols).
+const trimDots = t => t.replace(/\.\.\.|…/g, '').trim();
 function castLine(pl) {
-  const n = TABLE.players.length;
-  const { concept, trouble, boon, boonState, rels } = pl.info;
-  const trim = t => t.replace(/\.\.\.|…/g, '').trim();
-  const role = `the ${trim(concept.text).replace(/^(a|an|the)\s+/i, '')}`;
-  const flaw = trim(trouble.text);
-  const item = !boon ? '' : boonState ? `${lowerFirst(trim(boonState))} ${boon.text}` : boon.text;
+  const { concept, trouble, boon, boonState } = pl.info;
+  const role = `the ${trimDots(concept.text).replace(/^(a|an|the)\s+/i, '')}`;
+  const flaw = trimDots(trouble.text);
+  const item = !boon ? '' : boonState ? `${lowerFirst(trimDots(boonState))} ${boon.text}` : boon.text;
   const article = !boon || (/s$/i.test(boon.text) && !/ss$/i.test(boon.text)) ? '' : (/^[aeiou]/i.test(item) ? 'an ' : 'a ');
-  const partners = [TABLE.players[(pl.index + 1) % n], TABLE.players[(pl.index - 1 + n) % n]];
-  const ties = rels.map((r, i) => `${i ? 'with' : 'Their relationship with'} ${who(partners[i])} is “${esc(trim(r.text))}”`);
   const equipped = boon ? `, equipped with ${article}<b>${esc(item)}</b>` : ', with no Asset yet';
-  return `${who(pl)}, <b>${esc(role)}</b> <b>${esc(flaw)}</b>${equipped}. ${ties.join('; ')}.`;
+  return `${who(pl)}, <b>${esc(role)}</b> <b>${esc(flaw)}</b>${equipped}.`;
+}
+
+// A Relationship card as the end of a sentence about two people: "escaped an off-world colony
+// together", "were made by the same designer", "are partners on the force".
+const REL_VERBS = /^(Share|Escaped|Owe|Saved|Exorcised|Grew|Met)\b/;
+const REL_WERE = /^(Made|Thrown|Slimed|Raised)\b/;
+const REL_KEEP_CAPS = /^(Elf|Elves|Dwarf|Dwarves|Hobbit|Jedi|Sith|Wookiee)\b/; // peoples keep their capital
+function relationshipPhrase(text) {
+  const t = trimDots(text), lower = REL_KEEP_CAPS.test(t) ? t : lowerFirst(t);
+  return REL_VERBS.test(t) ? lower : REL_WERE.test(t) ? `were ${lower}` : `are ${lower}`;
+}
+
+// Every Relationship once, after the cast, one per line: "W Dax and X Mika escaped an off-world
+// colony together." (Each player's first Relationship is the one with the next player round the
+// table; two players share one.)
+function relationshipsLine() {
+  const ps = TABLE.players, n = ps.length;
+  const short = pl => `<span class="chip" style="--c:${pl.color}">${pl.letter}</span> <b>${esc(pl.info.name.split(' ')[0])}</b>`; // first name only, they were just introduced
+  const pairs = (n === 2 ? [ps[0]] : ps).map(pl => {
+    const rel = pl.info.rels[0];
+    return rel ? `<li>${short(pl)} and ${short(ps[(pl.index + 1) % n])} ${esc(relationshipPhrase(rel.text))}.</li>` : '';
+  }).filter(Boolean);
+  return pairs.length ? `<p>Relationships:</p><ul class="sim-cast">${pairs.join('')}</ul>` : '';
 }
 
 // The Asset in a character's slot right now (Assets can be earned and swapped during the game).
@@ -657,7 +677,7 @@ function* simGame() {
 
   yield {
     title: 'A new story begins',
-    html: `<p>${SIM_RULES.acts.length} acts, ${players.length} players, one Fate card per round. The cast:</p><ul class="sim-cast">${players.map(pl => `<li>${castLine(pl)}</li>`).join('')}</ul>`,
+    html: `<p>${SIM_RULES.acts.length} acts, ${players.length} players, one Fate card per round. The cast:</p><ul class="sim-cast">${players.map(pl => `<li>${castLine(pl)}</li>`).join('')}</ul>${relationshipsLine()}`,
   };
 
   // Each act draws one of its own Situations. If an act runs out (several Middles from a small

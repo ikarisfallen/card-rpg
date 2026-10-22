@@ -109,7 +109,7 @@ window.LOTR_DATA = (() => {
         { name: 'Fortress in the Gorge', lines: ['Siege ladders on the wall', 'Battlements', 'Culvert under the wall', 'The causeway', 'Barred gate', 'Caves behind the keep', 'Rain-soaked stones', 'Blast at the wall', 'An army of Uruks'] },
         { name: 'Haunted Marshes', lines: ['Rotting tree', 'Tall reeds', 'Sucking bog', 'Stepping stones', 'Fog banks', 'Hidden path through the reeds', 'Slick mud', 'Lights of the dead in the water', 'Things beneath the water'] },
         { name: 'Spider’s Lair', lines: ['Web-strung cliff', 'Webbed cocoons', 'Pit in the tunnel floor', 'Strand bridge over a gap', 'Wall of web', 'Crack into the tower', 'Slimy rock', 'Poisoned sting', 'Giant spiders'] },
-        { name: 'The Fiery Mountain', lines: ['Ash-covered slope', 'Jagged rocks', 'Crack of the fire', 'Narrow ledge path', 'Lava flow', 'Side door into the mountain', 'Loose cinders', 'Eruption', 'Orc patrols'] },
+        { name: 'Fiery Mountain', lines: ['Ash-covered slope', 'Jagged rocks', 'Crack of the fire', 'Narrow ledge path', 'Lava flow', 'Side door into the mountain', 'Loose cinders', 'Eruption', 'Orc patrols'] },
       ],
     },
 
