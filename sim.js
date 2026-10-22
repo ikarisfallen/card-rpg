@@ -200,7 +200,9 @@ function showUsedCards(row) {
     // Story Points waiting on a compelled Trouble or Liability (parkEdge) ride along with it.
     p.showRiders = (row.troubleEdge || []).filter(t => onCard(t, p)).map(t => ({ t, dx: t.x - p.x, dy: t.y - p.y }));
     glide(p, x0 + i * (w + gap), TABLE.showcaseAt.y); raise(p);
-    p.el.querySelectorAll(`[data-ap="${noVS16(a)}"]`).forEach(e => e.classList.add('ap-used')); // the approach that counts, ringed
+    // The approach that counts, ringed: gold on the cards that help, red on a compelled Trouble or Liability.
+    const hurts = p.card.kind === 'trouble' || p.card.kind === 'bane';
+    p.el.querySelectorAll(`[data-ap="${noVS16(a)}"]`).forEach(e => e.classList.add(hurts ? 'ap-hurts' : 'ap-used'));
     p.showRiders.forEach(({ t, dx, dy }) => { glide(t, p.x + dx, p.y + dy); raise(t); });
   });
   return list;
@@ -217,7 +219,7 @@ function returnUsedCards(list) {
       riders.forEach(({ t, dx, dy }) => { glide(t, p.x + dx, p.y + dy); raise(t); });
     }
     p.showRiders = null;
-    p.el.querySelectorAll('.ap-used').forEach(e => e.classList.remove('ap-used'));
+    p.el.querySelectorAll('.ap-used, .ap-hurts').forEach(e => e.classList.remove('ap-used', 'ap-hurts'));
     if (p.showChildren) { p.children = p.showChildren; p.showChildren = null; }
   });
   // The slot's Asset / Liability back on top of any stacked under it.
@@ -430,7 +432,7 @@ function* drawRisks(rows) {
     r.riskHidden = true;
     r.riskTile = createCard({
       className: 'risk-tile', w: RISK_TILE.w, h: RISK_TILE.h, x: from.x - RISK_TILE.w / 2, y: from.y - RISK_TILE.h / 2, faceUp: false,
-      front: `<div class="risk-tile-face">${resourceBadge(drawn[i])}</div>`,
+      front: `<div class="risk-tile-face">${resourceBadge(drawn[i], '', true)}</div>`,
       back: '<div class="risk-tile-back"><b>?</b><small>Risk</small></div>',
     });
     r.riskTile.cardKind = 'risk';
@@ -485,9 +487,10 @@ function* revealAndGoIn(rows, order, board) {
     if (pl.edge.length < cost) continue;
     let other = null;
     if (pl.human) {
-      const i = yield ask('Swap your risk?', `<p>${rowTag(row)} risks ${resourceLabel(row.risk)}. Pay ${storyPts(cost)} to the pile to swap it with another row’s risk?</p>`,
-        [{ label: 'Keep it', hint: `best roll here ${signed(riskValue(pl, row, row.risk, board))}`, value: -1 },
-          ...rows.filter(o => o !== row).map(o => ({ label: `Take ${resourceLabel(o.risk)}`, hint: `from ${rowTag(o)}${o.main ? ` (${o.main.letter}’s row)` : ''} · best roll then ${signed(riskValue(pl, row, o.risk, board))}`, value: o.index }))]);
+      const arrows = res => `🔺${RISKS[res].good} 🔻${RISKS[res].bad}`; // +1 with the first approach, −1 with the second
+      const i = yield ask('Swap your risk?', `<p>${rowTag(row)} risks ${resourceLabel(row.risk)} (${arrows(row.risk)}). Pay ${storyPts(cost)} to the pile to swap it with another row’s risk?</p>`,
+        [{ label: `Keep ${resourceLabel(row.risk)} ${arrows(row.risk)}`, hint: `best roll here ${signed(riskValue(pl, row, row.risk, board))}`, value: -1 },
+          ...rows.filter(o => o !== row).map(o => ({ label: `Take ${resourceLabel(o.risk)} ${arrows(o.risk)}`, hint: `from ${rowTag(o)}${o.main ? ` (${o.main.letter}’s row)` : ''} · best roll then ${signed(riskValue(pl, row, o.risk, board))}`, value: o.index }))]);
       if (i >= 0) other = rows[i];
     } else other = botSwapPick(pl, row, rows, board);
     if (!other) continue;
@@ -838,7 +841,7 @@ function* playSituation(situation, act, label = act) {
       // Each roll goes step by step: 1) who's rolling; 2) the cards that count come out under the
       // Board and every bonus is listed; 3) the human player spends Story Points / resources;
       // 4) the result; 5) tokens move, and the cards and pawns go back.
-      spotlightRow(row);
+      spotlightRow(row, board);
       yield rollIntro(row);
       const shown = showUsedCards(row); // the cards behind this roll, lined up under the Board
       yield rollBonuses(row, fateOf(row.approach), difficulty, board);
@@ -1476,7 +1479,7 @@ const outcomeText = m => { const o = outcomeOf(m); return `${o.name}: ${o.what}`
 
 // Step 1 of a roll: who's rolling, and how.
 // While a row is being rolled and checked, the whole Board row lights up and its Main's pawn bobs.
-function spotlightRow(row) {
+function spotlightRow(row, board = null) {
   clearRowSpotlight();
   if (!TABLE.boardAt) return;
   const at = { x: TABLE.boardAt.x + MAT_PAD, y: TABLE.boardAt.y + MAT_TOP + row.index * MAT_ROW, w: MAT_W - MAT_PAD * 2, h: MAT_ROW };
@@ -1485,7 +1488,16 @@ function spotlightRow(row) {
   glow.style.height = `${at.h}px`;
   noteTouch(at); // the camera frames the row
   row.main.pawn.el.classList.add('rolling');
-  TABLE.rowGlow = { glow, pawn: row.main.pawn, at };
+  // Going in with the approach that guards the row's risk is +1: the risk tile's 🔺 side flashes.
+  const helps = row.riskTile && riskMod(row, row.approach) > 0 ? row.riskTile.el.querySelector('.res-col.good') : null;
+  if (helps) helps.classList.add('res-helps');
+  // ...and so does the Edge die, if this row claimed it (its bonus counts on this roll).
+  const edgeDie = row.sceneDie && TABLE.sceneDie && bonusParts(row.main, row.approach, row).some(([l]) => /^Edge die/.test(l)) ? TABLE.sceneDie : null;
+  if (edgeDie) edgeDie.el.classList.add('die-helps');
+  // Tension (Minus) dice showing this roll's approach take 1 each off it: they flash red.
+  const tension = board ? board.minus.filter(d => !d.fresh && same(d.faces[d.value - 1], row.approach)) : [];
+  tension.forEach(d => d.el.classList.add('die-hurts'));
+  TABLE.rowGlow = { glow, pawn: row.main.pawn, at, helps, edgeDie, tension };
 }
 // While a row rolls, the camera keeps that row and the turned Fate card in view.
 window.followAlso = () => (TABLE.rowGlow && TABLE.fate ? [TABLE.rowGlow.at, TABLE.fate.discardZone] : []);
@@ -1494,6 +1506,9 @@ function clearRowSpotlight() {
   if (!g) return;
   g.glow.remove();
   g.pawn.el.classList.remove('rolling');
+  if (g.helps) g.helps.classList.remove('res-helps');
+  if (g.edgeDie) g.edgeDie.el.classList.remove('die-helps');
+  (g.tension || []).forEach(d => d.el.classList.remove('die-hurts'));
   TABLE.rowGlow = null;
 }
 

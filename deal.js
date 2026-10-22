@@ -57,10 +57,13 @@ const RESOURCES = Object.keys(RISKS);
 // under a 🔺, the one that squanders it (−1) under a 🔻, and its name underneath.
 // Just the resource's name in its coloured box (as on the Concept and Trouble cards).
 const resourceLabel = res => `<span class="res-name res-${RESOURCES.indexOf(res)}">${esc(RISKS[res].name)}</span>`;
-function resourceBadge(res, note = '') {
+// `cols`: each side in its own column box (.res-col.good / .bad), so one can be lit up (the risk tiles).
+function resourceBadge(res, note = '', cols = false) {
   const r = RISKS[res];
-  return `<span class="res-badge" title="${esc(r.name)}"><span class="res-grid"><span class="res-arrow">🔺</span><span class="res-arrow">🔻</span><span>${r.good}</span><span>${r.bad}</span></span>`
-    + `${resourceLabel(res)}${note}</span>`;
+  const grid = cols
+    ? `<span class="res-grid res-cols"><span class="res-col good"><span class="res-arrow">🔺</span><span>${r.good}</span></span><span class="res-col bad"><span class="res-arrow">🔻</span><span>${r.bad}</span></span></span>`
+    : `<span class="res-grid"><span class="res-arrow">🔺</span><span class="res-arrow">🔻</span><span>${r.good}</span><span>${r.bad}</span></span>`;
+  return `<span class="res-badge" title="${esc(r.name)}">${grid}${resourceLabel(res)}${note}</span>`;
 }
 const noVS16 = s => (s || '').replace(/️/g, ''); // emoji variation selectors vary between sources
 // What a failure costs with `approach` on a row that risks `risk`: 0, 1 or 2 (always 1 when
@@ -716,6 +719,7 @@ const STORY_FACE = `<span class="story-slot"></span><svg class="story-ring" view
 // Relationship cards on the ring: one per pair of neighbours (just one for two players).
 const relationshipCount = n => (n === 2 ? 1 : n);
 
+const PAWN_HOME = 96, PAWN_HOME_DROP = 30; // a pawn's home disc: its size, and how far below the pawn's centre (at its base)
 function relationshipBoard(x, y, players, relationships) {
   const top = y + 18;
   const ring = addStatic(el('div', 'rel-board'), x, top);
@@ -729,6 +733,9 @@ function relationshipBoard(x, y, players, relationships) {
   players.forEach((p, i) => {
     const deg = i * 360 / n;
     const pawn = at(deg, R);
+    // The pawn's home: a disc in the player's colour under its base, so it's clear where it goes back.
+    const home = addStatic(el('div', 'pawn-home'), pawn.x - PAWN_HOME / 2, pawn.y + PAWN_HOME_DROP - PAWN_HOME / 2);
+    home.style.setProperty('--c', PLAYER_COLORS[i % PLAYER_COLORS.length]);
     const pawnPiece = createPawn({ color: PLAYER_COLORS[i % PLAYER_COLORS.length], label: p, x: pawn.x - 40, y: pawn.y - 48 });
     const tok = at(deg, R - 78);
     const initPiece = createToken({ className: 'initiative', size: 50, html: initiativeFaces(initiative[i]), x: tok.x - 25, y: tok.y - 25 });

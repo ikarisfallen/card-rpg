@@ -1897,3 +1897,41 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
   background: rgba(255, 200, 60, 0.28);
   box-shadow: 0 0 0 4px #e3a400, 0 0 16px rgba(255, 190, 40, 0.85); /* deeper gold than the row's glow, to show on cream cards */
 }
+
+/* A pawn's home on the Relationship ring: a disc in the player's colour under its base. */
+.pawn-home {
+  width: 96px; /* PAWN_HOME in deal.js */
+  height: 96px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--c) 55%, transparent) 0 55%, color-mix(in srgb, var(--c) 35%, transparent) 56% 100%);
+  box-shadow: inset 0 0 0 4px var(--c), 0 2px 6px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* The risk tiles' badge in two column boxes (resourceBadge cols): 🔺 over the guarding approach,
+   🔻 over the squandering one. While a row rolls with the guarding approach (+1), that side flashes. */
+.res-grid.res-cols { display: flex; align-items: flex-end; column-gap: 4px; }
+.res-col { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 3px 4px; border-radius: 9px; }
+.res-col.res-helps { animation: res-helps 0.9s ease-in-out infinite; }
+@keyframes res-helps {
+  0%, 100% { box-shadow: 0 0 0 3px #e3a400, 0 0 12px rgba(255, 190, 40, 0.8); background: rgba(255, 200, 60, 0.25); }
+  50% { box-shadow: 0 0 0 3px rgba(227, 164, 0, 0.15); background: transparent; }
+}
+/* The Edge die, while the row that claimed it rolls: the same flashing gold box. */
+.piece.die-helps .lift { animation: die-helps 0.9s ease-in-out infinite; }
+@keyframes die-helps {
+  0%, 100% { box-shadow: 0 0 0 4px #e3a400, 0 0 16px rgba(255, 190, 40, 0.85); }
+  50% { box-shadow: 0 0 0 4px rgba(227, 164, 0, 0.15); }
+}
+/* Tension (Minus) dice that count against the roll: the same flashing box, in red. */
+.piece.die-hurts .lift { animation: die-hurts 0.9s ease-in-out infinite; }
+@keyframes die-hurts {
+  0%, 100% { box-shadow: 0 0 0 4px #d32f2f, 0 0 16px rgba(229, 57, 53, 0.85); }
+  50% { box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.15); }
+}
+/* ...and in red on a compelled Trouble or Liability (it takes 1 off the roll). */
+.ap-hurts {
+  border-radius: 10px;
+  background: rgba(229, 57, 53, 0.18);
+  box-shadow: 0 0 0 4px #d32f2f, 0 0 16px rgba(229, 57, 53, 0.8);
+}
