@@ -11,6 +11,7 @@ const THEMES = {
   ghostbusters: { label: 'Ghostbusters', data: window.GHOSTBUSTERS_DATA },
   starwars: { label: 'Star Wars', data: window.STAR_WARS_DATA },
   lotr: { label: 'Lord of the Rings', data: window.LOTR_DATA },
+  marvel: { label: 'Marvel', data: window.MARVEL_DATA },
 };
 // The sets in play (one or more, for mash-ups), and DATA: their cards merged, each tagged with
 // its set's name (`set`). Decks are still built set by set (buildFromSets) so a card's back

@@ -97,7 +97,7 @@ function castLine(pl) {
 
 // A Relationship card as the end of a sentence about two people: "escaped an off-world colony
 // together", "were made by the same designer", "are partners on the force".
-const REL_VERBS = /^(Share|Escaped|Owe|Saved|Exorcised|Grew|Met)\b/;
+const REL_VERBS = /^(Share|Escaped|Owe|Saved|Exorcised|Grew|Met|Fought|Bonded)\b/;
 const REL_WERE = /^(Made|Thrown|Slimed|Raised)\b/;
 const REL_KEEP_CAPS = /^(Elf|Elves|Dwarf|Dwarves|Hobbit|Jedi|Sith|Wookiee)\b/; // peoples keep their capital
 function relationshipPhrase(text) {
