@@ -520,7 +520,9 @@ const MAT_TOP = MAT_PAD + MAT_BANNER + MAT_HEAD; // where row A starts
 // per-act numbers for this player count (the current act is highlighted during play).
 function boardRulesHtml(players) {
   const acts = [...new Set(SIM_RULES.acts)]; // one column per kind of act (all Middles alike)
-  const edge = playerRule('edgeAtActStart', players);
+  // Resource points each player gets back before every act after the first (1 at 2 players, 2 at 3-4).
+  // (Everyone's 1 Story Point at the start of the game goes without saying, so it isn't shown.)
+  const heal = playerRule('actEndHeal', players);
   const bonus = playerRule('actWinBonus', players);
   const row = (label, cell) => `<tr><th>${label}</th>${acts.map(a => `<td data-act="${a}">${cell(a)}</td>`).join('')}</tr>`;
   const perAct = typeof playerRule('target', players) === 'object'; // stacks that grow each act
@@ -534,7 +536,7 @@ function boardRulesHtml(players) {
       <tr><th></th>${acts.map(a => `<th data-act="${a}">${a}</th>`).join('')}</tr>
       ${perAct ? row('Successes', a => actTarget(a, players)) : ''}
       ${row('Difficulty', a => playerRule('difficulty', players)[a])}
-      ${acts.some(a => edge[a]) ? row('Story Points at start', a => edge[a] || 0) : ''}
+      ${heal ? row('Resources back first', a => (a === acts[0] ? '—' : `+${heal}`)) : ''}
       ${row(acts.some(a => bonus[a].helper) ? 'Win bonus <small>(helper)</small>' : SIM_RULES.actWinBonusAs === 'storyPoints' ? 'Winner’s Story Pts' : 'Win bonus', a => `${bonus[a].main}${bonus[a].helper ? ` <small>(${bonus[a].helper})</small>` : ''}`)}
     </table>`;
 }
