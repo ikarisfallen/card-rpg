@@ -237,6 +237,8 @@ const GAME_LENGTH = { middles: 1, extra: 1 };
 const LENGTH_BASE = {
   // 2026-10-21, any miss an Epic Failure (failBy 1) and bots that help when it pays (botHelp),
   // difficulty 1 / 3 / 3: sim ~ 2p 100 / 65 / 65, 3p 100 / 80 / 65, 4p 100 / 78 / 60.
+  // 2026-10-22, after the risk bag, a starting Story Point, one helper per row and approach-only
+  // compels: 2p 2 / 3 / 5 → 100 / 78 / 55 (60 games, ~11 rounds), 3p 100 / 85 / 58, 4p 100 / 80 / 58.
   // 2026-10-19: each success takes 1 token (maxTokensPerRoll 1), so the stacks count successful rolls
   // and can rise act to act. With difficulty 1 / 3 / 3 the stacks below aim at acts won about
   // 90-100% / 70-80% / 50-70%. With 2 Story Points + 2 resource points per roll, buy-back and up to
@@ -246,7 +248,7 @@ const LENGTH_BASE = {
   // Stacks: Beginning = stack, Middle = stack + extra + middleStack, Ending = stack + extra *
   // endingSteps + endingStack (extra is 1: the game is always three acts).
   // endingEdge / edgePerExtra: Story Points at the Ending's start (all 0: no act-start Story Points).
-  2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: 0, endingStack: 0 },  // 2 / 3 / 4
+  2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: 0, endingStack: 1 },  // 2 / 3 / 5 (2026-10-22)
   3: { stack: 2, endingSteps: 1, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: 1 },  // 2 / 2 / 4
   4: { stack: 3, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: 0 },  // 3 / 3 / 5
 };
