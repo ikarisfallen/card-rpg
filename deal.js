@@ -387,6 +387,24 @@ const shownNames = new Set();
 
 // Draw a spare card from `deck` to use as a name card, and pick which end (name) shows:
 // one not already on the table if possible.
+// An even mix of the sets in play: each deck's draws take turns between its sets, in a random order
+// per deck (so with 2 sets and 4 players, 2 Concepts come from each, and 2 Troubles from each).
+// Name cards (drawNameCard) still come from whatever is left.
+function drawEven(deck) {
+  if (!deck.turns) { deck.turns = shuffle([...new Set(deck.map(c => c.set))]); deck.turn = 0; }
+  for (let k = 0; k < deck.turns.length; k++) {
+    const want = deck.turns[(deck.turn + k) % deck.turns.length];
+    const i = deck.map(c => c.set).lastIndexOf(want);
+    if (i >= 0) { deck.turn = (deck.turn + k + 1) % deck.turns.length; return deck.splice(i, 1)[0]; }
+  }
+  return deck.pop();
+}
+// The last card in `deck` from set `want` (or just the last card).
+function drawFromSet(deck, want) {
+  const i = deck.map(c => c.set).lastIndexOf(want);
+  return i >= 0 ? deck.splice(i, 1)[0] : deck.pop();
+}
+
 function drawNameCard(deck) {
   let idx = deck.length - 1;
   for (let i = deck.length - 1; i >= 0; i--) {
@@ -442,7 +460,7 @@ function cardSlot(kind, x, y) {
 
 // Deal a card into a slot, plus a flipped spare from the same deck as its name card.
 function dealIntoSlot(zone, deck) {
-  const main = placePcCard(deck.pop(), zone.x, zone.y);
+  const main = placePcCard(drawEven(deck), zone.x, zone.y);
   snapTo(main, zone, false);
   const { card, rot } = drawNameCard(deck);
   const name = placePcCard(card, zone.x, zone.y - PEEK, false);
@@ -796,7 +814,7 @@ function relationshipBoard(x, y, players, relationships) {
       el: zoneOutline(zx, zy, PC_CARD.w, PC_CARD.h, 'Relationship', rot),
     });
     TABLE.relZones[i] = zone; // links player i and player i + 1
-    if (relationships) snapTo(placePcCard(relationships.pop(), zx, zy), zone, false);
+    if (relationships) snapTo(placePcCard(drawEven(relationships), zx, zy), zone, false);
   });
 }
 
@@ -1133,7 +1151,12 @@ function drawNewLocation() {
   const old = pieces.find(p => p.cardKind === 'location' && !p.parent);
   const oldCards = old ? [old.card, ...old.children.map(c => c.card)] : [];
   if (old) removePiece(old);
-  const choices = shuffle(TABLE.locationCards.filter(c => c !== oldCards[0]));
+  let choices = shuffle(TABLE.locationCards.filter(c => c !== oldCards[0]));
+  // Spread the acts' Locations over the sets in play: only the sets that have shown one least so far.
+  TABLE.locationUses = TABLE.locationUses || {};
+  if (oldCards[0]) TABLE.locationUses[oldCards[0].set] = (TABLE.locationUses[oldCards[0].set] || 0) + 1;
+  const uses = c => TABLE.locationUses[c.set] || 0, fewest = Math.min(...choices.map(uses));
+  choices = choices.filter(c => uses(c) === fewest);
   const card = choices.pop();
   const main = placeElementCard(card, TABLE.locationSlot.x, TABLE.locationSlot.y);
   // Prefer a place word that wasn't just showing.
@@ -1260,8 +1283,13 @@ function deal(mode = 'deal') {
     : deck === allies ? [LEFT, PEOPLE_Y]
     : deck === villains ? [LEFT + EL_CARD.w + EL_GAP, PEOPLE_Y]
     : [OBJ_X, OBJECT_Y]);
+  // The Location, Villain, Ally and Object share the sets in play out evenly: the sets in a random
+  // order, handed round the four kinds (also random), e.g. Object and Ally from one, Location and
+  // Villain from the other.
+  const setTurns = shuffle(DATA.sets.map(s => s.set));
+  const setFor = new Map(shuffle(elementSlots.map(([deck]) => deck)).map((deck, i) => [deck, setTurns[i % setTurns.length]]));
   elementSlots.forEach(([deck, namers]) => {
-    const main = placeElementCard(deck.pop(), ...elementAt(deck));
+    const main = placeElementCard(drawFromSet(deck, setFor.get(deck)), ...elementAt(deck));
     if (deck === locations) TABLE.locationSlot = { x: main.x, y: main.y };
     // One name card is centred above the element card; two sit side by side.
     const tucked = namers.map(([nameDeck, placeName]) => tuckNameCard(main, nameDeck, placeName));
@@ -1421,7 +1449,7 @@ function deal(mode = 'deal') {
       el: zoneOutline(portraitX, portraitY, PC_CARD.w, PC_CARD.w, 'Portrait', 0, 'tucked-zone'),
     });
     if (!fresh) {
-      const portrait = placePcCard(relationships.pop(), portraitX, portraitY, false);
+      const portrait = placePcCard(drawEven(relationships), portraitX, portraitY, false);
       snapTo(portrait, portraitSlot, false);
       portrait.el.classList.add('tucked-name'); // under the name cards and the board
     }
@@ -1440,7 +1468,7 @@ function deal(mode = 'deal') {
     } else {
       const concept = dealIntoSlot(conceptSlot, concepts);
       const trouble = dealIntoSlot(troubleSlot, troubles);
-      snapTo(placePcCard(boons.pop(), boonSlot.x, boonSlot.y), boonSlot, false); // no name card: an Asset is just what it is
+      snapTo(placePcCard(drawEven(boons), boonSlot.x, boonSlot.y), boonSlot, false); // no name card: an Asset is just what it is
       dice = buildSheet(sheetX, sheetY, concept.card, trouble.card);
     }
 

@@ -694,13 +694,16 @@ function* simGame() {
   // Each act draws one of its own Situations. If an act runs out (several Middles from a small
   // set), it borrows an unused Middle, then any unused Situation, renamed for the act.
   const used = new Set();
+  const setUses = {}; // Situations from each set so far: each act picks from the sets used least
+  const fewest = list => { const n = s => setUses[s.set] || 0, min = Math.min(...list.map(n)); return list.filter(s => n(s) === min); };
   const prefix = /^(Beginning|Middle|Ending):\s*/;
   for (const [i, act] of SIM_RULES.acts.entries()) {
     const unused = DATA.situations.filter(s => !used.has(s));
     const mine = unused.filter(s => (s.name || '').startsWith(`${act}:`));
     const middles = unused.filter(s => (s.name || '').startsWith('Middle:'));
-    const pick = pickOne(mine.length ? mine : middles.length ? middles : unused.length ? unused : DATA.situations);
+    const pick = pickOne(fewest(mine.length ? mine : middles.length ? middles : unused.length ? unused : DATA.situations));
     used.add(pick);
+    setUses[pick.set] = (setUses[pick.set] || 0) + 1;
     const situation = (pick.name || '').startsWith(`${act}:`) ? pick : { ...pick, name: `${act}: ${(pick.name || '').replace(prefix, '')}` };
     yield* playSituation(situation, act, actLabel(i));
     if (playerRule('actEndHeal') && i < SIM_RULES.acts.length - 1) yield* healBetweenActs(players);

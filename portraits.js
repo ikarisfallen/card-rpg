@@ -295,49 +295,73 @@ const makePortraits = (() => {
     return figure({ decor, back: `<path d="M8 100 C8 80 24 70 50 70 C76 70 92 80 92 100 Z" fill="${cloak}"/>` + (helm ? '' : b), skin, outfit: mail() + `<path d="M8 100 C10 84 18 76 30 73 L34 100 Z M92 100 C90 84 82 76 70 73 L66 100 Z" fill="${cloak}"/><circle cx="34" cy="76" r="2.5" fill="#c9a646"/>`, face: whiskers(woman, hc) + people(woman), front: helm || f });
   };
 
-  // ---- Marvel: suits of armour, masks, capes, Asgardians, sorcerers and spies ----
+  // ---- Marvel: superhero types in the films' spirit, but original (no one hero's costume) ----
+  // Armoured heroes, caped heroes, masked acrobats, armoured warriors, tech warriors, mystics,
+  // agents, scientists and energy wielders, each in a random pair of hero colours.
   const MARVEL_BG = ['#c62828', '#1565c0', '#6a1b9a', '#f9a825', '#2e7d32', '#00838f'];
+  const HERO = ['#2e7d6b', '#5e35b1', '#00838f', '#c2185b', '#ef6c00', '#455a64', '#1b5e20', '#283593', '#6d4c41', '#ad1457', '#37474f', '#f9a825'];
+  const TRIM = ['#e0e0e0', '#ffd54f', '#80deea', '#ff8a65', '#b2ff59', '#ce93d8', '#1a1a1a'];
+  const GLOW = ['#7cf4ff', '#b2ff59', '#ffd54f', '#ff80ab', '#b388ff'];
+  // A chest symbol: a bolt, a diamond, a chevron or a ring.
+  const emblem = c => pick([
+    `<path d="M52 77 L45 87 L50 87 L47 96 L56 84 L51 84 L54 77 Z" fill="${c}"/>`,
+    `<path d="M50 77 L57 86 L50 95 L43 86 Z" fill="${c}"/>`,
+    `<path d="M41 81 L50 89 L59 81 L59 86 L50 94 L41 86 Z" fill="${c}"/>`,
+    `<circle cx="50" cy="86" r="6" fill="none" stroke="${c}" stroke-width="2.5"/>`,
+  ]);
+  const domino = c => `<path d="M36 38 Q43 34 50 37 Q57 34 64 38 L63 45 Q57 43 50 45 Q43 43 37 45 Z" fill="${c}"/>`;
   const marvel = (woman, skin) => {
     const decor = rays('#fff');
-    const kind = pick(['armour', 'patriot', 'spider', 'asgardian', 'wakandan', 'sorcerer', 'spy', 'scientist']);
+    const kind = pick(['armour', 'caped', 'acrobat', 'warrior', 'tech', 'mystic', 'agent', 'scientist', 'energy']);
+    const main = pick(HERO), trim = pick(TRIM.filter(t => t !== main));
     const hc = pick(HAIR);
-    if (kind === 'armour') {
-      return decor + broad('#b71c1c') + '<path d="M30 76 L40 72 L44 100 L32 100 Z M70 76 L60 72 L56 100 L68 100 Z" fill="#f2b632"/><circle cx="50" cy="86" r="5" fill="#dff6ff" stroke="#9adcff" stroke-width="2"/>'
-        + '<path d="M34 46 C32 24 41 18 50 18 C59 18 68 24 66 46 L63 58 Q50 64 37 58 Z" fill="#b71c1c"/><path d="M39 32 C40 27 45 25 50 25 C55 25 60 27 61 32 L60 50 Q50 58 40 50 Z" fill="#f2b632"/>'
-        + '<path d="M41 39 H47 M53 39 H59" stroke="#dff6ff" stroke-width="2"/>';
+    if (kind === 'armour') { // a full suit, a helmet with a visor slit
+      const glow = pick(GLOW);
+      return decor + broad(main) + `<path d="M28 78 L38 72 L42 100 L30 100 Z M72 78 L62 72 L58 100 L70 100 Z" fill="${shade(main, -0.25)}"/>` + emblem(trim)
+        + `<path d="M34 46 C32 24 41 18 50 18 C59 18 68 24 66 46 L63 58 Q50 64 37 58 Z" fill="${main}"/><path d="M38 36 Q50 32 62 36 L61 42 Q50 39 39 42 Z" fill="${glow}"/>`
+        + `<path d="M50 18 V30" stroke="${trim}" stroke-width="3"/>`;
     }
-    if (kind === 'spider') {
-      const web = '#1a1a1a';
-      return decor + shoulders('#c62828') + `<path d="M8 100 C8 90 14 82 22 78 L30 100 Z M92 100 C92 90 86 82 78 78 L70 100 Z" fill="#1e4fa8"/><path d="M50 74 V100 M38 76 L44 100 M62 76 L56 100" stroke="${web}" stroke-width="0.6"/>`
-        + `<rect x="43" y="54" width="14" height="22" rx="4" fill="#b71c1c"/><ellipse cx="50" cy="42" rx="14.5" ry="17.5" fill="#c62828"/>`
-        + `<path d="M50 25 V59 M36 42 H64 M38 31 L62 53 M62 31 L38 53" stroke="${web}" stroke-width="0.5"/>`
-        + `<path d="M39 38 Q45 33 48 41 Q44 46 39 38 Z M61 38 Q55 33 52 41 Q56 46 61 38 Z" fill="#f4f8ff" stroke="${web}" stroke-width="1"/>`;
+    if (kind === 'acrobat') { // a full mask with tinted lenses and a stripe
+      const lens = pick(['#ffd54f', '#80deea', '#1a1a1a', '#ff8a65']);
+      return decor + shoulders(main) + `<path d="M30 74 L70 100 L58 100 L24 78 Z" fill="${trim}"/>`
+        + `<rect x="43" y="54" width="14" height="22" rx="4" fill="${shade(main, -0.1)}"/><ellipse cx="50" cy="42" rx="14.5" ry="17.5" fill="${main}"/>`
+        + `<path d="M36 32 Q50 26 64 32" stroke="${trim}" stroke-width="3" fill="none"/>`
+        + `<ellipse cx="44" cy="42" rx="4.5" ry="3.5" fill="${lens}" stroke="${shade(main, -0.4)}" stroke-width="1"/><ellipse cx="56" cy="42" rx="4.5" ry="3.5" fill="${lens}" stroke="${shade(main, -0.4)}" stroke-width="1"/>`;
+    }
+    if (kind === 'energy') { // wrapped in a glow, eyes alight
+      const glow = pick(GLOW);
+      const [b, f] = hair(pick(woman ? ['long', 'straight', 'bob'] : ['short', 'spiky', 'cropped']), pick([hc, '#f4f1ea']));
+      return `<circle cx="50" cy="55" r="44" fill="${glow}" opacity="0.28"/>` + decor
+        + figure({ back: b, skin, outfit: shoulders(main) + emblem(glow), face: `<ellipse cx="44.5" cy="42" rx="3" ry="1.8" fill="${glow}"/><ellipse cx="55.5" cy="42" rx="3" ry="1.8" fill="${glow}"/>`, front: f });
     }
     let back = '', outfit = '', face = people(woman), front = '';
     let [b, f] = hair(pick(woman ? WOMEN_HAIR : MEN_HAIR), hc);
-    if (kind === 'patriot') {
-      outfit = shoulders('#1e3f8a') + '<path d="M50 78 L52.4 84.5 L59 84.5 L53.7 88.5 L55.7 95 L50 91 L44.3 95 L46.3 88.5 L41 84.5 L47.6 84.5 Z" fill="#f4f1ea"/>';
-      if (chance(0.5)) { b = ''; f = '<path d="M35 46 C33 24 41 19 50 19 C59 19 67 24 65 46 L62 46 C62 34 57 29 50 29 C43 29 38 34 38 46 Z" fill="#1e3f8a"/><path d="M34 36 L28 30 L35 33 Z M66 36 L72 30 L65 33 Z" fill="#f4f1ea"/>'; }
-    } else if (kind === 'asgardian') {
-      back = '<path d="M14 100 C14 80 26 70 50 70 C74 70 86 80 86 100 Z" fill="#b71c1c"/>';
-      outfit = broad('#5a5f68') + [38, 62].map(x => [80, 92].map(y => `<circle cx="${x}" cy="${y}" r="4" fill="#c0c6ce" stroke="#3a3f48" stroke-width="1"/>`).join('')).join('');
-      [b, f] = hair(pick(['long', 'straight', 'braid']), pick(['#e8d07a', '#d8b56a', '#141010', '#8c2a1c']));
-      if (chance(0.35)) f += '<path d="M36 34 C36 24 43 21 50 21 C57 21 64 24 64 34 Z" fill="#c0c6ce"/><path d="M36 30 Q26 22 24 30 Q30 28 36 34 Z M64 30 Q74 22 76 30 Q70 28 64 34 Z" fill="#f4f1ea"/>';
-      if (!woman && chance(0.5)) face += beard(pick(['#e8d07a', '#8c2a1c', '#4a2e1c']));
-    } else if (kind === 'wakandan') {
-      outfit = shoulders(woman ? '#a3242e' : '#1b1b22') + (woman ? '<path d="M30 78 L40 72 L44 86 Z M70 78 L60 72 L56 86 Z" fill="#d4a52c"/>' : '<path d="M30 80 L50 90 L70 80" stroke="#8a6adf" stroke-width="1.2" fill="none"/>')
-        + Array.from({ length: 7 }, (_, i) => `<path d="M${41 + i * 3} ${74 + Math.abs(3 - i) * -0.8 + 3} l1.5 4 l1.5 -4 Z" fill="#e8e4d8"/>`).join('');
-      if (woman) { b = ''; f = '<path d="M37 34 Q50 24 63 34" stroke="#d4a52c" stroke-width="1.2" fill="none"/>'; face += '<rect x="44" y="62" width="12" height="3" rx="1.5" fill="#d4a52c"/><rect x="44" y="66" width="12" height="3" rx="1.5" fill="#d4a52c"/>'; }
-    } else if (kind === 'sorcerer') {
-      back = '<path d="M26 74 L22 40 Q30 50 36 62 Z M74 74 L78 40 Q70 50 64 62 Z" fill="#b71c1c"/>';
-      outfit = shoulders('#1e3f8a') + '<path d="M8 100 C10 84 18 76 30 73 L36 100 Z M92 100 C90 84 82 76 70 73 L64 100 Z" fill="#b71c1c"/><circle cx="50" cy="80" r="3.5" fill="#d4a52c" stroke="#3ccf6a" stroke-width="1"/>';
-      if (!woman) { face += goatee(hc); [b, f] = hair('slicked', hc); f += '<path d="M36 36 L38 30 M64 36 L62 30" stroke="#d8d8d8" stroke-width="2.5"/>'; }
-    } else if (kind === 'spy') {
-      outfit = shoulders('#151518') + zipper('#55555c') + '<rect x="24" y="92" width="52" height="4" fill="#2a2a30"/><circle cx="50" cy="94" r="2.5" fill="#c62828"/>';
-      if (woman) [b, f] = hair(pick(['waves', 'bob', 'long']), pick(['#b33a1c', '#d8b56a', '#141010']));
-    } else { // scientist
-      outfit = shoulders(pick(['#5a3a7a', '#3a4a6b', '#6e6e73'])) + collar();
-      if (chance(0.6)) face += glasses('#1a1a1a');
+    if (kind === 'caped') { // a cape, a chest symbol and a domino mask
+      back = `<path d="M10 100 C12 80 26 70 50 70 C74 70 88 80 90 100 Z" fill="${shade(trim === '#1a1a1a' ? main : trim, -0.2)}"/>`;
+      outfit = shoulders(main) + emblem(trim);
+      face += domino(shade(main, -0.35));
+    } else if (kind === 'warrior') { // scale armour, a cape and a circlet
+      const metal = pick(['#8d939a', '#b08d57', '#6b7178']);
+      back = `<path d="M14 100 C14 80 26 70 50 70 C74 70 86 80 86 100 Z" fill="${main}"/>`;
+      outfit = broad(metal) + Array.from({ length: 4 }, (_, r) => Array.from({ length: 9 }, (_, i) => `<path d="M${22 + i * 7 + (r % 2) * 3.5} ${78 + r * 5} q3.5 4 7 0" fill="none" stroke="${shade(metal, -0.35)}" stroke-width="0.8"/>`).join('')).join('');
+      [b, f] = hair(pick(['long', 'straight', 'braid', 'cropped']), hc);
+      f += `<path d="M36 33 Q50 28 64 33" stroke="${pick(['#e3c35a', '#c0c6ce'])}" stroke-width="2" fill="none"/>`;
+      if (!woman && chance(0.4)) face += beard(hc);
+    } else if (kind === 'tech') { // a suit traced with glowing circuit lines
+      const glow = pick(GLOW);
+      outfit = shoulders(pick(['#1b1b22', '#263238', '#2a2238'])) + `<path d="M24 82 H40 L46 76 M76 82 H60 L54 76 M50 74 V90 M38 92 H62" stroke="${glow}" stroke-width="1.3" fill="none"/><circle cx="50" cy="90" r="2" fill="${glow}"/>`;
+      front = `<rect x="40" y="60" width="20" height="10" rx="3" fill="${pick(['#1b1b22', '#263238'])}"/>`; // high collar
+    } else if (kind === 'mystic') { // a hood or a high collar, a glowing rune
+      const robe = pick(['#4a148c', '#1b5e20', '#004d40', '#3e2723', '#263238']), rune = pick(GLOW);
+      outfit = shoulders(robe) + `<path d="M8 100 C10 84 18 76 30 73 L36 100 Z M92 100 C90 84 82 76 70 73 L64 100 Z" fill="${shade(robe, -0.3)}"/>`
+        + `<circle cx="22" cy="88" r="7" fill="none" stroke="${rune}" stroke-width="1.5"/><path d="M22 81 L28 92 L16 92 Z" fill="none" stroke="${rune}" stroke-width="1"/>`;
+      if (chance(0.5)) { const [hb, hf] = hood(robe); back = hb; f = hf; b = ''; }
+    } else if (kind === 'agent') { // a tactical jacket and an earpiece
+      outfit = shoulders(pick(['#263238', '#3e2723', '#1b1b22', '#37474f'])) + zipper('#8a8a92') + '<path d="M30 80 H44 M56 80 H70" stroke="#55555c" stroke-width="3"/>';
+      front = '<path d="M64 46 Q68 50 64 56" stroke="#1a1a1a" stroke-width="1.5" fill="none"/><circle cx="64" cy="46" r="1.6" fill="#1a1a1a"/>';
+    } else { // scientist: goggles pushed up, a lab coat over hero colours
+      outfit = shoulders('#f2f2ee') + shirtV(main) + lapels('#e2e2dc');
+      front = `<path d="M37 32 H63" stroke="#55555c" stroke-width="2"/><circle cx="44" cy="31" r="3.5" fill="${pick(['#80deea', '#ffd54f'])}" stroke="#55555c" stroke-width="1.5"/><circle cx="56" cy="31" r="3.5" fill="${pick(['#80deea', '#ffd54f'])}" stroke="#55555c" stroke-width="1.5"/>`;
       face += whiskers(woman, hc);
     }
     return figure({ decor, back: back + b, skin, outfit, face, front: f + front });
