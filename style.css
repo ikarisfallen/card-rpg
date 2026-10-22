@@ -1935,3 +1935,8 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
   background: rgba(229, 57, 53, 0.18);
   box-shadow: 0 0 0 4px #d32f2f, 0 0 16px rgba(229, 57, 53, 0.8);
 }
+
+/* A filled-in blank on the Situation card: what's dealt, in green on the line (as wide as it needs). */
+.madlib-fill { display: block; padding: 0 2px; border-bottom: 1.5px solid currentColor; color: #1b7a3a; font-size: 0.85em; font-weight: 400; line-height: 1.1; text-align: center; } /* a long name wraps rather than spill out */
+.madlib.filled { max-width: 100%; }
+.madlib.filled .madlib-label { opacity: 0.55; }

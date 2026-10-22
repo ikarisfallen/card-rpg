@@ -647,19 +647,48 @@ function madLibKeys() {
   keys.push({ key: noVS('🏠'), label: 'Location' }); // situations use 🏠 for any location
   return keys.sort((a, b) => b.key.length - a.key.length); // pairs first
 }
-function madLib(text) {
-  const src = noVS(text || ''), keys = madLibKeys();
+// Each blank is filled in, in green on its line, with what the dealt cards say goes there (as the
+// read-aloud text does); `words` are the ones an act was played with, else the table's now, and
+// `seen` is shared across a card so a person's title is only given the first time.
+function madLib(text, words = null, seen = new Set()) {
+  const src = noVS(text || ''), keys = madLibKeys(), fills = words || narrationWords();
   let out = '';
   for (let i = 0; i < src.length;) {
     const hit = keys.find(k => src.startsWith(k.key, i));
     if (!hit) { out += esc(src[i]); i++; continue; }
-    out += `<span class="madlib"><span class="madlib-blank"></span><span class="madlib-label">${esc(hit.label)}</span></span>`;
+    const word = fills.find(w => w.key === hit.key);
+    let said = word ? (word.person ? sayPerson(word.person, src.slice(i + hit.key.length), seen) : word.text) : '';
+    const before = src.slice(0, i);
+    if (said && /\b(a|an|the)\s+$/i.test(before)) said = said.replace(/^(a|an|the)\s+/i, ''); // "over a the bridge"
+    if (said && /(^|[.!?:]\s+|\n)$/.test(before)) said = said.charAt(0).toUpperCase() + said.slice(1);
+    out += said
+      ? `<span class="madlib filled"><span class="madlib-fill">${esc(said)}</span><span class="madlib-label">${esc(hit.label)}</span></span>`
+      : `<span class="madlib"><span class="madlib-blank"></span><span class="madlib-label">${esc(hit.label)}</span></span>`;
     i += hit.key.length;
   }
   return out;
 }
 
-function situationFront(situation, result = null) {
+// Draw the Situation card's face, then shrink any part whose filled-in names don't fit (the
+// opening text, a choice's speech bubble, the Escalations), a step at a time, to 70% at most.
+function drawSituation(card, situation, result = null, words = null) {
+  const front = card.el.querySelector('.card-front');
+  front.innerHTML = situationFront(situation, result, words);
+  const fit = (node, tooBig) => {
+    for (let pct = 100; pct > 70 && tooBig(); pct -= 5) node.style.fontSize = `${pct - 5}%`;
+  };
+  const intro = front.querySelector('.sit-text'), introBox = front.querySelector('.sit-intro');
+  if (intro && introBox) fit(intro, () => introBox.scrollHeight > introBox.clientHeight + 1);
+  front.querySelectorAll('.sit-choice').forEach(c => {
+    const b = c.querySelector('.sit-choice-text');
+    if (b) fit(b, () => b.offsetHeight > c.clientHeight - 4);
+  });
+  const escs = front.querySelector('.sit-escs');
+  if (escs) fit(escs, () => escs.scrollHeight > escs.clientHeight + 1);
+}
+
+function situationFront(situation, result = null, words = null) {
+  const seen = new Set(); // titles on first mention, across the whole card
   const lines = situation.description.split('\n');
   const first = lines.findIndex(l => /^\s*[ABC]\)/.test(l));
   const intro = (first < 0 ? lines : lines.slice(0, first)).join('\n');
@@ -669,7 +698,7 @@ function situationFront(situation, result = null) {
     if (m) choices[m[1]] = m[2].replace(APPROACH_AND_RISK, '');
   });
   const escalations = situation.escalations
-    .map((text, i) => text && `<div class="sit-esc"><b>Escalation ${i + 1}:</b> ${madLib(text)}</div>`)
+    .map((text, i) => text && `<div class="sit-esc"><b>Escalation ${i + 1}:</b> ${madLib(text, words, seen)}</div>`)
     .join('');
   // Who won on row i (a shared win stamps every finished row).
   const winnerOn = i => result && !result.lost && (result.winners || [result]).find(w => w.row === i);
@@ -677,12 +706,12 @@ function situationFront(situation, result = null) {
     <div class="sit-intro">
       ${result && result.lost ? '<div class="sit-lost">Lost</div>' : ''}
       <div class="sit-name">${esc(situation.name || 'Situation')}</div>
-      <div class="sit-text">${madLib(intro)}</div>
+      <div class="sit-text">${madLib(intro, words, seen)}</div>
       ${SIM_RULES.riskModifier && SIM_RULES.freeApproach ? '<div class="sit-risk-head">Risk</div>' : ''}
     </div>
     <div class="sit-choices">
       ${['A', 'B', 'C'].map((k, i) => `
-        <div class="sit-choice${winnerOn(i) ? ' won' : ''}">${choiceRiskHtml(situation.risks[i])}<span class="sit-choice-text">${madLib(choices[k])}</span>${winnerOn(i) ? `<span class="sit-stamp" style="--c:${winnerOn(i).color}">★ ${esc(winnerOn(i).name)}</span>` : ''}</div>`).join('')}
+        <div class="sit-choice${winnerOn(i) ? ' won' : ''}">${choiceRiskHtml(situation.risks[i])}<span class="sit-choice-text">${madLib(choices[k], words, seen)}</span>${winnerOn(i) ? `<span class="sit-stamp" style="--c:${winnerOn(i).color}">★ ${esc(winnerOn(i).name)}</span>` : ''}</div>`).join('')}
     </div>
     <div class="sit-escs">${escalations}</div>${setTag(situation)}`;
 }
@@ -969,8 +998,19 @@ function narrationPanel(x, y, w, situation) {
   return node;
 }
 
+// The Situation card's filled-in blanks follow the table too (a Location swapped, a name card
+// turned), unless a past act is on show: that one keeps the words it was played with.
+function refreshSituationCard() {
+  const card = TABLE && TABLE.situationCard;
+  if (!card || !card.el.isConnected) return;
+  const n = (TABLE.history || []).length;
+  const entry = n ? TABLE.history[TABLE.shownAct ?? n - 1] : null;
+  if (entry && entry.words) return;
+  drawSituation(card, entry ? entry.situation : TABLE.situation, entry ? entry.result : null);
+}
+
 // Called by the table after any drop, flip or turn.
-window.onTableChange = renderNarration;
+window.onTableChange = () => { renderNarration(); refreshSituationCard(); };
 
 // ---- Spotlight tokens ----
 // Each player's scoring tokens: their colour, a stage spotlight shining down on their letter.
@@ -1107,7 +1147,7 @@ function showAct(i) {
   if (!entry) return;
   TABLE.shownAct = i;
   const card = TABLE.situationCard;
-  card.el.querySelector('.card-front').innerHTML = situationFront(entry.situation, entry.result);
+  drawSituation(card, entry.situation, entry.result, entry.words || null);
   setFaceUp(card, true);
   pulse(card);
   if (narration) {
@@ -1241,6 +1281,7 @@ function deal(mode = 'deal') {
     front: situationFront(situation),
     back: plainBack('Situation'),
   });
+  drawSituation(TABLE.situationCard, situation); // again, now it's on the table, so it can be fitted
 
   const cell = buildMat(BOARD_X, ROW2, situation);
   TABLE.sceneDieAt = { x: BOARD_X + MAT_PAD + 8, y: ROW2 + MAT_PAD + (MAT_BANNER - DIE_SIZE) / 2 + 8 }; // left end of the banner

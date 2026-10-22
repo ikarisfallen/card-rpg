@@ -439,6 +439,7 @@ function* drawRisks(rows) {
       back: '<div class="risk-tile-back"><b>?</b><small>Risk</small></div>',
     });
     r.riskTile.cardKind = 'risk';
+    r.riskTile.locked = true; // no peeking: only the game turns these over (or moves them)
     const at = riskSpot(i);
     glide(r.riskTile, at.x, at.y);
     return r.riskTile;
@@ -628,7 +629,7 @@ function drawFate() {
 function setSituation(situation) {
   TABLE.situation = situation;
   const card = TABLE.situationCard;
-  card.el.querySelector('.card-front').innerHTML = situationFront(situation);
+  drawSituation(card, situation);
   setFaceUp(card, true);
   pulse(card);
   TABLE.rows.forEach((row, i) => {

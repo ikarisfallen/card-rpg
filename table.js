@@ -485,8 +485,8 @@ table.addEventListener('pointerdown', e => {
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   if (e.target.closest('button')) return;
   const node = e.target.closest('.piece');
-  if (node) startDrag(e, node._piece);
-  else startPan(e);
+  if (node && !node._piece.locked) startDrag(e, node._piece);
+  else startPan(e); // empty table, or a locked piece (only the game moves or flips it)
 });
 
 function startDrag(e, piece) {
