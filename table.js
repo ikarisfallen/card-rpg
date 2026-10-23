@@ -414,8 +414,8 @@ function rollDie(piece) {
 
 // ---- Tokens & pawns ----
 
-function createToken({ className = '', size = 56, label, html, x, y }) {
-  return addPiece({ kind: 'token', className, w: size, h: size, lift: el('div', null, html ?? esc(label)), x, y });
+function createToken({ className = '', size = 56, w = size, h = size, label, html, x, y }) {
+  return addPiece({ kind: 'token', className, w, h, lift: el('div', null, html ?? esc(label)), x, y });
 }
 
 // A pawn seen from above at a slant, like a chess pawn: a round head on a collar, a flared body, and

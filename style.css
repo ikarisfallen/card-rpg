@@ -1545,26 +1545,26 @@ body[data-theme="starwars"] #table {
 /* The Board is narrower without the slot: the banner's small print wraps beside the act table. */
 .mat-goal .mat-sub, .mat-goal .mat-scene { white-space: normal; }
 
-/* The Storyteller token, right of the Storyteller's Trouble card: a slot the Obstacle die rests
-   in (its centre OBSTACLE_RIDE above the token's, in deal.js) and its name round the bottom. */
-.token.storyteller .lift {
-  position: relative;
-  display: grid;
-  place-items: center;
+/* The Storyteller token, above the Storyteller's Liability: a two-sided tile (a card, so a tap
+   flips it), its jobs each round on one side and a new situation's setup on the other. */
+.card.storyteller .card-face {
+  display: block;
   box-sizing: border-box;
-  border: 3px solid rgba(255, 255, 255, 0.4);
-  background: radial-gradient(circle at 35% 30%, #8a8fd0, #2e3266 75%);
+  padding: 6px 10px 5px;
+  border-radius: 14px;
+  border: 3px solid rgba(255, 255, 255, 0.45);
+  background: linear-gradient(160deg, #7b80c8, #2e3266 80%);
+  color: #fff;
+  font: 400 12px/1.14 "Segoe UI", system-ui, sans-serif;
+  text-align: left;
 }
-.token.storyteller .story-slot {
-  width: 66px;
-  height: 66px;
-  transform: translateY(-7px);
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.35);
-  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6), inset 0 0 0 2px rgba(255, 255, 255, 0.1);
-}
-.token.storyteller .story-ring { position: absolute; inset: -3px; width: calc(100% + 6px); height: calc(100% + 6px); pointer-events: none; }
-.token.storyteller .story-ring text { font: 800 11px "Segoe UI", system-ui, sans-serif; letter-spacing: 0.06em; fill: #fff; }
+.card.storyteller .card-back { background: linear-gradient(160deg, #6a4f9e, #2b1d4d 80%); }
+.card.storyteller .lift { border-radius: 14px; }
+.card.storyteller .story-title { font-weight: 800; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; margin-bottom: 3px; }
+.card.storyteller .story-steps { margin: 0; padding-left: 16px; }
+.card.storyteller .story-steps li { margin-bottom: 0; }
+.card.storyteller .story-text { margin: 0; font-size: 13.5px; line-height: 1.25; }
+.card.storyteller b { font-weight: 700; }
 
 /* The Board is as tall as the Situation card: its banner and footer have room for larger,
    more spaced-out text that's easier to scan across the table. */

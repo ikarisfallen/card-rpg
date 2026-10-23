@@ -760,14 +760,21 @@ function setOut(token, out) {
 // Round board: pawns sit around the ring with their initiative tokens, and each
 // Relationship card sits between the two players it links (W↔X between W and X).
 const REL_BOARD = 720; // room for Fate-card-sized Relationships between the pawns
-// The Storyteller token (SIM_RULES.obstacle), passed round the table: it sits right of the
-// Storyteller's Trouble card (above their Liability), with a slot (a little above its centre,
-// the token's name round the bottom) where the Obstacle die rests while it isn't on the Board.
-const STORY_SIZE = 110, OBSTACLE_SIZE = DIE_SIZE, OBSTACLE_RIDE = 7;
-// The token's face: a slot for the die, and its name curving round the bottom edge.
-const STORY_FACE = `<span class="story-slot"></span><svg class="story-ring" viewBox="0 0 ${STORY_SIZE} ${STORY_SIZE}" aria-hidden="true">`
-  + `<path id="story-arc" d="M 13 ${STORY_SIZE / 2} A ${STORY_SIZE / 2 - 13} ${STORY_SIZE / 2 - 13} 0 0 0 ${STORY_SIZE - 13} ${STORY_SIZE / 2}" fill="none"/>`
-  + '<text><textPath href="#story-arc" startOffset="50%" text-anchor="middle">STORYTELLER</textPath></text></svg>';
+// The Storyteller token, passed round the table: a two-sided tile above the Storyteller's
+// Liability (tap to flip it). One side lists their jobs each round, the other what to do when a new
+// situation starts. (With SIM_RULES.obstacle, test only, the Obstacle die rests on it.)
+const STORY_W = 196, STORY_H = 176, OBSTACLE_SIZE = DIE_SIZE, OBSTACLE_RIDE = 7;
+const STORY_FACE = `<div class="story-title">Storyteller</div><ol class="story-steps">
+  <li><b>New Situation?</b> Flip this over. If not, continue.</li>
+  <li>Draw <b>3 Risks</b>: one per row, face down.</li>
+  <li>Moves made? <b>Flip the Risks</b>.</li>
+  <li>Before the Fate card, <b>compel</b> a ✖️ Trouble or ➖ Liability.</li>
+  <li>Epic Failure? <b>Read its Escalation</b>.</li>
+  <li>Round over? <b>Pass this on</b>.</li>
+</ol>`;
+const STORY_BACK = `<div class="story-title">New Situation</div><p class="story-text">Draw a new <b>Situation</b> and <b>Location</b>.
+  Read the Situation description aloud, filling in the blanks with the text on the Element cards.
+  Place the <b>Edge die</b> on the Board, set to the approach on the Element line it names.</p>`;
 
 // Relationship cards on the ring: one per pair of neighbours (just one for two players).
 const relationshipCount = n => (n === 2 ? 1 : n);
@@ -1501,7 +1508,7 @@ function deal(mode = 'deal') {
     const conceptSlot = cardSlot('concept', conceptX(sheetX), rowTop + PEEK);
     const troubleSlot = cardSlot('trouble', troubleX(sheetX), rowTop + PEEK);
     // The Storyteller token's spot: above Liability 1.
-    TABLE.players[i].obstacleHome = { x: boardR + PC_CARD.w / 2, y: rowTop - 30 };
+    TABLE.players[i].obstacleHome = { x: boardR + PC_CARD.w / 2 - 2, y: rowTop + PEEK - STORY_H / 2 - 6 }; // its centre: its foot just above Liability 1
     const boonSlot = cardSlot('boon', bx, boonTop);
     if (!fresh) boonSlot.el.classList.add('hidden-zone'); // the board's strip marks it (shown while building a character)
     let dice;
@@ -1575,7 +1582,7 @@ function deal(mode = 'deal') {
   TABLE.obstacleDie = TABLE.storyToken = null;
   if (hasStoryteller()) {
     const home = TABLE.players[0].obstacleHome;
-    TABLE.storyToken = createToken({ className: 'storyteller', size: STORY_SIZE, html: STORY_FACE, x: home.x - STORY_SIZE / 2, y: home.y - STORY_SIZE / 2 });
+    TABLE.storyToken = createCard({ className: 'storyteller', w: STORY_W, h: STORY_H, front: STORY_FACE, back: STORY_BACK, x: home.x - STORY_W / 2, y: home.y - STORY_H / 2 });
     if (SIM_RULES.obstacle) TABLE.obstacleDie = createDie({ className: 'die-obstacle', size: OBSTACLE_SIZE, faces: APPROACHES, value: 1, x: home.x - OBSTACLE_SIZE / 2, y: home.y - OBSTACLE_SIZE / 2 - OBSTACLE_RIDE });
   }
 
