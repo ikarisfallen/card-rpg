@@ -612,9 +612,11 @@ function freeLine(approach) {
   return null;
 }
 
-function returnPawns() {
+// Pawns (and initiative tokens) back to the wheel, except the pawns of `staying` players, who chose to
+// stay on their row (keepOnSuccess): their initiative token still goes home.
+function returnPawns(staying = []) {
   TABLE.players.forEach(pl => {
-    glide(pl.pawn, pl.pawnHome.x, pl.pawnHome.y);
+    if (!staying.includes(pl)) glide(pl.pawn, pl.pawnHome.x, pl.pawnHome.y);
     if (pl.initHome) { pl.initToken.el.classList.remove('on-board'); glide(pl.initToken, pl.initHome.x, pl.initHome.y); }
   });
 }
@@ -1587,7 +1589,7 @@ function rollWrapUp(row, moves) {
   const took = Object.entries(byPlayer).map(([letter, n]) => `${who(TABLE.players.find(pl => pl.letter === letter))} takes ${n} spotlight token${n === 1 ? '' : 's'}`);
   return {
     title: `${row.main.info.name}’s roll is done`,
-    html: `<p>${took.length ? `${took.join(', ')}. ` : ''}The cards go back, and the pawns return to the Relationship board.</p>`,
+    html: `<p>${took.length ? `${took.join(', ')}. ` : ''}The cards go back, and the pawns return to the Relationship board${row.keeper ? `, except ${who(row.keeper)}’s: they stay on this row, to be Main here again next round` : ''}.</p>`,
   };
 }
 
@@ -2368,10 +2370,11 @@ function flipBackOut() {
 function endRound(round, rows) {
   flipBackOut();
   const initiative = reorderInitiative(rows);
-  returnPawns();
+  const staying = rows.map(r => r.keeper).filter(Boolean);
+  returnPawns(staying);
   return {
     title: `End of round ${round}`,
-    html: `<p>Pawns go back to the Relationship board.</p>${initiative}`,
+    html: `<p>Pawns go back to the Relationship board${staying.length ? `, except ${staying.map(who).join(', ').replace(/, ([^,]*)$/, ' and $1')}, staying on ${staying.length > 1 ? 'their rows' : 'their row'}` : ''}.</p>${initiative}`,
   };
 }
 
