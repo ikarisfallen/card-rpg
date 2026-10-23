@@ -10,6 +10,14 @@ const SIM_RULES = {
   maxEscalations: 2,  // the failure after the last Escalation loses the situation
   botHelp: true,      // bots help a friend's row when it beats a weak roll of their own, or finishes the situation (2026-10-21)
   helperShare: 1,     // spotlight tokens each helper places when the Main player succeeds
+  helperStoryPoint: false, // TEST 2026-10-23: a matching helper also takes 1 Story Point when the Main succeeds
+  // TEST 2026-10-23, what a helper takes (the Relationship match always adds +1 to the roll):
+  // 'match'  : success: a matching helper takes a spotlight (a Story Point if the row's empty); else nothing
+  // 'token'  : success: matching takes a spotlight, not matching a Story Point (a Story Point if the row's empty)
+  // 'auto'   : success: any helper takes a spotlight (2 Story Points if the row's empty); otherwise 1 Story Point
+  // 'points' : success: any helper takes 2 Story Points; otherwise 1 Story Point (no spotlight)
+  // 'choice' : success: any helper chooses a spotlight or 2 Story Points (2 if the row's empty); otherwise 1 Story Point
+  helperPay: 'auto', // ON 2026-10-23 (user chose it over 'choice': same balance, no decision)
   maxTokensPerRoll: 1,   // a success takes at most this many spotlight tokens (0 = no cap); 1 since 2026-10-19...
   overflowToEdge: false, // ...true: each point of margin above it is 1 Story Point from the pile instead
   // Failing (the Main player): Edge taken = failEdgeMain + failEdgePerMinus per Minus die already
@@ -46,7 +54,7 @@ const SIM_RULES = {
   actWinBonusAs: 'storyPoints', // ON 2026-10-20: the act-win bonus is Story Points instead of spotlight ('spotlight')
   shareActBonus: false, // 2026-10-20: everyone who finishes keeps their spotlight, but only the first to finish is the winner (stamp, bonus)
   // The Underdog Bonus (2026-10-20): a finisher who wasn't leading in scored spotlight going into the act's scoring banks double the act-win bonus.
-  underdogBonus: true,
+  underdogBonus: false, // OFF 2026-10-22: it widened the spotlight gap instead of closing it
   afterWin: 'none',       // 'safe': once a row completes the situation, misses on the rows still to roll cost nothing (dropped 2026-10-20: the situation is still on until the round ends)
   minusNextRound: true, // a new Minus die only counts from the next round (all rows roll against the same box) // true: several failures on one Fate card only escalate once
   maxEdgePerBet: 2,   // Story Points a Main player may spend on one roll (0 = no limit); 2 since 2026-10-19
@@ -190,6 +198,8 @@ const SIM_RULES = {
   // approach. A helper's +1 only counts if the Main's approach is on one of their Relationships.
   riskDraw: true,
   riskSwapCost: 1,
+  riskFreeSwap: 'lastPlayer', // ON 2026-10-23: the last player in initiative (Main, helper or Clear seat) may swap any two rows' risks, free; nobody else. Tested: true = each Main's first swap (one pass, reverse order) is free, more passes cost riskSwapCost;
+                       // 'redraw' = each Main may redraw their risk from the bag once, free; 'last' = only the Main last in initiative swaps free; 'lastOnly' = they swap free and nobody else may swap (only the last Main)
   // Holding your place (ON 2026-10-22): a Main player whose roll succeeds may choose, at the start of
   // the next round, to stay Main on the same row without betting. All three Risks are still redrawn.
   keepOnSuccess: true,
@@ -198,6 +208,11 @@ const SIM_RULES = {
   // ('open': face up from the start; 'hidden': face down until the first round's bets). Off: drawn every round.
   riskPerSituation: false,
   riskSwaps: true, // Mains may pay to swap Risks after they're turned over
+  // Spotlight scores the moment it's taken (2026-10-22): no "This scene" stack. A lost situation only
+  // means nobody gets the winner's Story Points. false: it waits in This scene and is lost with the situation.
+  scoreAtOnce: true,
+  // A lost situation costs everyone all the Story Points they hold, back to the pile (ON 2026-10-22).
+  lossTakesStoryPoints: true,
   maxHelpers: 1, // helpers a row can take (0 = no limit); one since 2026-10-22
 };
 
@@ -249,6 +264,10 @@ const LENGTH_BASE = {
   // compels: 2p 2 / 3 / 5 → 100 / 78 / 55 (60 games, ~11 rounds), 3p 100 / 85 / 58, 4p 100 / 80 / 58.
   // 2026-10-22, holding your place after a success (all Risks redrawn): 2p 2 / 2 / 4 → 100 / 92 / 59
   // (100 games), 3p 2 / 3 / 3 → 100 / 78 / 67 (60), 4p 3 / 3 / 4 → 100 / 82 / 68 (50).
+  // 2026-10-22, spotlight scored at once, a lost situation costs everyone their Story Points:
+  // 2p 2 / 3 / 4 → 100 / 82 / 51, 3p 2 / 2 / 3 → 100 / 84 / 60 (45 games each), 4p 3 / 3 / 4 → 100 / 86 / 72 (36).
+  // 2026-10-23, helpers take a spotlight or 2 Story Points (1 on a miss or tie): 2p 2 / 3 / 4 → 100 / 81 / 48
+  // (180 games; 2 / 3 / 3 was 100 / 84 / 75), 3p 2 / 3 / 3 → 100 / 67 / 58, 4p 3 / 4 / 4 → 100 / 71 / 59 (100 each).
   // 2026-10-19: each success takes 1 token (maxTokensPerRoll 1), so the stacks count successful rolls
   // and can rise act to act. With difficulty 1 / 3 / 3 the stacks below aim at acts won about
   // 90-100% / 70-80% / 50-70%. With 2 Story Points + 2 resource points per roll, buy-back and up to
@@ -258,9 +277,9 @@ const LENGTH_BASE = {
   // Stacks: Beginning = stack, Middle = stack + extra + middleStack, Ending = stack + extra *
   // endingSteps + endingStack (extra is 1: the game is always three acts).
   // endingEdge / edgePerExtra: Story Points at the Ending's start (all 0: no act-start Story Points).
-  2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: 0 },  // 2 / 2 / 4 (2026-10-22, holding your place)
-  3: { stack: 2, endingSteps: 1, endingEdge: 0, edgePerExtra: 0, middleStack: 0, endingStack: 0 },  // 2 / 3 / 3 (2026-10-22, holding your place)
-  4: { stack: 3, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: -1, endingStack: -1 },  // 3 / 3 / 4 (2026-10-22, holding your place)
+  2: { stack: 2, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: 0, endingStack: 0 },  // 2 / 3 / 4 (2026-10-22, losing Story Points with a situation)
+  3: { stack: 2, endingSteps: 1, endingEdge: 0, edgePerExtra: 0, middleStack: 0, endingStack: 0 },  // 2 / 3 / 3 (2026-10-23, helpers' choice)
+  4: { stack: 3, endingSteps: 2, endingEdge: 0, edgePerExtra: 0, middleStack: 0, endingStack: -1 },  // 3 / 4 / 4 (2026-10-23, helpers' choice)
 };
 function setGameLength(middles, extra) {
   GAME_LENGTH.middles = middles;

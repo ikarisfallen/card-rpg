@@ -859,12 +859,13 @@ function narrationWords() {
       if (kind === 'location') words.push({ key: icon, text: withArticle(text) });
     });
 
+    const bare = card.name.replace(/^the\s+/i, ''); // "The Miracle Child": the text adds its own "the"
     if (kind === 'villain' || kind === 'ally') {
       words.push({ key: head, person: { id: kind, name, title: `the ${card.name.replace(/^the\s+/i, '')}` } });
     } else if (kind === 'macguffin') {
-      words.push({ key: head, text: `the ${name ? `${lowerFirst(name)} ` : ''}${card.name.toLowerCase()}` });
+      words.push({ key: head, text: `the ${name ? `${lowerFirst(name)} ` : ''}${bare.toLowerCase()}` });
     } else {
-      const place = `the ${name ? `${name} ` : ''}${card.name}`;
+      const place = `the ${name ? `${name} ` : ''}${bare}`;
       words.push({ key: head, text: place });
       words.push({ key: '🏠', text: place }); // situations use 🏠 for any location
     }
@@ -1478,7 +1479,8 @@ function deal(mode = 'deal') {
     const supplyY = rowTop - SPOTLIGHT_SIZE - 10; // the bottom token, above Asset 1
     // With takeSpotlight there's no personal supply: the spot holds the tokens taken this scene.
     const supply = SIM_RULES.takeSpotlight ? [] : placeSpotlightTokens(p, PLAYER_COLORS[i % PLAYER_COLORS.length], supplyX, supplyY);
-    countedLabel(SIM_RULES.takeSpotlight ? 'This scene' : 'Spotlight', bx + 46, topY + 2, 'pair-label stack-label big-count', 'spotlight',
+    // (With scoreAtOnce there's no This scene stack: spotlight scores the moment it's taken.)
+    if (!SIM_RULES.scoreAtOnce) countedLabel(SIM_RULES.takeSpotlight ? 'This scene' : 'Spotlight', bx + 46, topY + 2, 'pair-label stack-label big-count', 'spotlight',
       { x: supplyX - 20, y: supplyY - SPOTLIGHT_TOKENS * SPOTLIGHT_STEP - 20, w: SPOTLIGHT_SIZE + 40, h: SPOTLIGHT_TOKENS * SPOTLIGHT_STEP + SPOTLIGHT_SIZE + 26 });
 
     // The player's approach die (six approaches): overlapping the portrait's top right corner,
@@ -1496,13 +1498,16 @@ function deal(mode = 'deal') {
     // Each label has its tokens just below it: stacks of STORY_STACK / SCORE_STACK tokens, two side by
     // side (a stack rises a few px per token, so there's room above the first).
     const scoreLabelY = topY;
-    const scoreX = portraitX + PC_CARD.w + 10;
+    // With no This scene stack (scoreAtOnce), Spotlight, the one that matters most, goes top left beside
+    // the badge, and Story Points right of the portrait, clear of the approach die on its corner.
+    const rightOfPortrait = portraitX + PC_CARD.w + 34;
+    const scoreX = SIM_RULES.scoreAtOnce ? bx + 46 : portraitX + PC_CARD.w + 10;
     const scoreY = scoreLabelY + 58 + (SCORE_STACK - 1) * 4; // under its two-line label
     const edgeLabelY = scoreLabelY;
     const edgeY = edgeLabelY + 58 + (STORY_STACK - 1) * 3;
-    const edgeX = boardX + 26; // clear of the This scene label to its left
+    const edgeX = SIM_RULES.scoreAtOnce ? rightOfPortrait : boardX + 26; // (or clear of the This scene label to its left)
     countedLabel('Story Points', edgeX, edgeLabelY, 'pair-label stack-label big-count', 'edge', { x: edgeX - 10, w: PC_CARD.w + 8, y: edgeLabelY - 4, h: edgeY + EDGE_SIZE - edgeLabelY + 8 });
-    countedLabel('Scored spotlight', scoreX, scoreLabelY, 'pair-label stack-label big-count', 'spotlight', { x: scoreX - 10, w: PC_CARD.w + 8, y: scoreLabelY - 4, h: scoreY + SPOTLIGHT_SIZE - scoreLabelY + 8 });
+    countedLabel(SIM_RULES.scoreAtOnce ? 'Spotlight' : 'Scored spotlight', scoreX, scoreLabelY, 'pair-label stack-label big-count', 'spotlight', { x: scoreX - 10, w: PC_CARD.w + 8, y: scoreLabelY - 4, h: scoreY + SPOTLIGHT_SIZE - scoreLabelY + 8 });
     // Two player reference cards under the area, one showing each side.
     const refY = Math.max(boonTop + STACK_STEP + PC_CARD.h, sheetY + SHEET_H + 10) + 24;
     const refX = bx + (AREA_W - 2 * EL_CARD.w - EL_GAP) / 2;
@@ -1517,6 +1522,10 @@ function deal(mode = 'deal') {
       sceneAt: { x: supplyX, y: supplyY },
       scoreAt: { x: scoreX, y: scoreY },
       edgeAt: { x: edgeX, y: edgeY },
+      // Where tokens land, at random, in an overlapping pile under each label (top-left corners; kept
+      // inside the area the label counts).
+      scorePile: { x: scoreX - 4, y: scoreLabelY + 54, w: PC_CARD.w - SPOTLIGHT_SIZE, h: scoreY - scoreLabelY - 54 },
+      edgePile: { x: edgeX - 4, y: edgeLabelY + 54, w: PC_CARD.w - EDGE_SIZE - 34, h: edgeY - edgeLabelY - 50 }, // (narrower: the Storyteller token sits to its right)
     });
   });
 
