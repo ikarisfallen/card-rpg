@@ -194,6 +194,10 @@ const SIM_RULES = {
   // the next round, to stay Main on the same row without betting. All three Risks are still redrawn.
   keepOnSuccess: true,
   keepRisk: false, // true: the held row keeps its Risk, face up (tested: more snowballing)
+  // TEST 2026-10-22: the Risks are drawn once, at the start of each situation, and stay on their rows
+  // ('open': face up from the start; 'hidden': face down until the first round's bets). Off: drawn every round.
+  riskPerSituation: false,
+  riskSwaps: true, // Mains may pay to swap Risks after they're turned over
   maxHelpers: 1, // helpers a row can take (0 = no limit); one since 2026-10-22
 };
 

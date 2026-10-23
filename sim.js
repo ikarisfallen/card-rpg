@@ -427,6 +427,10 @@ function* drawRisks(rows) {
   TABLE.oppSeat++;
   TABLE.storyteller = st; // they also watch for Troubles and Liabilities to compel (compelOnly)
   parkObstacle(st);
+  if (SIM_RULES.riskPerSituation && rows.every(r => r.riskTile)) { // drawn at the start of the situation: they stay
+    yield { title: `${st.letter} is the Storyteller`, html: `<p>${who(st)} is the Storyteller this round. The Risks stay where they are for the whole situation.</p>` };
+    return;
+  }
   const keep = rows.filter(r => SIM_RULES.keepOnSuccess && SIM_RULES.keepRisk && r.keeper && r.riskTile); // keepOnSuccess
   (TABLE.riskTiles || []).filter(t => !keep.some(r => r.riskTile === t)).forEach(removePiece);
   const drawn = shuffle(RESOURCES.filter(res => !keep.some(r => r.risk === res)));
@@ -444,6 +448,7 @@ function* drawRisks(rows) {
     r.riskTile.locked = true; // no peeking: only the game turns these over (or moves them)
     const at = riskSpot(i);
     glide(r.riskTile, at.x, at.y);
+    if (SIM_RULES.riskPerSituation === 'open') { r.riskHidden = false; setFaceUp(r.riskTile, true); } // face up from the start
     return r.riskTile;
   });
   yield {
@@ -480,15 +485,16 @@ function botApproach(pl, row, board) {
 }
 
 function* revealAndGoIn(rows, order, board) {
-  rows.forEach(r => { r.riskHidden = false; if (r.riskTile) { setFaceUp(r.riskTile, true); raise(r.riskTile); pulse(r.riskTile); } });
+  const hidden = rows.some(r => r.riskHidden);
+  rows.forEach(r => { r.riskHidden = false; if (r.riskTile) { setFaceUp(r.riskTile, true); raise(r.riskTile); if (hidden) pulse(r.riskTile); } });
   const cost = SIM_RULES.riskSwapCost;
-  yield {
+  if (hidden || SIM_RULES.riskSwaps) yield {
     title: 'The risks are turned over',
     html: `<p>${rows.map(r => `${rowTag(r)}${r.main ? ` (${r.main.letter})` : ''} risks ${resourceLabel(r.risk)}`).join(' · ')}</p>
       <p>In reverse initiative order, each Main may pay ${storyPts(cost)} to swap their row’s risk with another row’s.</p>`,
   };
   // Swaps, in reverse initiative order: one each (a row can change hands more than once).
-  for (const pl of order.filter(p => rows.some(r => r.main === p)).reverse()) {
+  for (const pl of SIM_RULES.riskSwaps ? order.filter(p => rows.some(r => r.main === p)).reverse() : []) {
     const row = rows.find(r => r.main === pl);
     if (pl.edge.length < cost) continue;
     let other = null;
@@ -545,8 +551,9 @@ function botBetRow(pl, rows, board, difficulty, isLast, recovered) {
     .sort((a, b) => a.left - b.left || b.m - a.m)[0] : null;
   if (goodHelp) return betHelp(pl, goodHelp.r, recovered);
   if (free.length && (mine >= 0 || !helpable.length)) {
-    // The row closest to finishing (a success there counts most); ties at random.
-    const row = free.map(r => ({ r, v: r.tokens.length + Math.random() * 0.5 })).reduce((a, b) => (b.v > a.v ? b : a)).r;
+    // The row closest to finishing (a success there counts most), and, when its Risk is showing, the
+    // best roll it offers; ties at random.
+    const row = free.map(r => ({ r, v: r.tokens.length + (r.riskHidden || !r.risk ? 0 : riskValue(pl, r, r.risk, board)) + Math.random() * 0.5 })).reduce((a, b) => (b.v > a.v ? b : a)).r;
     return betMain(pl, row, board, difficulty, recovered, 0, null);
   }
   if (helpable.length) return betHelp(pl, helpable.reduce((a, b) => (b.tokens.length > a.tokens.length ? b : a)), recovered);
@@ -787,6 +794,7 @@ function* playSituation(situation, act, label = act) {
     action: actions[i] || (SIM_RULES.freeApproach ? 'act' : `act with ${situation.approaches[i]}`),
   }));
   const board = { minus: [], rows }; // Minus dice in the shared box: −1 to every roll
+  TABLE.players.forEach(pl => glide(pl.pawn, pl.pawnHome.x, pl.pawnHome.y)); // a new situation: pawns that stayed on a row come home
   if (SIM_RULES.takeSpotlight) fillSuccessStacks(target); // a stack of `target` on every row
   if (TABLE.sceneRow) returnSceneDie(TABLE.sceneRow);    // the last situation's Scene die, back on the banner
   let escalations = 0;
@@ -816,12 +824,7 @@ function* playSituation(situation, act, label = act) {
     // keepOnSuccess: whoever succeeded as Main last round may hold their place on that row this round.
     const kept = [];
     for (const r of SIM_RULES.keepOnSuccess ? rows.filter(r => r.keeper) : []) {
-      const pl = r.keeper;
-      const hold = pl.human
-        ? yield ask('Hold your place?', `<p>Your roll on ${rowTag(r)} succeeded last round. Stay Main there this round, without betting? Its Risk is drawn again, face down, like the others.</p>`,
-          [{ label: 'Hold my place', hint: `stay Main on ${rowTag(r)}`, value: true }, { label: 'Let it go', hint: 'bet as usual this round', value: false }])
-        : botHolds(pl, board);
-      if (hold) { r.main = pl; placeMainPawn(pl, r); kept.push(r); } else r.keeper = null;
+      r.main = r.keeper; placeMainPawn(r.keeper, r); kept.push(r); // the pawn never left; its initiative token joins it
     }
     if (kept.length) {
       yield { title: 'Holding their place', html: kept.map(r => `<p>${who(r.main)} succeeded last round, so they stay Main on ${rowTag(r)}${SIM_RULES.keepRisk ? `, and its Risk (${resourceLabel(r.risk)}) stays too` : ' (its Risk is drawn again, face down, like the others)'}.</p>`).join('') };
@@ -940,11 +943,20 @@ function* playSituation(situation, act, label = act) {
       }
       // The pawns, approach die and cards stay put while the result shows, so the roll can be checked.
       yield step;
-      row.keeper = SIM_RULES.keepOnSuccess && /: (Epic )?Success$/.test(step.title) ? row.main : null; // keepOnSuccess
-      // Wrap-up: the tokens move, and the row's pawns (and initiative token) go back to the wheel,
-      // so you can see who still has to go.
+      // keepOnSuccess: after a success, the Main player chooses whether their pawn stays on the row
+      // (they're Main there again next round, without betting) or goes back to the wheel.
+      row.keeper = null;
+      if (SIM_RULES.keepOnSuccess && /: (Epic )?Success$/.test(step.title) && !firstWon) { // (not once the situation is finished)
+        const stay = row.main.human
+          ? yield ask('Stay on this row?', `<p>Your roll on ${rowTag(row)} succeeded. Leave your pawn there, to be Main on it again next round without betting? (Its Risk is drawn again, face down, like the others.) Or take it back to the wheel and bet as usual.</p>`,
+            [{ label: 'Stay on the row', hint: 'Main here again next round', value: true }, { label: 'Back to the wheel', hint: 'bet as usual next round', value: false }])
+          : botHolds(row.main, board);
+        if (stay) row.keeper = row.main;
+      }
+      // Wrap-up: the tokens move, and the row's pawns (but not one staying on) and initiative token go
+      // back to the wheel, so you can see who still has to go.
       moves.forEach(([p, x, y]) => glide(p, x, y));
-      [row.main, ...row.helpers].forEach(p => glide(p.pawn, p.pawnHome.x, p.pawnHome.y));
+      [row.main, ...row.helpers].filter(p => p !== row.keeper).forEach(p => glide(p.pawn, p.pawnHome.x, p.pawnHome.y));
       if (SIM_RULES.freeApproach) dropApproachDie(row);
       if (row.main.initHome) { row.main.initToken.el.classList.remove('on-board'); glide(row.main.initToken, row.main.initHome.x, row.main.initHome.y); }
       returnUsedCards(shown);
