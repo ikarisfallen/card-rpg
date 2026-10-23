@@ -641,7 +641,7 @@ function* revealAndGoIn(rows, order, board) {
     row.helpers.forEach(h => {
       const rel = relFor(h, row.approach);
       step.html += rel ? `<p>${who(h)}’s Relationship “${esc(rel.text)}” has ${row.approach}: their help counts (+1).</p>`
-        : `<p>None of ${who(h)}’s Relationships has ${row.approach}: they stay, but add nothing to the roll and take no spotlight if it works.</p>`;
+        : `<p>None of ${who(h)}’s Relationships has ${row.approach}: they stay, but add nothing to the roll${['choice', 'points', 'auto'].includes(SIM_RULES.helperPay) ? '' : ' and take no spotlight if it works'}.</p>`;
     });
     yield step;
   }
@@ -1477,7 +1477,7 @@ function betHelp(pl, row, recovered) {
     return {
       title: `${pl.letter} helps`,
       html: `${recovered}<p>${who(pl)} helps ${who(row.main)} <i>${row.action}</i> (${rowTag(row)} as <b>Help</b>).</p>
-        <p>If ${who(row.main)} goes in with an approach on one of their Relationships (${shows}), they add +1 and share the spotlight if it works; otherwise they add nothing and take nothing.</p>`,
+        <p>If ${who(row.main)} goes in with an approach on one of their Relationships (${shows}), they add +1${['choice', 'points', 'auto'].includes(SIM_RULES.helperPay) ? '. Either way they’re paid: a spotlight if it works (2 Story Points if the row is empty), 1 Story Point if not' : ' and share the spotlight if it works; otherwise they add nothing and take nothing'}.</p>`,
     };
   }
   const rel = relFor(pl, row.approach);
@@ -2717,6 +2717,17 @@ function stopAuto() {
 }
 
 document.getElementById('sim-btn').addEventListener('click', () => {
+  simPanel.hidden = false;
+  startSim(false);
+  fitView();
+});
+// New game: once every character is built, the cards left in the pool go and the game starts.
+document.getElementById('start-game-btn').addEventListener('click', () => {
+  if (!TABLE.building || buildMissing().length) return;
+  TABLE.building = false;
+  (TABLE.pool || []).filter(p => !p.zone && !p.parent).forEach(removePiece);
+  if (TABLE.heightWithoutPool) worldSize.h = TABLE.heightWithoutPool;
+  updateBuild();
   simPanel.hidden = false;
   startSim(false);
   fitView();

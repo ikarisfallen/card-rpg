@@ -1035,7 +1035,48 @@ function refreshSituationCard() {
 }
 
 // Called by the table after any drop, flip or turn.
-window.onTableChange = () => { renderNarration(); refreshSituationCard(); };
+window.onTableChange = () => { renderNarration(); refreshSituationCard(); updateBuild(); };
+
+// ---- New game: building the characters ----
+// While TABLE.building, each character's resource dice follow the Concept and Trouble in their
+// slots, and Start game stays greyed out until every character has a Concept, a Trouble and an
+// Asset, a first and a last name, and a portrait, and every Relationship on the wheel is placed.
+function buildMissing() {
+  const missing = [];
+  TABLE.players.forEach(pl => {
+    const z = pl.zones;
+    if (!z) return;
+    const need = [
+      [z.concept.occupant, 'Concept'], [z.trouble.occupant, 'Trouble'], [z.boon.occupant, 'Asset'],
+      [z.concept.nameZone.occupant, 'first name'], [z.trouble.nameZone.occupant, 'last name'], [z.portrait.occupant, 'portrait'],
+    ].filter(([have]) => !have).map(([, what]) => what);
+    if (need.length) missing.push(`${pl.letter}: ${need.join(', ')}`);
+  });
+  const rels = TABLE.relZones.filter(z => !z.occupant).length;
+  if (rels) missing.push(`${rels} Relationship${rels > 1 ? 's' : ''} on the wheel`);
+  return missing;
+}
+
+function updateBuild() {
+  const btn = document.getElementById('start-game-btn');
+  if (!btn) return;
+  btn.hidden = !(TABLE && TABLE.building);
+  if (btn.hidden) return;
+  TABLE.players.forEach(pl => {
+    if (!pl.zones || !pl.dice) return;
+    const concept = pl.zones.concept.occupant, trouble = pl.zones.trouble.occupant;
+    Object.entries(pl.dice).forEach(([res, die]) => {
+      const value = (SIM_RULES.resourceStart ?? RESOURCE_START) + (concept?.card.resource === res) - (trouble?.card.resource === res);
+      if (die.value !== value) setDieValue(die, Math.max(1, Math.min(6, value)));
+    });
+  });
+  // A portrait slides under the name cards and the board, as when dealt.
+  (TABLE.pool || []).filter(p => p.cardKind === 'relationship')
+    .forEach(p => p.el.classList.toggle('tucked-name', TABLE.players.some(pl => pl.zones && pl.zones.portrait === p.zone)));
+  const missing = buildMissing();
+  btn.disabled = missing.length > 0;
+  btn.title = missing.length ? `Still to do — ${missing.join(' · ')}` : 'Everyone’s ready: start the game';
+}
 
 // ---- Spotlight tokens ----
 // Each player's scoring tokens: their colour, a stage spotlight shining down on their letter.
@@ -1219,7 +1260,7 @@ function deal(mode = 'deal') {
   const fresh = mode === 'new';
   clearWorld();
   shownNames.clear();
-  TABLE = { players: [], relZones: [], rows: [{}, {}, {}] };
+  TABLE = { players: [], relZones: [], rows: [{}, {}, {}], building: fresh };
 
   const players = DATA.players.slice(0, PLAYER_COUNT); // W, X, Y, Z: as many as are playing
   const concepts = buildFromSets(d => buildPcDeck('concept', d.concepts, d.firstNames, '✔️', SIM_RULES.charApproaches || 2, true));
@@ -1462,7 +1503,7 @@ function deal(mode = 'deal') {
     // The Storyteller token's spot: above Liability 1.
     TABLE.players[i].obstacleHome = { x: boardR + PC_CARD.w / 2, y: rowTop - 30 };
     const boonSlot = cardSlot('boon', bx, boonTop);
-    boonSlot.el.classList.add('hidden-zone'); // the board's strip marks it
+    if (!fresh) boonSlot.el.classList.add('hidden-zone'); // the board's strip marks it (shown while building a character)
     let dice;
     if (fresh) {
       dice = buildSheet(sheetX, sheetY, null, null);
@@ -1517,7 +1558,7 @@ function deal(mode = 'deal') {
     }));
     charBottom = Math.max(charBottom, refY + EL_CARD.h);
     Object.assign(TABLE.players[i], {
-      zones: { concept: conceptSlot, trouble: troubleSlot, boon: boonSlot, bane: baneSlot },
+      zones: { concept: conceptSlot, trouble: troubleSlot, boon: boonSlot, bane: baneSlot, portrait: portraitSlot },
       dice, supply, scored: [], edge: [], scene: [], approachDie, approachDieHome,
       sceneAt: { x: supplyX, y: supplyY },
       scoreAt: { x: scoreX, y: scoreY },
@@ -1562,27 +1603,30 @@ function deal(mode = 'deal') {
 
   // ---- New game: the pool of character cards to choose from ----
   if (fresh) {
+    TABLE.heightWithoutPool = worldSize.h;
     const POOL_TOP = worldSize.h + 50;
     const STEP = PC_CARD.w + 16;
-    // Two of each character card per player (one to play, one spare for its name), the
-    // Relationships for the ring (face up), and one more per player shown
-    // portrait-side up for the portraits. `null` leaves a gap between groups.
+    // Two of each character card per player (one to play, one spare for its name), and the
+    // Relationships, all face up: the ring's first, then the rest flipped over as portraits.
+    // `null` leaves a gap between groups.
     const n = players.length;
-    const ring = relationships.splice(-relationshipCount(n)).map(card => ({ card, faceUp: true }));
-    const faces = relationships.splice(-n).map(card => ({ card, faceUp: false }));
     const up = card => ({ card, faceUp: true });
+    const rels = relationships.splice(-(relationshipCount(n) + n)).map(up);
+    const half = Math.ceil(rels.length / 2);
     const rows = [
-      [...concepts.slice(-2 * n).map(up), null, ...ring],
-      [...troubles.slice(-2 * n).map(up), null, ...faces],
+      [...concepts.slice(-2 * n).map(up), null, ...rels.slice(0, half)],
+      [...troubles.slice(-2 * n).map(up), null, ...rels.slice(half)],
       boons.slice(-2 * n).map(up),
     ];
+    TABLE.pool = [];
     rows.forEach((row, r) => row.forEach((item, c) => {
-      if (item) placePcCard(item.card, 40 + c * STEP, POOL_TOP + r * (PC_CARD.h + 24), item.faceUp);
+      if (item) TABLE.pool.push(placePcCard(item.card, 40 + c * STEP, POOL_TOP + r * (PC_CARD.h + 24), item.faceUp));
     }));
     worldSize.h = POOL_TOP + rows.length * (PC_CARD.h + 24) + 30;
   }
 
   updateSceneBoard(); // now the character badges exist, mark the ones the Scene die favours
+  updateBuild();
 
   // Little "dealt" animation, staggered across the table.
   pieces.forEach((p, i) => {
