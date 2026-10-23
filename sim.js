@@ -572,9 +572,21 @@ function* revealAndGoIn(rows, order, board) {
       const arrows = res => `🔺${RISKS[res].good} 🔻${RISKS[res].bad}`; // +1 with the first approach, −1 with the second
       const pairs = rows.flatMap((a, i) => rows.slice(i + 1).map(b => ({ a, b })));
       const after = (r, risk) => (r.main ? ` · ${r.main.letter}’s best roll ${signed(riskValue(r.main, r, r.risk, board))} → ${signed(riskValue(r.main, r, risk, board))}` : '');
+      // Your row (Main or helping) first, as "Take <its new risk>"; then swaps between the other rows.
+      const mine = rows.find(r => r.main === pl || r.helpers.includes(pl));
+      const take = o => `${resourceLabel(o.risk)} ${arrows(o.risk)}`;
+      const option = ({ a, b }, i) => {
+        if (mine === a || mine === b) {
+          const o = mine === a ? b : a;
+          return { label: `Take ${take(o)}`, hint: `from ${rowTag(o)}${o.main ? ` (${o.main.letter}’s row)` : ''}${mine.main ? ` · ${mine.main === pl ? 'your' : `${mine.main.letter}’s`} best roll then ${signed(riskValue(mine.main, mine, o.risk, board))}` : ''}`, value: i };
+        }
+        const name = r => (r.main ? `${r.main.letter}’s row` : rowLabel(r));
+        return { label: `${name(a)} takes ${take(b)}, ${name(b)} takes ${take(a)}`, hint: `${rowLabel(a)}${after(a, b.risk)} | ${rowLabel(b)}${after(b, a.risk)}`, value: i };
+      };
+      const order2 = pairs.map((pr, i) => ({ pr, i })).sort((x, y) => ((y.pr.a === mine || y.pr.b === mine) - (x.pr.a === mine || x.pr.b === mine)));
       const k = yield ask('Swap two risks?', `<p>You’re last in initiative: you may swap the risks on any two rows, free.</p><p>${rows.map(r => `${rowTag(r)}${r.main ? ` (${r.main.letter})` : ''}: ${resourceLabel(r.risk)} ${arrows(r.risk)}`).join('<br>')}</p>`,
-        [{ label: 'Leave them', hint: 'no swap', value: -1 },
-          ...pairs.map(({ a, b }, i) => ({ label: `Swap ${resourceLabel(a.risk)} ⇄ ${resourceLabel(b.risk)}`, hint: `${rowLabel(a)}${after(a, b.risk)} | ${rowLabel(b)}${after(b, a.risk)}`, value: i }))]);
+        [{ label: mine ? `Keep ${resourceLabel(mine.risk)} ${arrows(mine.risk)}` : 'Leave them', hint: mine && mine.main ? `${mine.main === pl ? 'your' : `${mine.main.letter}’s`} best roll here ${signed(riskValue(mine.main, mine, mine.risk, board))}` : 'no swap', value: -1 },
+          ...order2.map(({ pr, i }) => option(pr, i))]);
       if (k >= 0) pick = pairs[k];
     } else pick = botPairPick(pl, rows, board);
     if (pick) {

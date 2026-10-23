@@ -1606,7 +1606,8 @@ function deal(mode = 'deal') {
     TABLE.heightWithoutPool = worldSize.h;
     const POOL_TOP = worldSize.h + 50;
     const STEP = PC_CARD.w + 16;
-    // Two of each character card per player (one to play, one spare for its name), and the
+    // Two Concepts and two Troubles per player (one to play, one spare for its name), one Asset
+    // each (an Asset has no name card), and the
     // Relationships, all face up: the ring's first, then the rest flipped over as portraits.
     // `null` leaves a gap between groups.
     const n = players.length;
@@ -1616,7 +1617,7 @@ function deal(mode = 'deal') {
     const rows = [
       [...concepts.slice(-2 * n).map(up), null, ...rels.slice(0, half)],
       [...troubles.slice(-2 * n).map(up), null, ...rels.slice(half)],
-      boons.slice(-2 * n).map(up),
+      boons.slice(-n).map(up),
     ];
     TABLE.pool = [];
     rows.forEach((row, r) => row.forEach((item, c) => {
