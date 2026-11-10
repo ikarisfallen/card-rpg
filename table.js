@@ -222,9 +222,11 @@ function animateOnce(piece, cls, ms) {
 
 // ---- Cards ----
 
-function createCard({ className = '', w, h, front, back, faceUp = true, rot = 0, x, y }) {
+// `zoom`: the faces are laid out at (w / zoom) x (h / zoom) and drawn `zoom` times larger.
+function createCard({ className = '', w, h, front, back, faceUp = true, rot = 0, x, y, zoom = 1 }) {
+  const size = zoom === 1 ? '' : ` style="width:${w / zoom}px;height:${h / zoom}px;zoom:${zoom}"`;
   const lift = el('div', null, `
-    <div class="card-inner">
+    <div class="card-inner"${size}>
       <div class="card-face card-front">${front}</div>
       <div class="card-face card-back">${back}</div>
     </div>`);

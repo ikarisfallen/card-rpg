@@ -1538,7 +1538,7 @@ body[data-theme="starwars"] #table {
   font-size: calc(var(--card-text) * 0.75);
   font-weight: 400;
 }
-.situation-card .sit-intro { flex: none; height: 165px; box-sizing: border-box; padding: 8px 12px 6px; /* SIT_CARD.intro */ border-bottom: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.situation-card .sit-intro { flex: none; height: 240px; box-sizing: border-box; padding: 8px 12px 6px; /* SIT_CARD.intro */ border-bottom: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); }
 .situation-card .sit-intro .sit-name { font-size: calc(var(--card-title) * 0.75); }
 .situation-card .sit-escs { justify-content: center; margin-top: 0; padding: 6px 12px 8px; }
 .situation-card .sit-choices { flex: none; height: calc(3 * 104px); } /* 3 x MAT_ROW in deal.js */
@@ -2053,3 +2053,24 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
 .mat-diff { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-right: 8px; }
 .mat-diff-slot { width: 86px; height: 86px; border-radius: 14px; border: 2px dashed rgba(255, 255, 255, 0.4); background: rgba(0, 0, 0, 0.18); }
 .mat-diff-name { font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #ffd25e; } /* like the Edge die's name */
+
+/* Each choice's Risk box: where the round's Risk tile is laid (RISK_TILE in sim.js: 128 x 92, 8px in from the card's edge). */
+.situation-card .sit-risk-slot {
+  width: 128px;
+  height: 92px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 2px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.situation-card .sit-risk-slot span { font-size: 14px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, var(--accent) 60%, transparent); }
+
+/* The Situation's description, large enough to read across the table (the card's top and the Board's
+   banner are 90px taller for it: SIT_CARD.intro, MAT_BANNER). */
+.situation-card .sit-intro .sit-text { font-size: 1.3em; line-height: 1.3; }
+.situation-card .sit-intro .sit-name { font-size: calc(var(--card-title) * 0.95); }
+.mat-goal { font-size: 21px; }
+.mat-goal .mat-sub { font-size: 15px; }
+.mat-scene { font-size: 15px; }

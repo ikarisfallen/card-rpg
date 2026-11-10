@@ -80,19 +80,29 @@ const riskName = risk => (RISKS[risk] ? RISKS[risk].name : risk);
 const PLAYER_COLORS = ['#e0aa1b', '#3a7bd5', '#d64545', '#3fa66b'];
 const RESOURCE_START = 2; // +1 if the Concept names the resource, -1 if the Trouble does (SIM_RULES.resourceStart overrides)
 
-// Character cards (Concept, Trouble, Asset, Liability, Relationship) are the size of a Fate card.
-const PC_CARD = { w: 150, h: 210 };
+// Three card sizes, at 6.4px to the mm (the Board's rows fix the Situation card at 125mm, 797px):
+// small (FFG mini shape, 41:63): Concept, Trouble, Asset, Liability, Relationship, Fate, half an Element
+// card wide, so two side by side (a person's name cards) are exactly as wide as one;
+// medium, playing cards (63 x 88mm): the Elements, the reference and player-count cards;
+// large (88 x 125mm): the Situation and Location. A card's contents are laid out at its design
+// size (..._BASE) and drawn scaled up, so the cards keep their layouts.
+const PX_PER_MM = 797 / 125;
+const PC_CARD = { w: 201, h: Math.round(201 * 63 / 41) }; // 201 x 309: EL_CARD.w / 2 (set below)
+const PC_BASE = { w: 150, h: Math.round(150 * 63 / 41) };
+const PC_ZOOM = PC_CARD.w / PC_BASE.w;
 const DIE_SIZE = 72; // every die on the table: the sheets' resource dice and all the approach dice
 // Element cards: MacGuffin, Ally and Villain side by side, and underneath them the Location:
 // as wide as the Situation card, shaped like an index card (5 x 3), its nine lines in two
 // columns. Text is as large as the Situation card's.
-const EL_CARD = { w: 310, h: Math.round(310 * 88 / 63) }; // wide enough for two name cards side by side; Magic card proportions (63 x 88)
+const EL_CARD = { w: Math.round(63 * PX_PER_MM), h: Math.round(88 * PX_PER_MM) }; // 402 x 561: playing-card size (63 x 88mm)
+const EL_BASE = { w: 310, h: Math.round(310 * 88 / 63) };
+const EL_ZOOM = EL_CARD.w / EL_BASE.w;
 const EL_GAP = 20;
 // The Location card: landscape, in two columns (the title and four lines, then five lines from the top).
 // The Situation card turned landscape (SIT_CARD is set further down, so read it when used).
 const LOC_CARD = { get w() { return SIT_CARD.h; }, get h() { return SIT_CARD.w; } };
 const elSize = kind => (kind === 'location' ? LOC_CARD : EL_CARD);
-const PEEK = 44; // how much of a tucked name card shows above the card it's under
+const PEEK = Math.round(44 * PC_ZOOM); // how much of a tucked name card shows above the card it's under
 const STACK_STEP = PC_CARD.h + 8; // a second Asset / Liability sits right under the first
 
 // ---------------------------------------------------------------------------
@@ -217,7 +227,7 @@ function portraitBack(portrait) {
 
 const FATE_VALUES = [-2, -1, 0, 1, 2];
 const FATE_DECK_SIZE = 30; // 6 of each value per approach
-const FATE_CARD = { w: 150, h: 210 };
+const FATE_CARD = PC_CARD; // small cards
 // Balanced deck (SIM_RULES.fateDeck 'balanced', 2026-10-18): every card shows −2, −1, 0, 0, +1, +2,
 // one per approach, and across each set of 6 cards every approach gets those same six values
 // once each. 24 cards = 4 differently shuffled sets. 'random': the old 30-card deck above, where
@@ -332,7 +342,7 @@ function placePcCard(card, x, y, faceUp = true) {
   back += setTag(card); // the set's name on the back too
   const piece = createCard({
     className: `pc-card kind-${card.kind}`,
-    w, h, x, y, faceUp,
+    w, h, x, y, faceUp, zoom: PC_ZOOM,
     front: pcFront(card),
     back,
   });
@@ -366,7 +376,7 @@ function placeElementCard(card, x, y, faceUp = true) {
   const { w, h } = elSize(card.kind);
   const piece = createCard({
     className: `el-card kind-${card.kind}`,
-    w, h, x, y, faceUp,
+    w, h, x, y, faceUp, zoom: card.kind === 'location' ? 1 : EL_ZOOM,
     front: elementFront(card),
     back: (card.names ? namesBack(card.label, card.names) : plainBack(card.label)) + setTag(card),
   });
@@ -473,7 +483,7 @@ function dealIntoSlot(zone, deck) {
 // Character sheet: three resource columns, two rows. Each resource has a small label (icon, then
 // name) above its box, and a d6 in the box showing the current value. The Concept and Trouble
 // sit side by side above the sheet.
-const SHEET_COL = 110;     // one resource column: the box hugs its die, with room either side
+const SHEET_COL = 134;     // one resource column: wide enough for the Concept and Trouble side by side above
 const SHEET_COLS = [SHEET_COL, SHEET_COL, SHEET_COL];
 // Just the six resources, in two rows. Each resource cell is its label plus a box just taller than
 // the die.
@@ -534,10 +544,10 @@ const matCol = name => MAT_COL_NAMES.indexOf(name);
 // banner fills the card's description and the footer its Escalations, so the rows line up.
 // MAT_TRACKS: the Progress and Round tracks under the banner (level with the card's Setup box);
 // MAT_GUTTER: the Tension gutter under the rows, where the Tension dice and the Clear seat's pawn go.
-const MAT_BANNER = 136, MAT_TRACKS = 120, MAT_HEAD = 26, MAT_ROW = 104, MAT_GUTTER = 112, MAT_PAD = 8;
+const MAT_BANNER = 211, MAT_TRACKS = 120, MAT_HEAD = 26, MAT_ROW = 104, MAT_GUTTER = 112, MAT_PAD = 8;
 // The player-count card stands right of the Board: this player count's numbers, and a reminder of each
 // column's rules (they used to be printed under the Board).
-const COUNT_CARD = { w: 300, h: 470 };
+const COUNT_CARD = EL_CARD; // a medium card
 const MAT_W = MAT_COLS.reduce((a, b) => a + b, 0) + MAT_PAD * 2;
 const MAT_TOP = MAT_PAD + MAT_BANNER + MAT_TRACKS + MAT_HEAD; // where row A starts
 
@@ -671,7 +681,8 @@ function moveTrackMarker(kind, n) {
 // at the bottom.
 // setup: the .sit-setup band, level with the Board's tracks; escs: the Epic Failure outcomes, level with
 // the Tension gutter and the Board's foot.
-const SIT_CARD = { w: 400, border: 5, intro: 165, setup: MAT_TRACKS, escs: MAT_GUTTER + MAT_PAD - 5 }; // intro: the .sit-intro height in style.css
+// Large: 88 x 125mm (h 797, which the Board's rows set). The Location card is the same, turned.
+const SIT_CARD = { w: Math.round(88 * PX_PER_MM), border: 5, intro: 240, setup: MAT_TRACKS, escs: MAT_GUTTER + MAT_PAD - 5 }; // intro: the .sit-intro height in style.css
 SIT_CARD.h = 2 * SIT_CARD.border + SIT_CARD.intro + SIT_CARD.setup + 3 * MAT_ROW + SIT_CARD.escs;
 
 // One size for the A/B/C shapes on the Board and on the Situation card.
@@ -695,7 +706,7 @@ function rowShape(i, size = 34) {
 // the risk (and, with freeApproach, its ✓ / ✗ approaches) is drawn beside the choice instead.
 const APPROACH_AND_RISK = new RegExp(`\\s*(?:(?:${APPROACHES.map(a => noVS16(a) + '\\uFE0F?').join('|')})\\s*)?\\([^)]*\\)\\s*$`, 'u');
 function choiceRiskHtml(risk) {
-  if (SIM_RULES.riskDraw) return '<span class="sit-risk-slot"></span>'; // the round's risk tile lies here
+  if (SIM_RULES.riskDraw) return '<span class="sit-risk-slot"><span>Risk</span></span>'; // a box: the round's Risk tile lies here
   const r = RISKS[risk];
   if (!r) return '';
   // Risks as bonuses: +1 / −1 approaches on the left, the resource and what a failure costs right.
@@ -832,7 +843,6 @@ function situationFront(situation, result = null, words = null) {
       ${result && result.lost ? '<div class="sit-lost">Lost</div>' : ''}
       <div class="sit-name">${esc(situation.name || 'Situation')}</div>
       <div class="sit-text">${madLib(intro, words, seen)}</div>
-      ${SIM_RULES.riskModifier && SIM_RULES.freeApproach ? '<div class="sit-risk-head">Risk</div>' : ''}
     </div>
     <div class="sit-setup">${situationSetupHtml(situation, words, seen)}</div>
     <div class="sit-choices">
@@ -861,7 +871,7 @@ function setOut(token, out) {
 
 // Round board: pawns sit around the ring with their initiative tokens, and each
 // Relationship card sits between the two players it links (W↔X between W and X).
-const REL_BOARD = 720; // room for Fate-card-sized Relationships between the pawns
+const REL_BOARD = 960; // room for the Relationship cards between the pawns
 // The Storyteller token, passed round the table: a two-sided tile above the Storyteller's
 // Liability (tap to flip it). One side lists their jobs each round, the other what to do when a new
 // situation starts. (With SIM_RULES.obstacle, test only, the Obstacle die rests on it.)
@@ -888,7 +898,7 @@ function relationshipBoard(x, y, players, relationships) {
   ring.style.width = ring.style.height = `${REL_BOARD}px`;
   const cx = x + REL_BOARD / 2, cy = top + REL_BOARD / 2;
   const n = players.length;
-  const R = 240;
+  const R = 320;
   const at = (deg, r) => ({ x: cx + r * Math.sin(deg * Math.PI / 180), y: cy - r * Math.cos(deg * Math.PI / 180) });
   const initiative = shuffle(players.map((_, i) => i + 1));
 
@@ -1403,9 +1413,12 @@ function deal(mode = 'deal') {
   // card and Board (the focus, in the middle), and the Relationship wheel. Bottom: the characters.
   const LEFT = 40;
   const LOC = elSize('location');
-  const PEOPLE_W = 2 * EL_CARD.w + EL_GAP;             // the Ally and Villain side by side
-  const OBJ_X = LEFT + Math.max(LOC.w, PEOPLE_W) + EL_GAP; // the Object's column
-  const EL_R = OBJ_X + EL_CARD.w;                       // the Elements' right edge
+  // A person's two name cards (small cards, side by side) overhang their Element card on both sides.
+  const NAME_OVER = Math.max(0, (2 * PC_CARD.w - EL_CARD.w) / 2); // 0: they fit exactly
+  const PEOPLE_GAP = EL_GAP + 2 * NAME_OVER;
+  const PEOPLE_W = NAME_OVER + 2 * EL_CARD.w + PEOPLE_GAP + NAME_OVER; // the Ally and Villain side by side
+  const OBJ_X = LEFT + Math.max(LOC.w, PEOPLE_W) + EL_GAP; // the Object's column (the Fate deck's two piles above it)
+  const EL_R = OBJ_X + Math.max(EL_CARD.w, 2 * FATE_CARD.w + EL_GAP); // the Elements' right edge
   const SIT_X = EL_R + 50;
   const BOARD_X = SIT_X + SIT_CARD.w; // the Board, flush against the Situation card's right edge
   const COUNT_X = BOARD_X + MAT_W + 30; // the player-count card, right of the Board
@@ -1432,8 +1445,8 @@ function deal(mode = 'deal') {
   const PEOPLE_Y = LOC_Y + LOC.h + EL_GAP + PEEK;
   const OBJECT_Y = PEOPLE_Y; // the Object, right of the Villain (the Fate deck is above it)
   const elementAt = deck => (deck === locations ? [LEFT, LOC_Y]
-    : deck === allies ? [LEFT, PEOPLE_Y]
-    : deck === villains ? [LEFT + EL_CARD.w + EL_GAP, PEOPLE_Y]
+    : deck === allies ? [LEFT + NAME_OVER, PEOPLE_Y]
+    : deck === villains ? [LEFT + NAME_OVER + EL_CARD.w + PEOPLE_GAP, PEOPLE_Y]
     : [OBJ_X, OBJECT_Y]);
   // The Location, Villain, Ally and Object share the sets in play out evenly: the sets in a random
   // order, handed round the four kinds (also random), e.g. Object and Ally from one, Location and
@@ -1445,7 +1458,7 @@ function deal(mode = 'deal') {
     if (deck === locations) TABLE.locationSlot = { x: main.x, y: main.y };
     // One name card is centred above the element card; two sit side by side.
     const tucked = namers.map(([nameDeck, placeName]) => tuckNameCard(main, nameDeck, placeName));
-    const GAP = 4;
+    const GAP = 0; // two name cards side by side are exactly an Element card wide
     const rowW = tucked.reduce((sum, t) => sum + t.w, 0) + GAP * (tucked.length - 1);
     let x = (main.w - rowW) / 2;
     tucked.forEach(t => { moveBy(t, x, 0); x += t.w + GAP; });
@@ -1479,7 +1492,7 @@ function deal(mode = 'deal') {
   TABLE.sceneNoteEl = document.querySelector('.mat .mat-scene');
   TABLE.cell = cell;
   TABLE.countCard = createCard({
-    className: 'count-card', w: COUNT_CARD.w, h: COUNT_CARD.h, x: COUNT_X, y: ROW2,
+    className: 'count-card', w: COUNT_CARD.w, h: COUNT_CARD.h, x: COUNT_X, y: ROW2, zoom: EL_ZOOM,
     front: countCardHtml(Math.min(PLAYER_COUNT, DATA.players.length)), back: plainBack('Players'),
   });
   // The Difficulty die, top right of the Board: set from the player-count card at each act's setup,
@@ -1526,14 +1539,14 @@ function deal(mode = 'deal') {
     accepts: 'fate', faceDown: true, x: FX, y: FY, w: FATE_CARD.w, h: FATE_CARD.h,
     el: zoneOutline(FX, FY, FATE_CARD.w, FATE_CARD.h, 'Draw'),
   });
-  const discardX = FX + EL_CARD.w - FATE_CARD.w;
+  const discardX = FX + FATE_CARD.w + EL_GAP;
   const discardZone = addZone({
     accepts: 'fate', x: discardX, y: FY, w: FATE_CARD.w, h: FATE_CARD.h,
     el: zoneOutline(discardX, FY, FATE_CARD.w, FATE_CARD.h, 'Discard'),
   });
   buildFateDeck().forEach(card => {
     const piece = createCard({
-      className: 'fate-card', w: FATE_CARD.w, h: FATE_CARD.h, x: FX, y: FY, faceUp: false,
+      className: 'fate-card', w: FATE_CARD.w, h: FATE_CARD.h, x: FX, y: FY, faceUp: false, zoom: PC_ZOOM,
       front: fateFront(card), back: plainBack('Fate'),
     });
     piece.cardKind = 'fate';
@@ -1560,7 +1573,7 @@ function deal(mode = 'deal') {
   // Situation card's act tabs (up to two lines of them) and the wheel. A player's badge sits 42
   // above PC_TOP, the Storyteller token above that.
   const topBottom = Math.max(PEOPLE_Y + EL_CARD.h + 10, SIT_Y + SIT_CARD.h + 12 + 90, 12 + 18 + REL_BOARD);
-  const PC_TOP = Math.ceil(topBottom + 26 + 175); // room for each player's portrait and counters above their area
+  const PC_TOP = Math.ceil(topBottom + 26 + Math.max(175, PC_CARD.w + 40)); // room for each player's portrait and counters above their area
   // Where each player's area starts: four fill the top row's width, edge to edge, evenly
   // spaced; two or three are centred under it with equal space between and around them.
   const AREA_W = BLOCK_W - 30, ROW_W = TOP_R - LEFT, n = players.length;
@@ -1674,7 +1687,7 @@ function deal(mode = 'deal') {
     const refY = Math.max(boonTop + STACK_STEP + PC_CARD.h, sheetY + SHEET_H + 10) + 24;
     const refX = bx + (AREA_W - 2 * EL_CARD.w - EL_GAP) / 2;
     [true, false].forEach((up, k) => createCard({
-      className: 'ref-card', w: EL_CARD.w, h: EL_CARD.h, x: refX + k * (EL_CARD.w + EL_GAP), y: refY, faceUp: up,
+      className: 'ref-card', w: EL_CARD.w, h: EL_CARD.h, x: refX + k * (EL_CARD.w + EL_GAP), y: refY, faceUp: up, zoom: EL_ZOOM,
       front: refRoundSide(), back: refRollSide(),
     }));
     charBottom = Math.max(charBottom, refY + EL_CARD.h);
