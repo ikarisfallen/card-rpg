@@ -164,6 +164,35 @@ window.LOTR_DATA = (() => {
         approaches: ['🕶️', '🐢', '💪'],
         risks: ['ℹ️', '📏', '🔥'],
       },
+      // Discovery, Clock and Hold Situations (2026-11-10): see situationSetupHtml in deal.js.
+      {
+        name: 'Beginning: The stranger at the inn',
+        family: 'discovery',
+        shapes: { '●': '😇, keeping watch over you', '▲': 'a spy for 👿', '■': 'a harmless old drunk' },
+        key: '😇🔒',
+        description: 'Rain on the shutters at 🏠. Three hooded figures sit in the corners, and one of them has been watching you since you came in.\nA) I buy the nearest one a drink and listen 🕶️ (ℹ️)\nB) I make a scene to see who flinches 📢 (⭐)\nC) I slip outside and watch who leaves ⚡ (⌛)',
+        escalations: ['A note changes hands under a table ➖🧠', 'Someone says your real name out loud ➖📢'],
+        approaches: ['🕶️', '📢', '⚡'],
+        risks: ['ℹ️', '⭐', '⌛'],
+      },
+      {
+        name: 'Middle: The door at moonrise',
+        family: 'clock',
+        key: '🕳️',
+        description: 'The hidden door into 🏠 only shows itself by tonight’s moonlight, and the moon is setting. Below you, something stirs in the 🕳️.\nA) I read the moon-runes on the rock 🧠 (ℹ️)\nB) I hold off the wolves coming up the slope 💪 (🔥)\nC) I find the keyhole when the light catches it 🐢 (📏)',
+        escalations: ['Clouds cover the moon ➖🕶️', 'The wolves find the path ➖💪'],
+        approaches: ['🧠', '💪', '🐢'],
+        risks: ['ℹ️', '🔥', '📏'],
+      },
+      {
+        name: 'Middle: Hold the wall',
+        family: 'hold',
+        key: '🧱',
+        description: 'Night falls on 🏠, and 👿’s army is at the 🧱. Hold until dawn, when 😇 comes.\nA) I brace the gate with everything we have 💪 (🔥)\nB) I go down into the tunnels and stop the sappers 🕶️ (ℹ️)\nC) I rally the defenders on the walls 📢 (⭐)',
+        escalations: ['The wall is breached', 'Ladders go up everywhere at once'],
+        approaches: ['💪', '🕶️', '📢'],
+        risks: ['🔥', 'ℹ️', '⭐'],
+      },
       // Track Situations (2026-11-10): every row pushes one Progress marker; see situationSetupHtml in deal.js.
       {
         name: 'Middle: Riders at the ford',

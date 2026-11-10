@@ -2044,6 +2044,10 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
 .count-card .mini-tok { width: 15px; height: 15px; font-size: 8px; vertical-align: -3px; color: #222; }
 
 .token.track-marker.parked { opacity: 0.35; }
+/* Discovery's shape tokens: face down (?), then turned over to ● ▲ ■. */
+.token.shape-token .lift { font: 900 22px "Segoe UI", system-ui, sans-serif; color: #fff; border: 3px solid #fff;
+  background: repeating-linear-gradient(45deg, #36325e 0 7px, #2a2650 7px 14px); }
+.token.shape-token.up .lift { background: #f4e3b0; color: #3b3a5c; }
 
 /* The Difficulty die's spot, top right of the Board's banner. */
 .mat-diff { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-right: 8px; }

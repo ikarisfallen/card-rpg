@@ -579,6 +579,8 @@ function countCardHtml(players) {
       ${heal ? row('Resources back', a => (a === acts[0] ? '—' : `+${heal}`)) : ''}
       ${row(SIM_RULES.actWinBonusAs === 'storyPoints' ? 'Winner’s Story Pts' : 'Win bonus', a => `${bonus[a].main}`)}
       <tr><th>Track start</th><td colspan="${acts.length}">${playerRule('trackStart', players)}</td></tr>
+      <tr><th>Clock: stack · rounds</th><td colspan="${acts.length}">${playerRule('clockStack', players)} · ${playerRule('clockRounds', players)}</td></tr>
+      <tr><th>Hold: stack · rounds · attack</th><td colspan="${acts.length}">${playerRule('holdStack', players)} · ${playerRule('holdRounds', players)} · ${playerRule('holdDrain', players)}</td></tr>
     </table>
     <div class="cc-notes">${['main', 'approach', 'help', 'edge', 'successes'].filter(c => MAT_COL_NAMES.includes(c)).map(note).join('')}
       <div class="cc-note"><b>Tension</b> −1 to its approach${SIM_RULES.minusNextRound ? ' from next round' : ''} · ${SIM_RULES.maxEscalations} out: an Epic Failure loses · <b>Clear seat</b>: remove a die, +1 Story Point</div>
@@ -783,6 +785,21 @@ function situationSetupHtml(situation, words = null, seen = new Set()) {
   const n = supportersFor(situation);
   const why = situation.supportWhy ? madLib(situation.supportWhy, words, seen) : 'you each find your own way in';
   const support = n === 1 ? `<b>1 supporter per row:</b> ${why}.` : n ? `<b>Up to ${n} supporters per row.</b>` : '<b>Any number of supporters.</b>';
+  const winLose = (win, lose) => `<span class="sit-winlose"><b class="win">Win:</b> ${win} · <b class="lose">Lose:</b> ${lose}</span>`;
+  const tension = `an Epic Failure with ${SIM_RULES.maxEscalations} Tension dice out`;
+  if (familyOf(situation) === 'clock') {
+    return `<b class="sit-family">⏳ Clock</b> Each row: the <b>Clock stack</b>. Empty <b>every</b> row before the <b>Clock rounds</b> run out (both on the player-count card); an emptied row closes. ${support}
+      ${winLose('every row empty (whoever empties the last one wins the act)', `time runs out, or ${tension}`)}`;
+  }
+  if (familyOf(situation) === 'hold') {
+    return `<b class="sit-family">🛡 Hold</b> Each row starts with the <b>Hold stack</b>. After each round the enemy takes the <b>Hold attack</b> from the weakest row (both on the player-count card). A success puts 1 back, and the Lead takes 1 spotlight from the scene pool (9). An Epic Failure: read one below (no Tension). ${support}
+      ${winLose('last the <b>Hold rounds</b>: everyone takes 1 Story Point', 'a row is emptied')}`;
+  }
+  if (familyOf(situation) === 'discovery') {
+    const say = shape => madLib((situation.shapes || {})[shape] || '', words, seen);
+    return `<b class="sit-family">❓ Discovery</b> A shape lies face down under each row’s stack; empty the row to turn it over. <b>●</b> ${say('●')} · <b>▲</b> ${say('▲')}: an Epic Failure · <b>■</b> ${say('■')}. ${support}
+      ${winLose('turn over the ●', tension)}`;
+  }
   if (familyOf(situation) === 'track') {
     const t = trackSetup(situation);
     const end = k => (t.labels && t.labels[k] ? ` (${madLib(t.labels[k], words, seen)})` : '');

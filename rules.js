@@ -229,6 +229,14 @@ const SIM_RULES = {
   sharedCost: false,   // TEST 2026-11-09: a success bought with Story Points or a pushed resource costs every helper 1 of the row's resource
   sharedMiss: false,   // TEST 2026-11-09: a tie or a miss costs everyone on the row 1 of the row's resource
   sharedFailure: false, // TEST 2026-11-09: on an Epic Failure every helper on the row draws a Liability too
+  clockStack: 2,      // Clock Situations: each row's stack; every row must be emptied...
+  clockRounds: 5,     // ...within this many rounds (per player count below; on the player-count card)
+  holdStack: 3,       // Hold Situations: each row's stack at the start
+  holdFailCost: false, // ...true: an Epic Failure costs its row a token too (made Hold far too hard: 15-35% won)
+  // 2026-11-10 sim (the Middle won, 35 games each): Clock stack 2 · rounds 6/5/4 → 2p 74%, 3p 77%, 4p 91%
+  // (4p 3 rounds: 49%); Hold 5 rounds, attack 1, stack 4/4/3 → 2p 77%, 3p 69%, 4p 77%.
+  holdRounds: 5,      // Hold Situations: last this many rounds...
+  holdDrain: 1,       // ...while the enemy takes this many tokens from the weakest row after each round
   trackStart: 3,      // Track Situations: where the Progress marker starts, on the player-count card. 2026-11-10 sim (Track
                       // Middle won, 50-60 games): 2p 3 → 68% (4: 86%), 3p 2 → 86% (1: 63%, 3: 92%), 4p 1 → 74% (2: 96%)
   maxHelpers: 0,      // supporters a row can take (0 = no limit). Any number since 2026-11-10 (1 from 2026-10-22);
@@ -252,6 +260,7 @@ function hasStoryteller() { return !!(SIM_RULES.obstacle || SIM_RULES.riskDraw);
 const PLAYER_COUNT_RULES = {
   // 2 players: a tougher finale (difficulty 4) softened by 2 Edge, since there was no Edge left to cut.
   2: {
+    clockRounds: 6, holdStack: 4,
     target: { 'Beginning': 2, 'Middle': 3, 'Ending': 3 },
     difficulty: { 'Beginning': 1, 'Middle': 3, 'Ending': 3 },
     extraMiddleEdge: 3, // long games: 3 Story Points at Middle 2, 3, ... (1 wasn't enough at 2 players)
@@ -261,11 +270,11 @@ const PLAYER_COUNT_RULES = {
     // Obstacle: two players start the Ending with plenty of Edge the 2-per-roll limit kept unused).
   },
   3: {
-    trackStart: 2,
+    trackStart: 2, clockRounds: 5, holdStack: 4,
     target: { 'Beginning': 3, 'Middle': 4, 'Ending': 5 },
     edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 0 }, // 1 Story Point to start the game (2026-10-21), none at later acts
   },
-  4: { trackStart: 1, target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 0 } }, // 1 Story Point to start the game (2026-10-21), none at later acts
+  4: { trackStart: 1, clockRounds: 4, target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 0 } }, // 1 Story Point to start the game (2026-10-21), none at later acts
 };
 
 // Story Points (called Edge in the code): "1 Story Point", "2 Story Points".

@@ -696,13 +696,40 @@ function botBetRow(pl, rows, board, difficulty, isLast, recovered) {
   if (free.length && (mine >= 0 || !helpable.length || pol.help === 'never')) {
     // The row closest to finishing (a success there counts most), and, when its Risk is showing, the
     // best roll it offers; ties at random.
-    const row = free.map(r => ({ r, v: r.tokens.length + (r.riskHidden || !r.risk ? 0 : riskValue(pl, r, r.risk, board)) + Math.random() * 0.5 })).reduce((a, b) => (b.v > a.v ? b : a)).r;
+    const row = free.map(r => ({ r, v: rowPull(r) + (r.riskHidden || !r.risk ? 0 : riskValue(pl, r, r.risk, board)) + Math.random() * 0.5 })).reduce((a, b) => (b.v > a.v ? b : a)).r;
     return betMain(pl, row, board, difficulty, recovered, 0, null);
   }
   if (helpable.length && pol.help !== 'never') return betHelp(pl, helpable.reduce((a, b) => (b.tokens.length > a.tokens.length ? b : a)), recovered);
   if (seatFree && pol.clear !== 'never') return takeClearSeat(pl, rows, board, recovered);
   return passTurn(pl, recovered);
 }
+
+// How much a bot wants to be Lead on a row: the row closest to finishing, or (Hold) the weakest one.
+const rowPull = r => (TABLE.family === 'hold' ? 2 * ((TABLE.target || 3) - stackOf(r).length) : r.tokens.length);
+const stackOf = r => TABLE.rows[r.index].stack || (TABLE.rows[r.index].stack = []);
+
+// Discovery: three shape tokens, shuffled face down, one under each row's stack.
+function placeShapeTokens(rows) {
+  removeShapeTokens();
+  const shapes = shuffle(['●', '▲', '■']);
+  TABLE.shapeTokens = rows.map((r, i) => {
+    const at = cellSpot(r, COL.successes, 50, 50, -36, 26);
+    const t = createToken({ className: 'shape-token', size: 50, html: '<span>?</span>', x: at.x, y: at.y });
+    r.hiddenShape = shapes[i];
+    return t;
+  });
+}
+function revealShape(row) {
+  const t = TABLE.shapeTokens && TABLE.shapeTokens[row.index];
+  row.shape = row.hiddenShape;
+  if (t) { t.lift.innerHTML = `<span>${row.shape}</span>`; t.el.classList.add('up'); pulse(t); }
+  return row.shape;
+}
+function removeShapeTokens() {
+  (TABLE.shapeTokens || []).forEach(removePiece);
+  TABLE.shapeTokens = null;
+}
+const shapeMeaning = (situation, shape) => (situation.shapes && situation.shapes[shape]) || { '●': 'what you came for', '▲': 'a trap', '■': 'nothing' }[shape];
 
 // Clearing a Minus die: remove the chosen one (bots take the one that hurts the most rows), and
 // reward the player who gave up their bet for it with 1 Edge and SIM_RULES.clearSpotlight
@@ -786,7 +813,7 @@ function setSituation(situation) {
   TABLE.family = familyOf(situation);
   TABLE.maxHelpers = supportersFor(situation);
   const goal = document.querySelector('.mat-goal > div:first-child');
-  if (goal) goal.textContent = TABLE.family === 'track' ? 'Push the Progress marker to the goal' : 'The successes in the table win a row';
+  if (goal) goal.textContent = { track: 'Push the Progress marker to the goal', clock: 'Empty every row before time runs out', hold: 'Hold every row until the last round', discovery: 'Empty rows to turn their shapes over: find the ●' }[TABLE.family] || 'The successes in the table win a row';
   const card = TABLE.situationCard;
   drawSituation(card, situation);
   setFaceUp(card, true);
@@ -926,7 +953,9 @@ function* playSituation(situation, act, label = act) {
   renderActTabs();
   const difficulty = playerRule('difficulty')[act] ?? 1;
   if (TABLE.difficultyDie) { setDieValue(TABLE.difficultyDie, difficulty); pulse(TABLE.difficultyDie); } // set from the player-count card
-  const target = actTarget(act);
+  const fam = TABLE.family;
+  // Clock and Hold Situations set their own stacks on the card; the others use the act's.
+  const target = fam === 'clock' || fam === 'hold' ? (situation.setup && situation.setup.stack) || playerRule(fam === 'hold' ? 'holdStack' : 'clockStack') : actTarget(act);
   TABLE.target = target; // for the bots' reckoning during this act
 
   // Later acts hand everyone some Edge to face the higher difficulty.
@@ -949,27 +978,35 @@ function* playSituation(situation, act, label = act) {
   TABLE.players.forEach(pl => glide(pl.pawn, pl.pawnHome.x, pl.pawnHome.y)); // a new situation: pawns that stayed on a row come home
   // Track Situations: no stacks; the Progress marker starts on the card's number and the scene pool
   // holds the spotlight successes take. Others: a stack of `target` on every row.
-  const track = TABLE.family === 'track' ? trackSetup(situation) : null;
+  const track = fam === 'track' ? trackSetup(situation) : null;
   if (track) {
     clearSuccessStacks();
     board.progress = track.start;
     TABLE.trackGoal = track.goal;
     TABLE.scenePool = track.pool;
   } else if (SIM_RULES.takeSpotlight) fillSuccessStacks(target);
+  if (fam === 'hold') TABLE.scenePool = (situation.setup && situation.setup.pool) || 9;
+  if (fam === 'discovery') placeShapeTokens(rows);
   moveTrackMarker('progress', track ? track.start : null);
+  // Clock: every row emptied in time; Hold: last the rounds. Both on the player-count card.
+  const lastRound = fam === 'clock' ? playerRule('clockRounds') : fam === 'hold' ? playerRule('holdRounds')
+    : SIM_RULES.roundLimit != null ? target + SIM_RULES.roundLimit : SIM_RULES.maxRounds;
+  const famNote = track ? `A <b>Track</b> situation: every success pushes the Progress marker (on ${track.start}) towards <b>${track.goal}</b>; an Epic Failure pushes it back, and at 0 it’s lost.`
+    : fam === 'clock' ? `A <b>Clock</b> situation: empty <b>every</b> row (${target} tokens each) within <b>${lastRound}</b> rounds.`
+    : fam === 'hold' ? `A <b>Hold</b> situation: each row starts with ${target}. Last <b>${lastRound}</b> rounds: each round the enemy takes ${playerRule('holdDrain')} from the weakest row, and a success puts one back. Lose a row and it’s lost.`
+    : fam === 'discovery' ? `A <b>Discovery</b> situation: a shape lies face down under each row’s stack (${target}). Empty a row to turn it over, and find the <b>●</b>.`
+    : `Get <b>${target}</b> successes on one row to defeat it.`;
   if (TABLE.sceneRow) returnSceneDie(TABLE.sceneRow);    // the last situation's Scene die, back on the banner
   let escalations = 0;
   let lost = false;
 
   yield {
     title: `${label}: ${situation.name.replace(/^(Beginning|Middle|Ending|Act [IV]+):\s*/, '')}`,
-    html: `${newPlace}<p>Difficulty <b>${difficulty}</b>. ${track ? `A <b>Track</b> situation: every success pushes the Progress marker (on ${track.start}) towards <b>${track.goal}</b>; an Epic Failure pushes it back, and at 0 it’s lost.` : `Get <b>${target}</b> successes on one row to defeat it.`} ${TABLE.maxHelpers === 1 ? '1 supporter per row.' : TABLE.maxHelpers ? `Up to ${TABLE.maxHelpers} supporters per row.` : 'Any number of supporters.'}</p>${edgeNote}
+    html: `${newPlace}<p>Difficulty <b>${difficulty}</b>. ${famNote} ${TABLE.maxHelpers === 1 ? '1 supporter per row.' : TABLE.maxHelpers ? `Up to ${TABLE.maxHelpers} supporters per row.` : 'Any number of supporters.'}</p>${edgeNote}
       <p>${SIM_RULES.riskDraw ? 'Each round the Storyteller draws the rows’ risks from the bag.' : `Rows: ${rows.map(r => `${rowTag(r)} (risks ${resourceLabel(r.risk)})`).join(' · ')}`}</p>
       <p class="sim-quote">${narrationFor(situation.description.split('\n').map(l => l.replace(/^\s*[ABC]\)\s*/, '– ').replace(APPROACH_AND_RISK, '')).join('\n'))}</p>`,
   };
 
-  // SIM_RULES.roundLimit (test): the situation is lost after its stack + this many rounds.
-  const lastRound = SIM_RULES.roundLimit != null ? target + SIM_RULES.roundLimit : SIM_RULES.maxRounds;
   for (let round = 1; round <= lastRound; round++) {
     rows.forEach(r => { r.main = null; r.helpers = []; r.invoke = null; r.stake = []; r.hits = []; r.troubleEdge = []; });
     moveTrackMarker('round', round);
@@ -996,13 +1033,14 @@ function* playSituation(situation, act, label = act) {
     yield {
       title: `Round ${round}: place your bets`,
       html: `<p>In initiative order: ${order.map(who).join(', ')}.</p>
-        <p>Board: ${track ? `Progress <b>${board.progress}</b> of ${track.goal}` : rows.map(r => `${rowTag(r)} ${r.tokens.length}/${target}`).join(' · ')}${board.minus.length ? ` · Minus box: <b>${minusList(board)}</b>` : ''}${board.obstacle ? ` · Obstacle: <b>➖${board.obstacle.approach}</b> on ${rowTag(rows[board.obstacle.row])}` : ''}</p>`,
+        <p>Board: ${track ? `Progress <b>${board.progress}</b> of ${track.goal}` : rows.map(r => `${rowTag(r)} ${fam === 'hold' ? `${stackOf(r).length} left` : `${r.tokens.length}/${target}`}${r.closed ? ` (${r.shape || 'done'})` : ''}`).join(' · ')}${fam === 'clock' || fam === 'hold' ? ` · round ${round} of ${lastRound}` : ''}${board.minus.length ? ` · Minus box: <b>${minusList(board)}</b>` : ''}${board.obstacle ? ` · Obstacle: <b>➖${board.obstacle.approach}</b> on ${rowTag(rows[board.obstacle.row])}` : ''}</p>`,
     };
 
     for (const [k, pl] of order.entries()) {
       if (rows.some(r => r.main === pl)) continue; // holding their place (keepOnSuccess)
-      if (pl.human) yield* humanBet(pl, rows, board, difficulty);
-      else yield bet(pl, rows, board, difficulty, k === order.length - 1);
+      const open = rows.filter(r => !r.closed);
+      if (pl.human) yield* humanBet(pl, open, board, difficulty);
+      else yield bet(pl, open, board, difficulty, k === order.length - 1);
     }
     if (SIM_RULES.riskDraw) yield* revealAndGoIn(rows, order, board);
     yield* troublePhase(rows, order, board, difficulty, target);
@@ -1111,14 +1149,34 @@ function* playSituation(situation, act, label = act) {
         if (TABLE.swapStats) TABLE.swapStats.danger = (TABLE.swapStats.danger || 0) + 1;
       }
       if (crowd && TABLE.swapStats) TABLE.swapStats.crowded = (TABLE.swapStats.crowded || 0) + 1;
-      if (track && step.failed && !board.over) {
+      let trapped = false; // Discovery: the ▲ turned over is as bad as an Epic Failure
+      if ((fam === 'clock' || fam === 'discovery') && !row.closed && row.tokens.length >= target) {
+        row.closed = true;
+        row.keeper = null;
+        if (fam === 'discovery') {
+          const found = revealShape(row);
+          step.html += `<p><b>${who(row.main)} empties the row and turns its shape over: ${row.shape}</b> — ${narrationFor(shapeMeaning(situation, row.shape))}.</p>`;
+          if (row.shape === '●') board.found = row;
+          else if (row.shape === '▲') { trapped = true; step.html += `<p>${who(row.main)} picks an Epic Failure outcome.</p>`; }
+          else step.html += '<p>Nothing more here: this row is done.</p>';
+          void found;
+        } else step.html += `<p>${rowTag(row)} is done: no more bets on it.</p>`;
+      }
+      if (fam === 'hold' && step.failed && !board.over) {
+        const pick = yield* chooseEscalation(row.main, situation, board);
+        const text = situation.escalations[pick ?? 0] || '';
+        const t = SIM_RULES.holdFailCost ? stackOf(row).pop() : null; // holdFailCost: the row loses a token too
+        if (t) returnToPool(t);
+        step.html += `<p class="sim-quote"><b>Epic Failure${pick !== null ? ` (${who(row.main)}’s choice)` : ''}:</b> ${narrationFor(text)}</p>${t ? `<p>${rowTag(row)} loses a token: <b>${stackOf(row).length}</b> left.</p>` : ''}`;
+        if (!stackOf(row).length) { lost = true; step.html += '<p><b>The row falls: the situation is lost.</b></p>'; }
+      } else if (track && step.failed && !board.over) {
         const pick = yield* chooseEscalation(row.main, situation, board);
         const text = situation.escalations[pick ?? 0] || '';
         board.progress = Math.max(0, board.progress - 1);
         moveTrackMarker('progress', board.progress);
         step.html += `<p class="sim-quote"><b>Epic Failure${pick !== null ? ` (${who(row.main)}’s choice)` : ''}:</b> ${narrationFor(text)}</p><p>The Progress marker slips back to <b>${board.progress}</b>.</p>`;
         if (board.progress <= 0) { lost = true; step.html += '<p><b>The marker reaches 0: the situation is lost.</b></p>'; }
-      } else if (step.failed || (danger && !SIM_RULES.crowdSetback)) {
+      } else if (step.failed || trapped || (danger && !SIM_RULES.crowdSetback)) {
         if (SIM_RULES.oneEscalationPerSpin && escalatedThisSpin) {
           step.html += '<p>The situation already escalated on this Fate card, so no new Escalation.</p>';
         } else if (board.minus.length < SIM_RULES.maxEscalations) { // room in the Minus box
@@ -1139,7 +1197,9 @@ function* playSituation(situation, act, label = act) {
         }
       }
       // The first row to complete the situation (with afterWin 'safe', the danger passes for the rest).
-      if (!firstWon && (track ? board.progress >= track.goal : row.tokens.length >= target)) {
+      const finishedNow = track ? board.progress >= track.goal : fam === 'clock' ? rows.every(r => r.tokens.length >= target)
+        : fam === 'discovery' ? board.found === row : fam === 'hold' ? false : row.tokens.length >= target;
+      if (!firstWon && finishedNow) {
         firstWon = row;
         if (SIM_RULES.afterWin === 'safe' && rollOrder.some(r => r.main && rollOrder.indexOf(r) > rollOrder.indexOf(row))) {
           board.over = true;
@@ -1153,7 +1213,7 @@ function* playSituation(situation, act, label = act) {
       // keepOnSuccess: after a success, the Lead chooses whether their pawn stays on the row
       // (they're Lead there again next round, without betting) or goes back to the wheel.
       row.keeper = null;
-      if (SIM_RULES.keepOnSuccess && /: (Epic )?Success$/.test(step.title) && !firstWon) { // (not once the situation is finished)
+      if (SIM_RULES.keepOnSuccess && /: (Epic )?Success$/.test(step.title) && !firstWon && !row.closed) { // (not once the situation is finished, or on a closed row)
         const stay = row.main.human
           ? yield ask('Stay on this row?', `<p>Your roll on ${rowTag(row)} succeeded. Leave your pawn there, to be Lead on it again next round without betting? (Its Risk is drawn again, face down, like the others.) Or take it back to the wheel and bet as usual.</p>`,
             [{ label: 'Stay on the row', hint: 'Lead here again next round', value: true }, { label: 'Back to the wheel', hint: 'bet as usual next round', value: false }])
@@ -1198,8 +1258,29 @@ function* playSituation(situation, act, label = act) {
       board.clearer = null;
     }
 
+    // ---- Hold: the enemy attacks the weakest row; last the rounds and the situation is held ----
+    if (fam === 'hold' && !lost) {
+      const took = [];
+      for (let i = 0; i < playerRule('holdDrain'); i++) {
+        const weakest = rows.reduce((a, b) => (stackOf(b).length < stackOf(a).length ? b : a));
+        const t = stackOf(weakest).pop();
+        if (t) { returnToPool(t); took.push(weakest); }
+      }
+      const fallen = rows.find(r => !stackOf(r).length);
+      yield { title: 'The enemy attacks', html: `<p>The Storyteller takes ${took.length} from the weakest row${took.length > 1 ? 's' : ''}: ${took.map(rowTag).join(', ')}. Left: ${rows.map(r => `${rowTag(r)} ${stackOf(r).length}`).join(' · ')}.</p>${fallen ? `<p><b>${rowTag(fallen)} falls: the situation is lost.</b></p>` : ''}` };
+      if (fallen) lost = true;
+      else if (round === lastRound) {
+        entry.result = { row: -1, name: 'Everyone', color: '#6b7f6b', letter: '', winners: [] };
+        showAct(TABLE.history.length - 1);
+        const got = TABLE.players.filter(pl => gainEdge(pl));
+        yield { title: 'They held!', html: `<p>${lastRound} rounds, and nothing fell: the situation is won, by everyone together. ${got.length ? `${got.map(who).join(', ')} take${got.length > 1 ? '' : 's'} 1 Story Point.` : ''}</p><p>Totals: ${TABLE.players.map(pl => `${who(pl)} ${pl.score}`).join(' · ')}</p>` };
+        yield endSituation(rows, board);
+        return;
+      }
+    }
+
     // ---- Did it end? ----
-    const won = firstWon || rows.find(r => r.tokens.length >= target);
+    const won = firstWon || (fam === 'parallel' ? rows.find(r => r.tokens.length >= target) : null);
     if (won) {
       const hero = won.main;
       // Everyone who finished a row this round shares the win (SIM_RULES.shareActWin).
@@ -1242,7 +1323,7 @@ function* playSituation(situation, act, label = act) {
       const others = finishers.filter(r => r !== won).map(r => SIM_RULES.shareActBonus === false ? [r, '', 0] : [r, dogNote(r.main), award(r.main, winBonus(r.main))]);
       yield {
         title: 'Situation defeated!',
-        html: `<p>${track ? `${who(hero)} pushes the Progress marker to <b>${track.goal}</b>` : `${rowTag(won)} reached ${reached}/${target}`}. ${SIM_RULES.scoreAtOnce ? 'Spotlight taken this act' : 'Every spotlight token on the board is scored'}:</p>
+        html: `<p>${track ? `${who(hero)} pushes the Progress marker to <b>${track.goal}</b>` : fam === 'discovery' ? `${who(hero)} turns over the <b>●</b>: ${narrationFor(shapeMeaning(situation, '●'))}` : fam === 'clock' ? `${who(hero)} empties the last row, with time to spare` : `${rowTag(won)} reached ${reached}/${target}`}. ${SIM_RULES.scoreAtOnce ? 'Spotlight taken this act' : 'Every spotlight token on the board is scored'}:</p>
           <p>${scored}</p><p>Totals: ${TABLE.players.map(pl => `${who(pl)} ${pl.score}`).join(' · ')}</p>
           ${bonus ? (star === hero
             ? `<p>${who(hero)} finished it, and takes a <b>${bonusWords(bonus)}</b> for winning ${act}${starDog}${helperBonus.length ? `; ${helperBonus.map(([h, n]) => `${who(h)} banks ${n} for supporting`).join(', ')}` : ''}.</p>`
@@ -1696,7 +1777,7 @@ function* humanBet(pl, rows, board, difficulty) {
     ];
     const status = `<p>You have <b>${pl.edge.length}</b> Story Points and <b>${pl.score}</b> scored spotlight${bane ? `, and you carry the Liability ${baneName(bane)}` : ''}. Difficulty <b>${difficulty}</b>.</p>`;
     const [what, i] = yield ask(`Your bet, ${pl.info.name}`, `${recovered}${status}<p>Where does your pawn go?</p>`, opts);
-    const row = rows[i];
+    const row = rows.find(r => r.index === i); // by row number: closed rows aren't in the list
     if (what === 'shake') { recovered += shakeOffBane(pl, bane); continue; }
     if (what === 'recover') { recovered += recoverResource(pl, i); continue; }
     if (what === 'main') {
@@ -2041,6 +2122,22 @@ function resolveRow(row, fate, difficulty, target, board) {
       title: `${rowLabel(row)}: ${outcomeOf(margin).name}`,
       html: `${attempt}<p>${sum}. <b>Beats it by ${margin}: ${outcomeOf(margin).name === 'Epic Success' ? 'an Epic Success' : 'a Success'}.</b></p>
         <p>The Progress marker moves from ${was} to <b>${board.progress}</b>. ${took ? `${who(main)} takes 1 spotlight from the scene pool (${TABLE.scenePool} left)` : 'The scene pool is empty: no spotlight'}${paid.length ? `; ${paid.map(([h, k]) => `${who(h)} takes ${storyPts(k)}`).join(', ')}` : ''}.</p>${boonNote}`,
+    };
+  }
+
+  if (margin > 0 && TABLE.family === 'hold') {
+    const stack = stackOf(row);
+    let back = 0;
+    if (stack.length < target) { const t = TABLE.pool.pop(); if (t) { const at = successSpot(row.index, stack.length, target); glide(t, at.x, at.y); stack.push(t); back = 1; } }
+    let took = 0;
+    if (TABLE.scenePool > 0) { const t = TABLE.pool.pop(); if (t) { bankToken(main, t); main.roundGain = (main.roundGain || 0) + 1; TABLE.scenePool--; took = 1; } }
+    const each = SIM_RULES.helperPay === 'points' ? 2 : 1;
+    const paid = row.helpers.map(h => [h, Array.from({ length: each }).filter(() => gainEdge(h)).length]).filter(([, k]) => k);
+    const boonNote = (SIM_RULES.boonsEarned || SIM_RULES.boonUpgrades) && margin >= SIM_RULES.boonMargin ? giveBoon(main, board.rows || []) : '';
+    return {
+      title: `${rowLabel(row)}: ${outcomeOf(margin).name}`,
+      html: `${attempt}<p>${sum}. <b>Beats it by ${margin}: ${outcomeOf(margin).name === 'Epic Success' ? 'an Epic Success' : 'a Success'}.</b></p>
+        <p>${back ? `A token goes back on ${rowTag(row)}: <b>${stack.length}</b> now.` : `${rowTag(row)} is already full.`} ${took ? `${who(main)} takes 1 spotlight from the scene pool (${TABLE.scenePool} left)` : 'The scene pool is empty: no spotlight'}${paid.length ? `; ${paid.map(([h, k]) => `${who(h)} takes ${storyPts(k)}`).join(', ')}` : ''}.</p>${boonNote}`,
     };
   }
 
@@ -2657,6 +2754,7 @@ function endRound(round, rows) {
 function endSituation(rows, board) {
   flipBackOut();
   moveTrackMarker('progress', null);
+  removeShapeTokens();
   board.minus.forEach(removePiece);
   board.minus = [];
   // Liabilities clear at the end of an act (unless the rule says they stay until removed).
