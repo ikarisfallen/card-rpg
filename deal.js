@@ -37,7 +37,7 @@ const buildBoonDeck = () => buildFromSets(d => buildPcDeck('boon', d.boons, d.bo
 const setTag = card => (card && card.set ? `<div class="set-tag">${esc(card.set)}</div>` : '');
 const APPROACHES = window.GAME_DATA.approaches;
 // The approaches' names, small and in capitals under their icons on cards and dice.
-const APPROACH_NAMES = ['Bold', 'Wise', 'Calm', 'Loud', 'Swift', 'Subtle']; // in APPROACHES order
+const APPROACH_NAMES = ['Boldly', 'Wisely', 'Calmly', 'Loudly', 'Swiftly', 'Subtly']; // in APPROACHES order (adverbs since 2026-11-10)
 const approachName = a => APPROACH_NAMES[APPROACHES.findIndex(x => x.replace(/️/g, '') === (a || '').replace(/️/g, ''))] || '';
 const approachTag = a => `<span class="ap-icon" data-ap="${noVS16(a)}">${a}<span class="ap-name">${approachName(a)}</span></span>`;
 const approachFace = a => approachTag(a); // an approach die's face

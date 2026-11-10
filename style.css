@@ -1765,7 +1765,8 @@ body[data-theme="starwars"] #table {
 .madlib-label { text-transform: uppercase; }
 /* An approach's name, small and in capitals under its icon (cards and dice; not the resource badges). */
 .ap-icon { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; }
-.ap-name { font-family: "Segoe UI", system-ui, sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(0, 0, 0, 0.6); margin-top: 2px; }
+/* The approach names (Boldly, Swiftly...) in a narrow face, so they take less room under their icons. */
+.ap-name { font-family: "Roboto Condensed", "Arial Narrow", "Bahnschrift SemiCondensed", sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; color: rgba(0, 0, 0, 0.6); margin-top: 2px; }
 .el-lines .el-approach .ap-name { font-size: 9px; }
 .die-symbol .ap-icon { gap: 1px; }
 .die-symbol .ap-name { font-size: 10px; margin-top: 3px; }
