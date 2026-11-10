@@ -547,7 +547,7 @@ const matCol = name => MAT_COL_NAMES.indexOf(name);
 const MAT_BANNER = 211, MAT_TRACKS = 120, MAT_HEAD = 26, MAT_ROW = 104, MAT_GUTTER = 112, MAT_PAD = 8;
 // The player-count card stands right of the Board: this player count's numbers, and a reminder of each
 // column's rules (they used to be printed under the Board).
-const COUNT_CARD = EL_CARD; // a medium card
+const COUNT_CARD = { w: EL_CARD.h, h: EL_CARD.w }; // a medium card, landscape: the numbers left, the column reminders right
 const MAT_W = MAT_COLS.reduce((a, b) => a + b, 0) + MAT_PAD * 2;
 const MAT_TOP = MAT_PAD + MAT_BANNER + MAT_TRACKS + MAT_HEAD; // where row A starts
 
@@ -580,18 +580,20 @@ function countCardHtml(players) {
   const perAct = typeof playerRule('target', players) === 'object';
   const notes = columnNotes(players);
   const note = c => notes[c] && `<div class="cc-note"><b>${notes[c][0]}</b> ${notes[c][1].replace(/<br>/g, ' · ')}</div>`;
-  return `
+  return `<div class="cc-left">
     <div class="cc-title">${players} players</div>
     <table class="mat-rules">
       <tr><th></th>${acts.map(a => `<th data-act="${a}">${a}</th>`).join('')}</tr>
-      ${perAct ? row('Stack', a => actTarget(a, players)) : ''}
       ${row('Difficulty die', a => playerRule('difficulty', players)[a])}
       ${heal ? row('Resources back', a => (a === acts[0] ? '—' : `+${heal}`)) : ''}
       ${row(SIM_RULES.actWinBonusAs === 'storyPoints' ? 'Winner’s Story Pts' : 'Win bonus', a => `${bonus[a].main}`)}
-      <tr><th>Track start</th><td colspan="${acts.length}">${playerRule('trackStart', players)}</td></tr>
-      <tr><th>Clock: stack · rounds</th><td colspan="${acts.length}">${playerRule('clockStack', players)} · ${playerRule('clockRounds', players)}</td></tr>
-      <tr><th>Hold: stack · rounds · attack</th><td colspan="${acts.length}">${playerRule('holdStack', players)} · ${playerRule('holdRounds', players)} · ${playerRule('holdDrain', players)}</td></tr>
-    </table>
+      <tr class="cc-sub"><th colspan="${acts.length + 1}">Situations (the icon on the card)</th></tr>
+      ${perAct ? row('<span class="cc-fam">⇶</span>Parallel <small>stack</small>', a => actTarget(a, players)) : ''}
+      ${perAct ? row('<span class="cc-fam">❓</span>Discovery <small>stack</small>', a => actTarget(a, players)) : ''}
+      <tr><th><span class="cc-fam">⇄</span>Track <small>start</small></th><td colspan="${acts.length}">${playerRule('trackStart', players)}</td></tr>
+      <tr><th><span class="cc-fam">⏳</span>Clock <small>stack · rounds</small></th><td colspan="${acts.length}">${playerRule('clockStack', players)} · ${playerRule('clockRounds', players)}</td></tr>
+      <tr><th><span class="cc-fam">🛡</span>Hold <small>stack · rounds · attack</small></th><td colspan="${acts.length}">${playerRule('holdStack', players)} · ${playerRule('holdRounds', players)} · ${playerRule('holdDrain', players)}</td></tr>
+    </table></div>
     <div class="cc-notes">${['main', 'approach', 'help', 'edge', 'successes'].filter(c => MAT_COL_NAMES.includes(c)).map(note).join('')}
       <div class="cc-note"><b>Tension</b> −1 to its approach${SIM_RULES.minusNextRound ? ' from next round' : ''} · ${SIM_RULES.maxEscalations} out: an Epic Failure loses · <b>Clear seat</b>: remove a die, +1 Story Point</div>
     </div>`;
@@ -1495,6 +1497,11 @@ function deal(mode = 'deal') {
     className: 'count-card', w: COUNT_CARD.w, h: COUNT_CARD.h, x: COUNT_X, y: ROW2, zoom: EL_ZOOM,
     front: countCardHtml(Math.min(PLAYER_COUNT, DATA.players.length)), back: plainBack('Players'),
   });
+  { // shrink the card's text a step at a time if it doesn't fit
+    const face = TABLE.countCard.el.querySelector('.card-front');
+    const over = () => [face, ...face.children].some(n => n.scrollHeight > n.clientHeight + 1 || n.scrollWidth > n.clientWidth + 1);
+    for (let pct = 100; pct > 70 && over(); pct -= 5) face.style.fontSize = `${(11.5 * (pct - 5)) / 100}px`;
+  }
   // The Difficulty die, top right of the Board: set from the player-count card at each act's setup,
   // so everyone can see the number to beat.
   const diffAt = cell.diffSpot();

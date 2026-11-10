@@ -2032,15 +2032,15 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
 
 /* The player-count card, right of the Board: this count's numbers by act, and the column reminders. */
 .count-card { --accent: #2b5a3e; --back: #1d3f2c; }
-.count-card .card-front { padding: 10px 12px; gap: 8px; font-size: 13px; line-height: 1.28; }
-.count-card .cc-title { font-size: 20px; font-weight: 800; color: color-mix(in srgb, var(--accent) 85%, #000); }
-.count-card .mat-rules { width: 100%; font-size: 13px; color: var(--ink); }
+.count-card .card-front { padding: 8px 10px; gap: 6px; font-size: 11.5px; line-height: 1.22; }
+.count-card .cc-title { font-size: 17px; font-weight: 800; color: color-mix(in srgb, var(--accent) 85%, #000); }
+.count-card .mat-rules { width: 100%; font-size: 11.5px; color: var(--ink); }
 .count-card .mat-rules th, .count-card .mat-rules td { padding: 1px 4px; }
-.count-card .mat-rules td { font-size: 15px; }
+.count-card .mat-rules td { font-size: 13px; }
 .count-card .mat-rules tr:first-child th { font-size: 10px; opacity: 0.7; }
 .count-card .mat-rules tr > th:first-child { text-align: left; opacity: 0.8; }
 .count-card .mat-rules .now { background: color-mix(in srgb, #e0a92e 30%, transparent); color: #6b4a00; }
-.count-card .cc-notes { display: flex; flex-direction: column; gap: 5px; border-top: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); padding-top: 7px; }
+.count-card .cc-notes { display: flex; flex-direction: column; gap: 3px; border-top: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); padding-top: 7px; }
 .count-card .cc-note b { color: color-mix(in srgb, var(--accent) 85%, #000); }
 .count-card .mini-tok { width: 15px; height: 15px; font-size: 8px; vertical-align: -3px; color: #222; }
 
@@ -2075,3 +2075,42 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
 .mat-goal { font-size: 21px; }
 .mat-goal .mat-sub { font-size: 15px; }
 .mat-scene { font-size: 15px; }
+.count-card .mat-rules tr > th:first-child { white-space: normal; }
+.count-card .mat-rules th small { display: block; font-size: 0.8em; font-weight: 600; opacity: 0.8; }
+.count-card .mat-rules tr:first-child th { letter-spacing: 0.02em; }
+/* Banded rows in the player-count card's table, so each row is easy to follow across. */
+.count-card .mat-rules tr:not(:first-child):nth-child(even) > * { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.count-card .mat-rules tr:not(:first-child) > :first-child { border-radius: 5px 0 0 5px; }
+.count-card .mat-rules tr:not(:first-child) > :last-child { border-radius: 0 5px 5px 0; }
+.count-card .mat-rules th, .count-card .mat-rules td { padding-top: 2px; padding-bottom: 2px; }
+/* The player-count card's Situation rows: each family's icon, as on its Situation card. */
+.count-card .mat-rules tr.cc-sub th { text-align: left; font-size: 0.85em; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.7; padding-top: 4px; }
+.count-card .cc-fam { display: inline-block; width: 1.4em; text-align: center; font-family: var(--emoji); }
+.count-card .cc-families th small { padding-left: 1.4em; }
+/* The player-count card is landscape: its numbers on the left, the Board's column reminders on the right. */
+.count-card .card-front { flex-direction: row; gap: 10px; }
+.count-card .cc-left { flex: 0 0 56%; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.count-card .cc-notes { flex: 1; border-top: 0; padding-top: 2px; padding-left: 9px; border-left: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+/* (landscape card) the table's sizes follow the card's text size, so it shrinks with it; labels stay on one line */
+.count-card .mat-rules { font-size: 1em; }
+.count-card .mat-rules td { font-size: 1.12em; }
+.count-card .mat-rules tr:first-child th { font-size: 0.82em; }
+.count-card .mat-rules tr > th:first-child { white-space: nowrap; }
+.count-card .mat-rules th small { display: inline; padding-left: 0.3em; font-size: 0.82em; }
+
+.count-card .cc-left { flex: 0 0 60%; }
+.count-card .cc-title { font-size: 1.45em; }
+.count-card .mat-rules tr.cc-sub th { background: none; }
+.count-card .cc-left, .count-card .cc-notes { overflow: hidden; }
+.count-card .mat-rules th, .count-card .mat-rules td { font-size: 1em; padding-left: 3px; padding-right: 3px; }
+.count-card .mat-rules td { font-size: 1.1em; }
+.count-card .mat-rules tr:first-child th, .count-card .mat-rules tr.cc-sub th { font-size: 0.72em; }
+.count-card .cc-left { flex: 0 0 53%; }
+/* (landscape card, stacked) the table across the top, the column reminders below in two columns */
+.count-card .card-front { flex-direction: column; gap: 6px; }
+.count-card .cc-left { flex: none; width: 100%; }
+.count-card .cc-notes { display: block; columns: 2; column-gap: 14px; flex: 1; padding-left: 0; padding-top: 6px; border-left: 0; border-top: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.count-card .cc-note { break-inside: avoid; margin-bottom: 3px; }
+.count-card .mat-rules th, .count-card .mat-rules td { padding-top: 1px; padding-bottom: 1px; line-height: 1.15; }
+.count-card .cc-title { font-size: 1.3em; line-height: 1.1; }
+.count-card .cc-note { line-height: 1.2; margin-bottom: 2px; }
