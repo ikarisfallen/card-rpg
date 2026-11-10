@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Situation Families – Mockups</title>
+<style>
+  :root {
+    --felt: #1f5c3a; --board: #1d4f33; --board-line: rgba(255,255,255,0.22);
+    --cream-1: #fbf3df; --cream-2: #ead9b4; --ink: #2b2418; --blank: #2f7d46; --gold: #e9c45a; --red: #a3332b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 28px 60px; color: #fff;
+    font: 15px/1.35 "Segoe UI", system-ui, sans-serif;
+    background: repeating-linear-gradient(45deg, rgba(0,0,0,0.05) 0 3px, transparent 3px 7px), var(--felt);
+  }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  .intro { max-width: 1000px; opacity: 0.88; margin: 0 0 8px; }
+  .intro li { margin: 2px 0; }
+  section { margin: 0 0 44px; }
+  .label { display: flex; align-items: baseline; gap: 12px; margin: 0 0 10px; }
+  .label .fam { font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; font-size: 13px; padding: 3px 10px; border-radius: 99px; background: rgba(0,0,0,0.35); }
+  .label .act { opacity: 0.8; }
+  .pair { display: flex; align-items: stretch; flex-wrap: wrap; }
+
+  /* ---- Situation card ---- */
+  .card {
+    width: 390px; display: flex; flex-direction: column;
+    color: var(--ink); border-radius: 14px; border: 6px solid #3b3a5c;
+    background: linear-gradient(160deg, var(--cream-1), var(--cream-2));
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35); overflow: hidden;
+  }
+  .card .top { padding: 9px 14px 6px; height: 139px; }
+  /* The Board's header is exactly as tall as the card's description + setup, so the rows line up. */
+  .bhead { height: 304px; display: flex; flex-direction: column; justify-content: space-between; }
+
+  .card h2 { margin: 0; font: 800 19px "Segoe UI", system-ui, sans-serif; color: #1e2742; }
+  .card .badge { display: inline-block; margin: 2px 0 1px; font: 800 11px "Segoe UI"; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; background: #3b3a5c; padding: 2px 8px; border-radius: 99px; }
+  .card .desc { margin: 0; font-size: 14px; line-height: 1.75; }
+  .setup { height: 163px; overflow: hidden; margin: 0 12px 8px; font-size: 12px; line-height: 1.42; padding: 6px 9px; border-radius: 8px; background: rgba(59,58,92,0.1); border-left: 4px solid #3b3a5c; }
+  .setup .h { font: 800 10.5px "Segoe UI"; letter-spacing: 0.1em; color: #3b3a5c; display: block; }
+  .setup .sp { color: #3b3a5c; font-weight: 700; }
+  .setup .win { color: #1f6b3a; font-weight: 700; } .setup .lose { color: var(--red); font-weight: 700; }
+  .blank { color: var(--blank); border-bottom: 1.5px solid var(--blank); position: relative; white-space: nowrap; }
+  .blank small { position: absolute; left: 0; right: 0; top: 100%; text-align: center; font: 700 8px "Segoe UI"; letter-spacing: 0.06em; color: #8a7f68; text-transform: uppercase; }
+  .setup .blank small { display: none; }
+  .rows { border-top: 1.5px solid rgba(0,0,0,0.2); border-bottom: 1.5px solid rgba(0,0,0,0.2); }
+  .row { display: flex; align-items: center; gap: 10px; padding: 0 12px; height: 104px; }
+  .row.closed .bubble { opacity: 0.35; text-decoration: line-through; }
+  .risk { width: 54px; height: 42px; flex: none; border-radius: 8px; display: grid; place-items: center; font: 800 18px "Segoe UI"; color: #fff; background: repeating-linear-gradient(45deg, #6b5b3e 0 6px, #5b4c33 6px 12px); border: 2px solid rgba(0,0,0,0.25); }
+  .row.closed .risk { visibility: hidden; }
+  .bubble { position: relative; flex: 1; background: #fff; border: 2px solid #9aa0a8; border-radius: 14px; padding: 9px 12px; font-size: 15px; line-height: 1.3; }
+  .bubble:has(.blank) { line-height: 1.75; }
+  .bubble::after { content: ""; position: absolute; right: -11px; top: 50%; transform: translateY(-50%); border: 9px solid transparent; border-left-color: #9aa0a8; border-right: 0; }
+  .bubble .ap { float: right; margin-left: 6px; font-size: 18px; }
+  .esc { padding: 9px 14px 4px; font-size: 13px; margin-top: auto; }
+  .esc .h { font: 800 11px "Segoe UI"; letter-spacing: 0.1em; color: var(--red); }
+  .esc .hint { font-size: 11.5px; color: #7a6d55; }
+  .esc ol { margin: 2px 0 0; padding-left: 20px; }
+  .setname { text-align: center; font: 700 10px "Segoe UI"; letter-spacing: 0.1em; color: #9a8d72; padding: 4px 0 8px; }
+
+  /* ---- The one Board ---- */
+  .board {
+    width: 640px; margin-left: -4px; display: flex; flex-direction: column;
+    background: var(--board); border: 3px solid rgba(255,255,255,0.18); border-radius: 0 16px 16px 0;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35); padding: 10px 12px;
+  }
+  .banner { display: flex; gap: 12px; align-items: center; padding: 4px 0 10px; border-bottom: 1px solid var(--board-line); }
+  .edge { width: 74px; flex: none; text-align: center; font: 700 11px "Segoe UI"; }
+  .die { width: 72px; height: 72px; margin: 0 auto 2px; border-radius: 12px; background: linear-gradient(160deg, #fff, #e4e4e4); color: #222; display: grid; place-items: center; font-size: 26px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+  .acts { flex: 1; font-size: 13px; opacity: 0.92; }
+  .acts table { margin-top: 4px; }
+  .acts table { border-collapse: collapse; }
+  .acts td { padding: 2px 9px; text-align: center; } .acts td:first-child { text-align: left; opacity: 0.8; }
+  .acts .on { background: rgba(255,255,255,0.18); border-radius: 4px; font-weight: 800; }
+  .poolbox { width: 100px; text-align: center; font: 700 11px "Segoe UI"; letter-spacing: 0.06em; }
+  .poolbox .pile { height: 72px; border-radius: 10px; border: 2px dashed rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; gap: 2px; margin-bottom: 2px; flex-wrap: wrap; padding: 3px; }
+  .poolbox .pile i { width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff0b8, var(--gold) 60%, #a07c1f); }
+  .poolbox.unused { opacity: 0.35; }
+  .diffbox { width: 96px; text-align: center; font: 700 11px "Segoe UI"; letter-spacing: 0.06em; }
+  .diffbox b { display: grid; place-items: center; height: 72px; font-size: 34px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.3); margin-bottom: 2px; letter-spacing: 0; }
+  .diffbox b.see { font-size: 14px; line-height: 1.1; padding: 0 4px; }
+  .cols { display: grid; grid-template-columns: 0.85fr 0.85fr 1.9fr 1.1fr; gap: 8px; padding: 6px 0 2px; font: 800 11px "Segoe UI"; letter-spacing: 0.08em; text-align: center; opacity: 0.85; }
+  .brow { display: grid; grid-template-columns: 0.85fr 0.85fr 1.9fr 1.1fr; gap: 8px; align-items: center; height: 104px; border-bottom: 1px dashed var(--board-line); }
+
+  .brow.closed { opacity: 0.3; }
+  .spot { width: 80px; height: 80px; margin: auto; border-radius: 50%; border: 2px dashed rgba(255,255,255,0.35); display: grid; place-items: center; font-size: 30px; }
+  .help { height: 84px; margin: auto 4px; border-radius: 42px; border: 2px dashed rgba(255,255,255,0.35); display: flex; align-items: center; justify-content: space-evenly; }
+  .sq { width: 74px; height: 74px; margin: auto; border-radius: 12px; border: 2px dashed rgba(255,255,255,0.35); }
+  .succ { height: 92px; margin: 0 6px; border-radius: 12px; border: 2px dashed rgba(255,255,255,0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .stack { display: flex; flex-direction: column-reverse; align-items: center; }
+  .tok { width: 44px; height: 14px; margin-top: -4px; border-radius: 50%; background: radial-gradient(ellipse at 40% 30%, #fff0b8, var(--gold) 60%, #a07c1f); box-shadow: 0 2px 2px rgba(0,0,0,0.4); }
+  .tok.gone { background: none; border: 1.5px dashed rgba(255,255,255,0.35); box-shadow: none; }
+  .count { font: 700 11.5px "Segoe UI"; opacity: 0.85; margin-top: 4px; text-align: center; }
+  .count.warn { color: #ffb3a8; opacity: 1; }
+  .shape { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; font: 800 26px "Segoe UI"; border: 3px solid #fff;
+    background: repeating-linear-gradient(45deg, #36325e 0 7px, #2a2650 7px 14px); color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+  .shape.up { background: #f4e3b0; color: #3b3a5c; }
+  .closedtag { font: 800 12px "Segoe UI"; letter-spacing: 0.1em; opacity: 0.8; }
+
+  .tracks { padding: 8px 0 12px; display: grid; gap: 16px; }
+  .track { display: flex; align-items: center; gap: 4px; }
+  .track .name { width: 78px; flex: none; font: 800 10.5px "Segoe UI"; letter-spacing: 0.08em; opacity: 0.85; }
+  .cell { flex: 1; height: 60px; border-radius: 7px; border: 2px solid rgba(255,255,255,0.28); background: rgba(0,0,0,0.18); display: grid; place-items: center; font: 700 13px "Segoe UI"; position: relative; }
+  .cell .n { opacity: 0.55; }
+  .cell.unused { opacity: 0.35; }
+  .cell.marker { background: #f4e3b0; color: #222; border-color: #fff; }
+  .cell.marker .n { opacity: 1; }
+  .cell.goal { border-color: #9be3a8; } .cell.fail { border-color: #ff9d8f; }
+  .cell .tag { position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); font: 700 9px "Segoe UI"; white-space: nowrap; letter-spacing: 0.04em; }
+  .cell.goal .tag { color: #9be3a8; } .cell.fail .tag { color: #ffb3a8; }
+  .foot { margin-top: auto; padding: 8px 0 6px; border-top: 1px solid var(--board-line); display: flex; gap: 12px; align-items: center; font-size: 12.5px; }
+  .tension { flex: 1; height: 84px; border-radius: 12px; border: 2px dashed rgba(255,150,140,0.55); display: flex; align-items: center; padding: 0 14px; }
+  .tension.unused { opacity: 0.35; }
+  .note { opacity: 0.85; }
+  .legend { display: inline-flex; gap: 10px; align-items: center; margin: 4px 0 20px; flex-wrap: wrap; }
+  .legend .shape { width: 40px; height: 40px; font-size: 18px; }
+</style>
+</head>
+<body>
+<h1>Situation families: mockups</h1>
+<ul class="intro">
+  <li><b>One Board for every Situation.</b> Three rows (Lead · Approach · Support · Successes; the Support box is open, for any number of pawns), a <b>Progress</b> track (0–8), a <b>Round</b> track (1–6) and the Tension box. A Situation that doesn’t use a track leaves it empty.</li>
+  <li><b>The Situation card says how to set the Board up</b> (its Setup box), and how it’s won and lost.</li>
+  <li><b>Every success still earns 1 spotlight</b>: from the row’s stack when the stacks are what you’re clearing, otherwise from the <b>scene pool</b>, a fixed pile set out at setup (6 in the Beginning, 9 after), so every scene is worth about the same.</li>
+  <li><b>Three generic shape tokens</b>, blank on one side and ● ▲ ■ on the other, for anything hidden. The card says what each shape means this time.</li>
+  <li>A mockup only: none of these rules are in the game yet. Green underlined words are blanks filled from the Element cards; <b>?</b> tiles are the face-down Risks.</li>
+</ul>
+<div class="legend"><span>Shape tokens:</span><span class="shape">?</span><span>face down ·</span><span class="shape up">●</span><span class="shape up">▲</span><span class="shape up">■</span><span>face up</span></div>
+
+<div id="mockups"></div>
+
+<script>
+// Each mockup: the card (setup, rows, escalations) and the Board as it looks mid-scene.
+const B = (t, s) => `<span class="blank">${t}<small>${s}</small></span>`;
+const stack = (n, of) => `<div class="stack">${Array.from({ length: of }, (_, i) => `<i class="tok${i < n ? '' : ' gone'}"></i>`).join('')}</div>`;
+
+const MOCKUPS = [
+  {
+    fam: 'A · Parallel', act: 'Beginning · the rules as they are now', badge: '⇶ Parallel',
+    title: 'Beginning: Leaving Before Dawn',
+    desc: `${B('The Wraith-Lord', 'Villain')}’s riders were seen on the road this evening. You have to be gone before they reach ${B('the Elven Refuge', 'Location')}.`,
+    setup: `Each row: the act’s stack of spotlight tokens. Tracks: not used.<br><span class="win">Win:</span> empty any row. <span class="lose">Lose:</span> Tension.<br><span class="sp">Spotlight:</span> 1 from the row’s stack per success.<br><span class="sp">Act win:</span> the first to empty a row.`,
+    rows: [['🐢', 'I go cross-country through the woods'], ['⚡', 'I take the ferry before they catch up'], ['🕶️', `I trust ${B('the Ranger King', 'Ally')} and follow the hidden road`]],
+    esc: ['A rider turns back and sniffs the air — 💪', 'The riders split up to watch every road — 🧠'],
+    edge: '🐢', diff: '1',
+    succ: [stack(2, 2), stack(1, 2), stack(2, 2)],
+  },
+  {
+    fam: 'H · Discovery', act: 'Beginning · find the right one', badge: '❓ Discovery',
+    title: 'Beginning: The Stranger at the Inn',
+    desc: `Rain on the shutters at ${B('the Crossroads Inn', 'Location')}. Three hooded figures sit in the corners, and one of them has been watching you since you came in.`,
+    setup: `Shuffle the shape tokens face down, one on each row. <b>●</b> ${B('the Ranger King', 'Ally')} · <b>▲</b> a spy for ${B('the Dark Lord', 'Villain')} · <b>■</b> a harmless drunk. A success turns its row’s token over. Scene pool: <b>6</b> spotlight tokens.<br><span class="win">Win:</span> turn over ●. <span class="lose">Lose:</span> Tension, or ▲ turned over last (the Middle starts with a Tension die out).<br><span class="sp">Spotlight:</span> 1 from the scene pool per success, until it runs out.<br><span class="sp">Act win:</span> whoever turns over ●.`, pool: 6,
+    rows: [['🕶️', 'I buy the hooded one a drink and listen'], ['📢', 'I make a scene to see who flinches'], ['⚡', 'I slip out and watch the door']],
+    esc: ['A note changes hands under a table — 🧠', 'The innkeeper says your real name out loud — 📢'],
+    edge: '🕶️', diff: '1',
+    succ: ['<span class="shape up">■</span><div class="count">a harmless drunk</div>', '<span class="shape">?</span>', '<span class="shape">?</span>'],
+  },
+  {
+    fam: 'D · Track', act: 'Middle · a chase', badge: '⇄ Track',
+    title: 'Middle: Riders at the Ford',
+    desc: `They’re right behind you, and ${B('rushing river gorge', 'Location’s feature')} is ahead. Reach the water before ${B('the Wraith-Lord', 'Villain')} reaches you.`,
+    setup: `No spotlight stacks. Scene pool: <b>9</b> spotlight tokens. Progress marker on <b>3</b>. Any success: marker +1 (+2 on an Epic Success). Epic Failure: marker −1, and the Lead reads an Escalation (no die: it’s just story). Clear seat: marker +1.<br><span class="win">Win:</span> marker reaches 8. <span class="lose">Lose:</span> marker reaches 0.<br><span class="sp">Spotlight:</span> 1 from the scene pool per success, until it runs out.<br><span class="sp">Act win:</span> whoever moves the marker to 8.`, pool: 7,
+    rows: [['⚡', 'I ride hard and don’t look back'], ['💪', 'I turn and face them with fire'], ['🧠', 'I call on the river to rise']],
+    esc: ['A horse goes lame under you', 'They cut across the bend'],
+    edge: '⚡', diff: '3',
+    succ: ['<div class="count">+1 → Progress</div>', '<div class="count">+1 → Progress</div>', '<div class="count">+1 → Progress</div>'],
+    progress: { at: 4, goal: 8, fail: 0, goalTag: 'the river', failTag: 'caught' }, noTension: true,
+  },
+  {
+    fam: 'E · Clock', act: 'Middle · everything, before time runs out', badge: '⏳ Clock',
+    title: 'Middle: The Door at Moonrise',
+    desc: `The hidden door at ${B('the Dwarven Mines', 'Location')} only shows itself by tonight’s moonlight, and the moon is setting. ${B('The Grey Wizard', 'Ally')} has forgotten the word.`,
+    setup: `Each row: 2 spotlight tokens. Round marker on <b>1</b>; move it at the end of each round.<br><span class="win">Win:</span> empty <b>every</b> row by the end of round 4. <span class="lose">Lose:</span> Tension, or round 4 ends with a token left.<br><span class="sp">Spotlight:</span> 1 from the row’s stack per success.<br><span class="sp">Act win:</span> whoever empties the last row.`,
+    rows: [['🧠', 'I read the moon-runes on the rock'], ['💪', 'I hold off the wolves coming down the slope'], ['🐢', 'I find the keyhole when the light catches it']],
+    esc: ['Clouds cover the moon: round marker +1 — 🕶️', 'Something stirs in the lake — 💪'],
+    edge: '🧠', diff: '3',
+    succ: [stack(0, 2) + '<div class="count">done ✓</div>', stack(1, 2), stack(2, 2)],
+    rounds: { at: 2, goal: 4, goalTag: 'moon sets' },
+  },
+  {
+    fam: 'F · Hold the line', act: 'Middle · survive until help comes', badge: '🛡 Hold',
+    title: 'Middle: Hold the Deep Wall',
+    desc: `Night falls on ${B('the Fortress in the Gorge', 'Location')}, and ${B('the Fallen Wizard', 'Villain')}’s army is at the walls. Hold until dawn, when ${B('the Grey Wizard', 'Ally')} comes.`,
+    setup: `Each row: 3 spotlight tokens. Round marker on <b>1</b>. Scene pool: <b>9</b> spotlight tokens. End of each round: the Storyteller takes 1 token from the row with the fewest (back to the box). A success puts 1 back. Epic Failure: that row loses 1, and the Lead reads an Escalation (no die).<br><span class="win">Win:</span> survive round 5. <span class="lose">Lose:</span> any row emptied.<br><span class="sp">Spotlight:</span> 1 from the scene pool per success, until it runs out.<br><span class="sp">Act win:</span> shared: everyone takes 1 Story Point.`, pool: 6,
+    rows: [['💪', 'I brace the gate with everything we have'], ['🕶️', 'I sneak down into the culvert and stop the sappers'], ['📢', 'I rally the defenders on the wall']],
+    esc: ['The wall is breached', 'Ladders go up everywhere at once'],
+    edge: '💪', diff: '3',
+    succ: [stack(3, 3), stack(1, 3) + '<div class="count warn">fewest ⚠</div>', stack(2, 3)],
+    rounds: { at: 2, goal: 5, goalTag: 'dawn' }, noTension: true,
+  },
+  {
+    fam: 'C · Attrition (boss)', act: 'Ending · knock out its defences, then the final phase', badge: '☠ Boss',
+    title: 'Ending: The Tower of the Wizard',
+    desc: `${B('The Fallen Wizard', 'Villain')} waits at the top of the tower with ${B('the One Ring', 'Object')} almost in reach. Three defences stand in your way.`,
+    setup: `Each row: 3 spotlight tokens. The Progress marker is the <b>difficulty</b>: start it on <b>3</b>. Each row emptied: −1. When one row is left: +2 (the final phase).<br><span class="win">Win:</span> empty <b>every</b> row. <span class="lose">Lose:</span> Tension.<br><span class="sp">Spotlight:</span> 1 from the row’s stack per success.<br><span class="sp">Act win:</span> whoever lands the final blow.`,
+    rows: [['🧠', 'I seize the seeing stone'], ['⚡', 'I hold back the army at the tower’s foot'], ['🐢', 'I close my ears to the Voice']],
+    esc: ['The tower shakes to its roots — 💪', 'His crows circle, watching — 🕶️'],
+    edge: '🐢', diff: null,
+    succ: [stack(0, 3) + '<div class="count">broken ✓</div>', stack(2, 3), stack(3, 3)],
+    progress: { at: 2, label: 'difficulty' },
+  },
+  {
+    fam: 'J · Dilemma', act: 'Ending · only one can be finished', badge: '⚖ Dilemma',
+    title: 'Ending: At the Edge of the Fire',
+    desc: `At last, ${B('the One Ring', 'Object')} hangs over ${B('crack of the fire', 'Location’s feature')}. But ${B('the Elf Lady', 'Ally')} has fallen from the ledge, and is holding on with one hand.`,
+    setup: `Rows 1 and 2: 3 spotlight tokens each. Row 3 is closed. Whichever row is emptied first ends the story; the other is lost. Whoever finishes it narrates the Epilogue.<br><span class="win">Win:</span> empty a row. <span class="lose">Lose:</span> Tension.<br><span class="sp">Spotlight:</span> 1 from the row’s stack per success.<br><span class="sp">Act win:</span> whoever empties a row first.`,
+    rows: [['💪', 'I throw it into the fire, whatever it costs'], ['🐢', 'I reach for her and let it wait'], null],
+    esc: ['The mountain shudders — ⚡', 'Ash chokes the air — 🧠'],
+    edge: '💪', diff: '3',
+    succ: [stack(2, 3), stack(3, 3), '<span class="closedtag">CLOSED</span>'],
+  },
+];
+
+function track(name, from, to, state, labelFn) {
+  const cells = [];
+  for (let n = from; n <= to; n++) {
+    const used = state && (state.goal === undefined || n <= state.goal);
+    const cls = !state ? 'unused' : [n === state.at ? 'marker' : '', n === state.goal ? 'goal' : '', n === state.fail ? 'fail' : '', !used ? 'unused' : ''].join(' ');
+    const tag = state && n === state.goal ? state.goalTag : state && n === state.fail ? state.failTag : '';
+    cells.push(`<div class="cell ${cls}"><span class="n">${labelFn ? labelFn(n) : n}</span>${tag ? `<span class="tag">${tag}</span>` : ''}</div>`);
+  }
+  return `<div class="track"><div class="name">${name}${state && state.label ? `<br><span style="font-weight:600;opacity:.8;text-transform:none;letter-spacing:0">= ${state.label}</span>` : ''}</div>${cells.join('')}</div>`;
+}
+
+document.getElementById('mockups').innerHTML = MOCKUPS.map(m => `
+<section>
+  <div class="label"><span class="fam">${m.fam}</span><span class="act">${m.act}</span></div>
+  <div class="pair">
+    <div class="card">
+      <div class="top">
+        <h2>${m.title}</h2>
+        <span class="badge">${m.badge}</span>
+        <p class="desc">${m.desc}</p>
+      </div>
+      <div class="setup"><span class="h">SETUP</span>${m.setup}</div>
+      <div class="rows">
+        ${m.rows.map(r => r ? `<div class="row"><div class="risk">?</div><div class="bubble"><span class="ap">${r[0]}</span>${r[1]}</div></div>`
+          : `<div class="row closed"><div class="risk"></div><div class="bubble">(closed)</div></div>`).join('')}
+      </div>
+      <div class="esc"><span class="h">EPIC FAILURE</span> <span class="hint">the Lead picks one:</span><ol><li>${m.esc[0]}</li><li>${m.esc[1]}</li></ol></div>
+      <div class="setname">LORD OF THE RINGS</div>
+    </div>
+    <div class="board">
+      <div class="bhead">
+      <div class="banner">
+        <div class="edge"><div class="die">${m.edge}</div>EDGE</div>
+        <div class="acts"><b>Spotlight stacks & difficulty by act</b> (used unless the card’s Setup says otherwise)
+          <table><tr><td></td><td class="${m.act.startsWith('Beginning') ? 'on' : ''}">Beginning</td><td class="${m.act.startsWith('Middle') ? 'on' : ''}">Middle</td><td class="${m.act.startsWith('Ending') ? 'on' : ''}">Ending</td></tr>
+          <tr><td>Stack</td><td>2</td><td>3</td><td>3</td></tr><tr><td>Difficulty</td><td>1</td><td>3</td><td>3</td></tr></table></div>
+        <div class="poolbox${m.pool ? '' : ' unused'}"><div class="pile">${m.pool ? '<i></i>'.repeat(m.pool) : ''}</div>SCENE POOL${m.pool ? ` · ${m.pool}` : ''}</div>
+        <div class="diffbox"><b class="${m.diff ? '' : 'see'}">${m.diff || 'see Progress'}</b>DIFFICULTY</div>
+      </div>
+      <div class="tracks">
+        ${track('PROGRESS', 0, 8, m.progress)}
+        ${track('ROUND', 1, 6, m.rounds)}
+      </div>
+      <div class="cols"><div>LEAD</div><div>APPROACH</div><div>SUPPORT</div><div>SUCCESSES</div></div>
+      </div>
+      ${m.succ.map((s, i) => `<div class="brow${m.rows[i] ? '' : ' closed'}"><div class="spot"></div><div class="sq"></div><div class="help"></div><div class="succ">${s}</div></div>`).join('')}
+      <div class="foot"><span>TENSION</span><div class="tension${m.noTension ? ' unused' : ''}"><span class="note">${m.noTension ? 'Not used: this Situation’s pressure is on its track.' : 'Tension dice and the Clear seat’s pawn go here.'}</span></div></div>
+    </div>
+  </div>
+</section>`).join('');
+</script>
+</body>
+</html>

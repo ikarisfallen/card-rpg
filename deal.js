@@ -160,8 +160,8 @@ function refRoundSide() {
     <div class="ref-title"><span class="ref-kind">Player reference</span>Each round</div>
     <ol class="ref-steps">
       <li><b>Obstacle.</b> The Storyteller sets it on a row and an approach: that approach’s bonuses don’t count there.</li>
-      <li><b>Moves</b>, in initiative order: <b>Main</b> on a free row (choose your approach) · <b>Help</b> a Main (a Relationship beside you shows their approach) · <b>Clear seat</b> · <b>Pass</b>.</li>
-      <li><b>Compel.</b> The Storyteller may compel one Main’s ✖️ Trouble or ➖ Liability: −1 and +1 Story Point, or refuse for 1.</li>
+      <li><b>Moves</b>, in initiative order: <b>Lead</b> on a free row (choose your approach) · <b>Support</b> a Lead (a Relationship beside you shows their approach) · <b>Clear seat</b> · <b>Pass</b>.</li>
+      <li><b>Compel.</b> The Storyteller may compel one Lead’s ✖️ Trouble or ➖ Liability: −1 and +1 Story Point, or refuse for 1.</li>
       <li><b>Fate.</b> Turn one card for everyone.</li>
       <li><b>Rolls</b>, in initiative order (see the back).</li>
       <li><b>Clear seat:</b> remove a Tension die, +1 Story Point, go first next round.</li>
@@ -174,7 +174,7 @@ function refRollSide() {
     <div class="ref-title"><span class="ref-kind">Player reference</span>Your roll</div>
     <ul class="ref-list">
       <li><span>✔️ Concept · ➕ each Asset</span><b>+1</b></li>
-      <li><span>Edge die · each helper</span><b>+1</b></li>
+      <li><span>Edge die · each supporter</span><b>+1</b></li>
       <li><span>Row’s 🔺 / 🔻</span><b>+1 / −1</b></li>
       <li><span>Each Tension die · a compel</span><b>−1</b></li>
       <li><span>Fate card</span><b>−2 to +2</b></li>
@@ -515,26 +515,31 @@ function buildSheet(x, y, concept, trouble) {
   return dice;
 }
 
-// The A/B/C board: a difficulty banner, then Main | Help | Approach | Minus | Risk | Successes.
+// The A/B/C board: a difficulty banner, then Lead | Support | Approach | Minus | Risk | Successes.
 // Its banner + headings are exactly as tall as the Situation card's opening text, so the
 // board's rows sit level with the card's choices A, B and C beside it.
 // Risk comes first (next to the Situation card's choices), then the row's shape, who acts, and
 // the Tension. With
-// freeApproach there's no Approach column (the Main player picks), and the Risk column is
+// freeApproach there's no Approach column (the Lead picks), and the Risk column is
 // wider: it names the resource and which approaches guard or squander it.
 // The first column is a slot cut into the Board: the Situation card slides in so its three
 // choices (with their risks) sit in it, level with rows A, B and C.
-// Main and Help hold pawns (round spots); Approach holds the Main's own approach die and Edge the
-// Edge die (the Situation's bonus die) when the Main claims it.
-const MAT_COL_NAMES = ['main', 'help', 'approach', ...(SIM_RULES.sceneModifier && SIM_RULES.sceneClaim ? ['edge'] : []), 'minus', ...(SIM_RULES.obstacle ? ['obstacle'] : []), 'successes'];
-const MAT_COL_W = { main: 104, help: 104, approach: 102, edge: 102, minus: 104, obstacle: 104, successes: 124 };
+// Lead and Support hold pawns (round spots); Approach holds the Lead's own approach die and Edge the
+// Edge die (the Situation's bonus die) when the Lead claims it.
+const MAT_COL_NAMES = ['main', 'approach', 'help', ...(SIM_RULES.sceneModifier && SIM_RULES.sceneClaim ? ['edge'] : []), ...(SIM_RULES.obstacle ? ['obstacle'] : []), 'successes'];
+const MAT_COL_W = { main: 104, help: 196, approach: 102, edge: 102, obstacle: 104, successes: 124 };
 const MAT_COLS = MAT_COL_NAMES.map(n => MAT_COL_W[n]);
 const matCol = name => MAT_COL_NAMES.indexOf(name);
 // The Board is as tall as the upright Situation card beside it, top and bottom level with it: the
 // banner fills the card's description and the footer its Escalations, so the rows line up.
-const MAT_BANNER = 136, MAT_HEAD = 26, MAT_ROW = 104, MAT_FOOT = 147, MAT_PAD = 8;
+// MAT_TRACKS: the Progress and Round tracks under the banner (level with the card's Setup box);
+// MAT_GUTTER: the Tension gutter under the rows, where the Tension dice and the Clear seat's pawn go.
+const MAT_BANNER = 136, MAT_TRACKS = 120, MAT_HEAD = 26, MAT_ROW = 104, MAT_GUTTER = 112, MAT_PAD = 8;
+// The player-count card stands right of the Board: this player count's numbers, and a reminder of each
+// column's rules (they used to be printed under the Board).
+const COUNT_CARD = { w: 300, h: 470 };
 const MAT_W = MAT_COLS.reduce((a, b) => a + b, 0) + MAT_PAD * 2;
-const MAT_TOP = MAT_PAD + MAT_BANNER + MAT_HEAD; // where row A starts
+const MAT_TOP = MAT_PAD + MAT_BANNER + MAT_TRACKS + MAT_HEAD; // where row A starts
 
 // The banner across the top of the Board: what wins a situation, and a small table of the
 // per-act numbers for this player count (the current act is highlighted during play).
@@ -552,45 +557,74 @@ function boardRulesHtml(players) {
       <div class="mat-sub">${players} players · miss by ${SIM_RULES.failBy}+ to fail${SIM_RULES.minorFailure ? ' · by 1: lose the resource' : ''}</div>
       <div class="mat-scene"></div>
     </div>
-    <table class="mat-rules">
-      <tr><th></th>${acts.map(a => `<th data-act="${a}">${a}</th>`).join('')}</tr>
-      ${perAct ? row('Successes', a => actTarget(a, players)) : ''}
-      ${row('Difficulty', a => playerRule('difficulty', players)[a])}
-      ${heal ? row('Resources back first', a => (a === acts[0] ? '—' : `+${heal}`)) : ''}
-      ${row(acts.some(a => bonus[a].helper) ? 'Win bonus <small>(helper)</small>' : SIM_RULES.actWinBonusAs === 'storyPoints' ? 'Winner’s Story Pts' : 'Win bonus', a => `${bonus[a].main}${bonus[a].helper ? ` <small>(${bonus[a].helper})</small>` : ''}`)}
-    </table>`;
+    <div class="mat-diff"><div class="mat-diff-name">Difficulty</div><div class="mat-diff-slot"></div></div>`;
 }
 
-// Highlight the act being played in the Board's rules table (null clears it).
+// The player-count card: this player count's numbers by act (the act being played is highlighted),
+// the Track start, and a reminder of each column's rules.
+function countCardHtml(players) {
+  const acts = [...new Set(SIM_RULES.acts)];
+  const heal = playerRule('actEndHeal', players);
+  const bonus = playerRule('actWinBonus', players);
+  const row = (label, cell) => `<tr><th>${label}</th>${acts.map(a => `<td data-act="${a}">${cell(a)}</td>`).join('')}</tr>`;
+  const perAct = typeof playerRule('target', players) === 'object';
+  const notes = columnNotes(players);
+  const note = c => notes[c] && `<div class="cc-note"><b>${notes[c][0]}</b> ${notes[c][1].replace(/<br>/g, ' · ')}</div>`;
+  return `
+    <div class="cc-title">${players} players</div>
+    <table class="mat-rules">
+      <tr><th></th>${acts.map(a => `<th data-act="${a}">${a}</th>`).join('')}</tr>
+      ${perAct ? row('Stack', a => actTarget(a, players)) : ''}
+      ${row('Difficulty die', a => playerRule('difficulty', players)[a])}
+      ${heal ? row('Resources back', a => (a === acts[0] ? '—' : `+${heal}`)) : ''}
+      ${row(SIM_RULES.actWinBonusAs === 'storyPoints' ? 'Winner’s Story Pts' : 'Win bonus', a => `${bonus[a].main}`)}
+      <tr><th>Track start</th><td colspan="${acts.length}">${playerRule('trackStart', players)}</td></tr>
+    </table>
+    <div class="cc-notes">${['main', 'approach', 'help', 'edge', 'successes'].filter(c => MAT_COL_NAMES.includes(c)).map(note).join('')}
+      <div class="cc-note"><b>Tension</b> −1 to its approach${SIM_RULES.minusNextRound ? ' from next round' : ''} · ${SIM_RULES.maxEscalations} out: an Epic Failure loses · <b>Clear seat</b>: remove a die, +1 Story Point</div>
+    </div>`;
+}
+
+// Highlight the act being played in the player-count card's table (null clears it).
 function highlightBoardAct(act) {
   document.querySelectorAll('.mat-rules [data-act]').forEach(c => c.classList.toggle('now', c.dataset.act === act));
+}
+
+// Each Board column's title, and a reminder of its rules (on the player-count card).
+function columnNotes(players) {
+  const miniEdge = '<span class="mini-tok edge" title="Story Points">+1</span>';
+  const miniSpot = '<span class="mini-tok spot" title="spotlight">★</span>';
+  const miniFirst = '<span class="mini-tok init" title="initiative">1</span>';
+  const heads = {
+    main: ['Lead', `${SIM_RULES.rowOrder === 'initiative' ? 'rolls in initiative order<br>' : ''}${SIM_RULES.maxStake ? `stake up to ${SIM_RULES.maxStake} ${miniSpot} · ` : ''}${SIM_RULES.maxEdgePerBet ? `Story Points: up to ${SIM_RULES.maxEdgePerBet}` : 'spend any Story Points'}${(PLAYER_COUNT_RULES[players] || {}).endingEdgeCap ? ` (Ending ${PLAYER_COUNT_RULES[players].endingEdgeCap})` : ''} ${miniEdge}`],
+    help: ['Support', `+1 each · needs a matching Relationship${SIM_RULES.helperPay === 'points' ? ' · takes 2 Story Points (1 if it fails)' : SIM_RULES.helperPay === 'one' ? ' · takes 1 Story Point' : ''}`],
+    approach: ['Approach', SIM_RULES.freeApproach ? 'the Lead’s own die, set to how they go in' : 'read it on the Fate card'],
+    edge: ['Edge', `${sceneMod()}: the first Lead going in with its approach takes the Edge die`],
+    minus: ['Tension', `−1 to its approach${SIM_RULES.minusNextRound ? '<br>from next round' : ''}<br>2 out: a fail loses${SIM_RULES.clearTiming === 'end' ? `<br>Clear: ${miniEdge}${SIM_RULES.clearGoesFirst ? ` ${miniFirst}st` : ''}` : ''}`],
+    obstacle: ['Obstacle', `${SIM_RULES.obstacleCancels ? 'its approach gets<br>no bonuses' : '−1 to its approach'}<br>on its row only<br>set by the Storyteller`],
+    successes: ['Successes', `${typeof playerRule('target', players) === 'object' ? 'stack in the table' : playerRule('target', players)} to win${SIM_RULES.overflowAtRowLimit ? `<br>extra margin → ${miniEdge}` : ''}`],
+  };
+  return heads;
 }
 
 function buildMat(x, y, situation) {
   const mat = el('div', 'mat');
   mat.style.gridTemplateColumns = MAT_COLS.map(c => `${c}px`).join(' ');
-  mat.style.gridTemplateRows = `${MAT_BANNER}px ${MAT_HEAD}px repeat(3, ${MAT_ROW}px) ${MAT_FOOT}px`;
+  mat.style.gridTemplateRows = `${MAT_BANNER}px ${MAT_TRACKS}px ${MAT_HEAD}px repeat(3, ${MAT_ROW}px) ${MAT_GUTTER}px`;
   mat.appendChild(el('div', 'mat-banner', boardRulesHtml(Math.min(PLAYER_COUNT, DATA.players.length))));
+  // The Progress track (0-8) and the Round track (1-8): markers move on them. A Situation that
+  // doesn't use the Progress track leaves its marker off to the side.
+  const track = (kind, name, from, to) => `<div class="mat-track"><div class="mat-track-name">${name}</div>${
+    Array.from({ length: to - from + 1 }, (_, i) => `<div class="mat-tcell" data-kind="${kind}" data-n="${from + i}">${from + i}</div>`).join('')}</div>`;
+  mat.appendChild(el('div', 'mat-tracks', track('progress', 'Progress', 0, 8) + track('round', 'Round', 1, 8)));
   // Each column's title on top, and a reminder of its rules under the column.
-  const players = Math.min(PLAYER_COUNT, DATA.players.length);
-  const miniEdge = '<span class="mini-tok edge" title="Story Points">+1</span>';
-  const miniSpot = '<span class="mini-tok spot" title="spotlight">★</span>';
-  const miniFirst = '<span class="mini-tok init" title="initiative">1</span>';
-  const heads = {
-    main: ['Main', `${SIM_RULES.rowOrder === 'initiative' ? 'rolls in initiative order<br>' : ''}${SIM_RULES.maxStake ? `stake up to ${SIM_RULES.maxStake} ${miniSpot} · ` : ''}${SIM_RULES.maxEdgePerBet ? `Story Points: up to ${SIM_RULES.maxEdgePerBet}` : 'spend any Story Points'}${(PLAYER_COUNT_RULES[players] || {}).endingEdgeCap ? ` (Ending ${PLAYER_COUNT_RULES[players].endingEdgeCap})` : ''} ${miniEdge}`],
-    help: ['Help', '+1 each · needs a matching Relationship'],
-    approach: ['Approach', SIM_RULES.freeApproach ? 'the Main’s own die, set to how they go in' : 'read it on the Fate card'],
-    edge: ['Edge', `${sceneMod()}: the first Main going in with its approach takes the Edge die`],
-    minus: ['Tension', `−1 to its approach${SIM_RULES.minusNextRound ? '<br>from next round' : ''}<br>2 out: a fail loses${SIM_RULES.clearTiming === 'end' ? `<br>Clear: ${miniEdge}${SIM_RULES.clearGoesFirst ? ` ${miniFirst}st` : ''}` : ''}`],
-    obstacle: ['Obstacle', `${SIM_RULES.obstacleCancels ? 'its approach gets<br>no bonuses' : '−1 to its approach'}<br>on its row only<br>set by the Storyteller`],
-    successes: ['Successes', `${typeof playerRule('target', players) === 'object' ? 'stack in the table' : playerRule('target', players)} to win${SIM_RULES.overflowAtRowLimit ? `<br>extra margin → ${miniEdge}` : ''}`],
-  };
+  const heads = columnNotes(Math.min(PLAYER_COUNT, DATA.players.length));
   MAT_COL_NAMES.forEach(c => mat.appendChild(el('div', 'mat-head', heads[c][0])));
   // Minus dice come from Escalations and hit every roll, so it's one tall box for all three
   // rows (added on row A only): the dice at the top, and a pawn clearing one of them at the bottom.
   const cellFor = {
     main: () => el('div', 'mat-cell round'),
-    help: () => el('div', 'mat-cell help round'),
+    help: () => el('div', 'mat-cell help'), // a wide box: any number of supporters' pawns
     approach: () => el('div', 'mat-cell approach'),
     edge: () => el('div', 'mat-cell edge'),
     minus: row => (row === 0 ? el('div', 'mat-cell minus') : null),
@@ -598,21 +632,45 @@ function buildMat(x, y, situation) {
     successes: () => el('div', 'mat-cell'),
   };
   [0, 1, 2].forEach(row => MAT_COL_NAMES.forEach(c => { const node = cellFor[c](row); if (node) mat.appendChild(node); }));
-  MAT_COL_NAMES.forEach(c => mat.appendChild(el('div', `mat-foot foot-${c}`, heads[c][1])));
+  // The Tension gutter: one open strip under the rows for the Tension dice, with the Clear seat at its right end.
+  mat.appendChild(el('div', 'mat-gutter', `<div class="mat-gutter-name">Tension<small>−1 to its approach${SIM_RULES.minusNextRound ? ', from next round' : ''} · ${SIM_RULES.maxEscalations} out: an Epic Failure loses</small></div><div class="mat-clear">Clear seat<small>remove a die: +1 Story Point</small></div>`));
   addStatic(mat, x, y);
 
   // Centre of a cell, in world coordinates.
-  return (row, col) => ({
+  const cell = (row, col) => ({
     x: x + MAT_PAD + MAT_COLS.slice(0, col).reduce((a, b) => a + b, 0) + MAT_COLS[col] / 2,
     y: y + MAT_TOP + row * MAT_ROW + MAT_ROW / 2,
   });
+  // Centre of anything inside the Board (a track cell, the gutter), in world coordinates.
+  const centre = node => {
+    let ox = 0, oy = 0;
+    for (let n = node; n && n !== mat; n = n.offsetParent) { ox += n.offsetLeft; oy += n.offsetTop; }
+    return { x: x + ox + node.offsetWidth / 2, y: y + oy + node.offsetHeight / 2 };
+  };
+  cell.track = (kind, n) => { const c = mat.querySelector(`.mat-tcell[data-kind="${kind}"][data-n="${n}"]`); return c && centre(c); };
+  cell.trackOff = kind => { const c = mat.querySelector(`.mat-tcell[data-kind="${kind}"]`); const p = c && centre(c); return p && { x: p.x - 92, y: p.y }; }; // over the track's name
+  cell.gutter = () => { const g = mat.querySelector('.mat-gutter'); return { ...centre(g), w: g.offsetWidth, h: g.offsetHeight }; };
+  cell.clearSpot = () => centre(mat.querySelector('.mat-clear'));
+  cell.diffSpot = () => centre(mat.querySelector('.mat-diff-slot'));
+  return cell;
+}
+
+// The Progress and Round markers: on track cell `n`, or (null) parked beside the track.
+function moveTrackMarker(kind, n) {
+  const marker = kind === 'progress' ? TABLE.progressMarker : TABLE.roundMarker;
+  if (!marker || !TABLE.cell) return;
+  const at = n === null ? TABLE.cell.trackOff(kind) : TABLE.cell.track(kind, Math.max(kind === 'round' ? 1 : 0, Math.min(8, n)));
+  if (at) glide(marker, at.x - marker.w / 2, at.y - marker.h / 2);
+  marker.el.classList.toggle('parked', n === null); // off the track: dimmed, over the track's name
 }
 
 // The Situation card stands upright left of the Board: the description at the top, the three
 // choices in the middle (each a Board row tall, level with the Board's rows), the Escalations
 // at the bottom.
-const SIT_CARD = { w: 400, border: 5, intro: 165, escs: 150 }; // intro: the .sit-intro height in style.css
-SIT_CARD.h = 2 * SIT_CARD.border + SIT_CARD.intro + 3 * MAT_ROW + SIT_CARD.escs;
+// setup: the .sit-setup band, level with the Board's tracks; escs: the Epic Failure outcomes, level with
+// the Tension gutter and the Board's foot.
+const SIT_CARD = { w: 400, border: 5, intro: 165, setup: MAT_TRACKS, escs: MAT_GUTTER + MAT_PAD - 5 }; // intro: the .sit-intro height in style.css
+SIT_CARD.h = 2 * SIT_CARD.border + SIT_CARD.intro + SIT_CARD.setup + 3 * MAT_ROW + SIT_CARD.escs;
 
 // One size for the A/B/C shapes on the Board and on the Situation card.
 const ROW_SHAPE_SIZE = 25;
@@ -707,8 +765,32 @@ function drawSituation(card, situation, result = null, words = null) {
     const b = c.querySelector('.sit-choice-text');
     if (b) fit(b, () => b.offsetHeight > c.clientHeight - 4);
   });
+  const setup = front.querySelector('.sit-setup');
+  if (setup) fit(setup, () => setup.scrollHeight > setup.clientHeight + 1);
   const escs = front.querySelector('.sit-escs');
   if (escs) fit(escs, () => escs.scrollHeight > escs.clientHeight + 1);
+}
+
+// Situation families (rules on the card): 'parallel' (the default: the first row emptied wins) and
+// 'track' (every row pushes one Progress marker). familyOf / trackSetup read a Situation's own numbers.
+const familyOf = situation => (situation && situation.family) || 'parallel';
+const trackSetup = situation => ({ start: playerRule('trackStart'), goal: 8, pool: 9, ...(situation.setup || {}) });
+// Supporters a row can take on this Situation (0 = any number): 1 on a Parallel card, unless it says.
+const supportersFor = situation => situation.supporters ?? (familyOf(situation) === 'parallel' ? 1 : 0);
+
+// The card's Setup box: how to set up the Board, and how the situation is won and lost.
+function situationSetupHtml(situation, words = null, seen = new Set()) {
+  const n = supportersFor(situation);
+  const why = situation.supportWhy ? madLib(situation.supportWhy, words, seen) : 'you each find your own way in';
+  const support = n === 1 ? `<b>1 supporter per row:</b> ${why}.` : n ? `<b>Up to ${n} supporters per row.</b>` : '<b>Any number of supporters.</b>';
+  if (familyOf(situation) === 'track') {
+    const t = trackSetup(situation);
+    const end = k => (t.labels && t.labels[k] ? ` (${madLib(t.labels[k], words, seen)})` : '');
+    return `<b class="sit-family">⇄ Track</b> No stacks. Progress marker on the <b>Track start</b> (player-count card). A success moves it +1 (+2 on an Epic Success), and the Lead takes 1 spotlight from the scene pool (${t.pool}). An Epic Failure moves it −1: read one below (no Tension). ${support}
+      <span class="sit-winlose"><b class="win">Win:</b> ${t.goal}${end('goal')} · <b class="lose">Lose:</b> 0${end('fail')}</span>`;
+  }
+  return `<b class="sit-family">⇶ Parallel</b> Each row starts with the act’s stack: a success takes 1 token. ${support}
+    <span class="sit-winlose"><b class="win">Win:</b> empty any row (its Lead wins the act) · <b class="lose">Lose:</b> an Epic Failure with ${SIM_RULES.maxEscalations} Tension dice out</span>`;
 }
 
 function situationFront(situation, result = null, words = null) {
@@ -721,8 +803,10 @@ function situationFront(situation, result = null, words = null) {
     const m = l.match(/^\s*([ABC])\)\s*(.*)$/);
     if (m) choices[m[1]] = m[2].replace(APPROACH_AND_RISK, '');
   });
-  const escalations = situation.escalations
-    .map((text, i) => text && `<div class="sit-esc"><b>Escalation ${i + 1}:</b> ${madLib(text, words, seen)}</div>`)
+  // The Epic Failure outcomes (the Situation's Escalations): the Lead picks one. On a Parallel card each
+  // ends with the approach its Tension die takes (➖🧠); a Track card's are story only.
+  const escalations = '<div class="sit-esc-head">Epic Failure <small>· the Lead picks one</small></div>' + situation.escalations
+    .map((text, i) => text && `<div class="sit-esc"><b>${i + 1}.</b> ${madLib(text, words, seen)}</div>`)
     .join('');
   // Who won on row i (a shared win stamps every finished row).
   const winnerOn = i => result && !result.lost && (result.winners || [result]).find(w => w.row === i);
@@ -733,6 +817,7 @@ function situationFront(situation, result = null, words = null) {
       <div class="sit-text">${madLib(intro, words, seen)}</div>
       ${SIM_RULES.riskModifier && SIM_RULES.freeApproach ? '<div class="sit-risk-head">Risk</div>' : ''}
     </div>
+    <div class="sit-setup">${situationSetupHtml(situation, words, seen)}</div>
     <div class="sit-choices">
       ${['A', 'B', 'C'].map((k, i) => `
         <div class="sit-choice${winnerOn(i) ? ' won' : ''}">${choiceRiskHtml(situation.risks[i])}<span class="sit-choice-text">${madLib(choices[k], words, seen)}</span>${winnerOn(i) ? `<span class="sit-stamp" style="--c:${winnerOn(i).color}">★ ${esc(winnerOn(i).name)}</span>` : ''}</div>`).join('')}
@@ -773,8 +858,8 @@ const STORY_FACE = `<div class="story-title">Storyteller</div><ol class="story-s
   <li>Round over? <b>Pass this on</b>.</li>
 </ol>`;
 const STORY_BACK = `<div class="story-title">New Situation</div><p class="story-text">Draw a new <b>Situation</b> and <b>Location</b>.
-  Read the Situation description aloud, filling in the blanks with the text on the Element cards.
-  Place the <b>Edge die</b> on the Board, set to the approach on the Element line it names.</p>`;
+  Read it aloud, filling in the blanks from the Element cards. Set the <b>Edge die</b> to the approach
+  on the Element line it names, and the <b>Difficulty die</b> from the player-count card.</p>`;
 
 // Relationship cards on the ring: one per pair of neighbours (just one for two players).
 const relationshipCount = n => (n === 2 ? 1 : n);
@@ -1306,7 +1391,8 @@ function deal(mode = 'deal') {
   const EL_R = OBJ_X + EL_CARD.w;                       // the Elements' right edge
   const SIT_X = EL_R + 50;
   const BOARD_X = SIT_X + SIT_CARD.w; // the Board, flush against the Situation card's right edge
-  const RX = BOARD_X + MAT_W + 50;    // the Relationship wheel, right of the Board
+  const COUNT_X = BOARD_X + MAT_W + 30; // the player-count card, right of the Board
+  const RX = COUNT_X + COUNT_CARD.w + 50; // the Relationship wheel, right of that
   const TOP_R = RX + REL_BOARD;       // the top row's right edge
   // The characters sit in a single row under it all (CHAR_COLS = 2 would make rows of two).
   const CHAR_COLS = players.length;
@@ -1353,7 +1439,7 @@ function deal(mode = 'deal') {
   // "Situation" title, with a button per act as the game goes on (see showAct).
   // The Situation card sits so its three choices (each a Board row tall, under the description)
   // line up with the Board's rows.
-  const SIT_Y = ROW2 + MAT_TOP - SIT_CARD.border - SIT_CARD.intro;
+  const SIT_Y = ROW2 + MAT_TOP - SIT_CARD.border - SIT_CARD.intro - SIT_CARD.setup;
   // "Situation" above the card's top left corner; the act tabs under its bottom left corner,
   // kept left of the Board (they wrap).
   TABLE.actTabs = addStatic(el('div', 'act-tabs'), SIT_X, SIT_Y + SIT_CARD.h + 12);
@@ -1375,8 +1461,16 @@ function deal(mode = 'deal') {
   edgeName.style.width = `${DIE_SIZE}px`;
   TABLE.sceneNoteEl = document.querySelector('.mat .mat-scene');
   TABLE.cell = cell;
+  TABLE.countCard = createCard({
+    className: 'count-card', w: COUNT_CARD.w, h: COUNT_CARD.h, x: COUNT_X, y: ROW2,
+    front: countCardHtml(Math.min(PLAYER_COUNT, DATA.players.length)), back: plainBack('Players'),
+  });
+  // The Difficulty die, top right of the Board: set from the player-count card at each act's setup,
+  // so everyone can see the number to beat.
+  const diffAt = cell.diffSpot();
+  TABLE.difficultyDie = createDie({ className: 'die-difficulty', size: DIE_SIZE, value: playerRule('difficulty')[SIM_RULES.acts[0]] ?? 1, x: diffAt.x - DIE_SIZE / 2, y: diffAt.y - DIE_SIZE / 2 });
   TABLE.boardAt = { x: BOARD_X, y: ROW2 }; // the Board's top left corner (for lighting up a row)
-  const boardBottom = ROW2 + MAT_TOP + MAT_ROW * 3 + MAT_FOOT + MAT_PAD;
+  const boardBottom = ROW2 + MAT_TOP + MAT_ROW * 3 + MAT_GUTTER + MAT_PAD;
   TABLE.lostAt = { x: BOARD_X + 130, y: boardBottom + 12 };
   // Where a resolved roll's cards are shown: a line centred under the Board, overlapping its bottom edge.
   TABLE.showcaseAt = { x: BOARD_X + MAT_W / 2, y: boardBottom - 70 };
@@ -1387,14 +1481,17 @@ function deal(mode = 'deal') {
   TABLE.lost = [];
   // Where Minus dice sit. With the Clear seat, the Minus box covers rows A-B (a third die only
   // appears for a moment, while someone holds the line) and the Clear box is row C.
-  const seatRule = SIM_RULES.clearTiming === 'end';
+  // The Tension dice go along the gutter, left to right after its name; the Clear seat is its right end.
   TABLE.minusAt = (k, size) => {
-    const c = cell(seatRule ? 0 : 1, matCol('minus'));
-    const dy = seatRule ? ([-8, 66][k] ?? 29) : (k === 0 ? -60 : 60);
-    return { x: c.x - size / 2 + (k >= 2 ? 16 : 0), y: c.y - size / 2 + dy };
+    const g = cell.gutter();
+    return { x: g.x - g.w / 2 + 190 + k * (size + 16), y: g.y - size / 2 };
   };
-  const seat = cell(2, matCol('minus'));
-  TABLE.clearSeat = { x: seat.x, y: seat.y - 6 };
+  TABLE.clearSeat = cell.clearSpot();
+  // The Progress and Round markers.
+  TABLE.progressMarker = createToken({ className: 'track-marker progress', size: 48, html: '<span>◆</span>' });
+  TABLE.roundMarker = createToken({ className: 'track-marker round', size: 48, html: '<span>⟳</span>' });
+  moveTrackMarker('progress', null);
+  moveTrackMarker('round', 1);
   if (!SIM_RULES.freeApproach) situation.approaches.forEach((appr, row) => {
     const idx = APPROACHES.indexOf(appr);
     if (idx < 0) return;
@@ -1532,7 +1629,7 @@ function deal(mode = 'deal') {
       { x: supplyX - 20, y: supplyY - SPOTLIGHT_TOKENS * SPOTLIGHT_STEP - 20, w: SPOTLIGHT_SIZE + 40, h: SPOTLIGHT_TOKENS * SPOTLIGHT_STEP + SPOTLIGHT_SIZE + 26 });
 
     // The player's approach die (six approaches): overlapping the portrait's top right corner,
-    // until they go in as a Main and set it in their box on the Board.
+    // until they go in as a Lead and set it in their box on the Board.
     const approachDieHome = { x: portraitX + PC_CARD.w - DIE_SIZE + 12, y: portraitY - 12 };
     const approachDie = createDie({ className: 'die-approach', size: DIE_SIZE, faces: APPROACHES, value: randInt(6) + 1, x: approachDieHome.x, y: approachDieHome.y });
 

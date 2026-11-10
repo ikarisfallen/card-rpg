@@ -164,6 +164,27 @@ window.LOTR_DATA = (() => {
         approaches: ['🕶️', '🐢', '💪'],
         risks: ['ℹ️', '📏', '🔥'],
       },
+      // Track Situations (2026-11-10): every row pushes one Progress marker; see situationSetupHtml in deal.js.
+      {
+        name: 'Middle: Riders at the ford',
+        family: 'track',
+        setup: { goal: 8, pool: 9, labels: { goal: 'the river', fail: 'caught' } },
+        key: '🛠️❌',
+        description: 'The river at 🏠 is just ahead, and 👿’s riders are right behind you. Worse, 🛠️ is getting harder to carry: 🛠️❌.\nA) I ride hard for the water and don’t look back ⚡ (⌛)\nB) I turn and hold them off with fire 💪 (🔥)\nC) I call on the river to rise against them 🧠 (📦)',
+        escalations: ['A horse stumbles in the dark', 'They cut across the bend ahead of you'],
+        approaches: ['⚡', '💪', '🧠'],
+        risks: ['⌛', '🔥', '📦'],
+      },
+      {
+        name: 'Middle: The council of the hidden realm',
+        family: 'track',
+        setup: { goal: 8, pool: 9, labels: { goal: 'they stand with you', fail: 'they turn you away' } },
+        key: '😇🔒',
+        description: 'At 🏠, the old lords will decide whether to stand against 👿 with you. 😇 could sway them, but is keeping something back: 😇🔒.\nA) I speak for everyone who can’t be here 📢 (⭐)\nB) I show them what 👿 has already done 🧠 (ℹ️)\nC) I wait, and let them come round in their own time 🐢 (📏)',
+        escalations: ['An old grudge between your peoples comes up', 'One of the lords walks out'],
+        approaches: ['📢', '🧠', '🐢'],
+        risks: ['⭐', 'ℹ️', '📏'],
+      },
       {
         name: 'Middle: Siege at the gorge',
         key: '🧱',

@@ -14,10 +14,13 @@ const SIM_RULES = {
   // TEST 2026-10-23, what a helper takes (the Relationship match always adds +1 to the roll):
   // 'match'  : success: a matching helper takes a spotlight (a Story Point if the row's empty); else nothing
   // 'token'  : success: matching takes a spotlight, not matching a Story Point (a Story Point if the row's empty)
+  // 'one'    : (for any number of helpers) only the Main takes from the row; each helper takes 1 Story Point, success or not
+  // 'oneWin' : the same, but only on a success
   // 'auto'   : success: any helper takes a spotlight (2 Story Points if the row's empty); otherwise 1 Story Point
   // 'points' : success: any helper takes 2 Story Points; otherwise 1 Story Point (no spotlight)
   // 'choice' : success: any helper chooses a spotlight or 2 Story Points (2 if the row's empty); otherwise 1 Story Point
-  helperPay: 'auto', // ON 2026-10-23 (user chose it over 'choice': same balance, no decision)
+  helperPay: 'points', // ON 2026-11-10: the Lead takes the token; each supporter takes 2 Story Points, or 1 if the roll fails
+                       // (1 each, 'one', made supporting nearly worthless and 4 players too hard: sim 2026-11-10)
   maxTokensPerRoll: 1,   // a success takes at most this many spotlight tokens (0 = no cap); 1 since 2026-10-19...
   overflowToEdge: false, // ...true: each point of margin above it is 1 Story Point from the pile instead
   // Failing (the Main player): Edge taken = failEdgeMain + failEdgePerMinus per Minus die already
@@ -213,7 +216,23 @@ const SIM_RULES = {
   scoreAtOnce: true,
   // A lost situation costs everyone all the Story Points they hold, back to the pile (ON 2026-10-22).
   lossTakesStoryPoints: true,
-  maxHelpers: 1, // helpers a row can take (0 = no limit); one since 2026-10-22
+  helpCap: 0,          // TEST 2026-11-09: the most all helpers together add to a roll (0 = no cap)
+  crowdDanger: false,  // TEST 2026-11-09: a row with 2+ helpers is in danger: a negative Fate number for its approach means an Epic Failure outcome anyway
+  crowdDanger3: false, // ...and with 3+ helpers, a 0 counts too
+  crowdSetback: false, // TEST 2026-11-09: the crowd's danger puts a token back on the row (progress lost, an Epic Failure outcome told) instead of a Tension die
+  crowdWhole: false,   // TEST 2026-11-09: a crowd is the whole party on one row; its danger is a Fate 0 or less
+  crowdWholeAt: 0,     // TEST: the whole-party danger hits on a Fate number at or below this (0: 4 cards in 6; -1: 2 in 6)
+  epicTwoSolo: false,  // TEST 2026-11-09: an Epic Success takes 2 tokens when the row has at most 1 helper
+  crowdBig: false,     // TEST 2026-11-09: at 4+ players a crowd is 3+ helpers (2+ below that)
+  roundLimit: null,    // TEST 2026-11-09: a situation is lost after its stack + this many rounds (null: maxRounds)
+  crowdScale: false,   // TEST 2026-11-09: ...or scaled: 2 helpers on a Fate 0 or less, 3+ helpers on +1 or less
+  sharedCost: false,   // TEST 2026-11-09: a success bought with Story Points or a pushed resource costs every helper 1 of the row's resource
+  sharedMiss: false,   // TEST 2026-11-09: a tie or a miss costs everyone on the row 1 of the row's resource
+  sharedFailure: false, // TEST 2026-11-09: on an Epic Failure every helper on the row draws a Liability too
+  trackStart: 3,      // Track Situations: where the Progress marker starts, on the player-count card. 2026-11-10 sim (Track
+                      // Middle won, 50-60 games): 2p 3 → 68% (4: 86%), 3p 2 → 86% (1: 63%, 3: 92%), 4p 1 → 74% (2: 96%)
+  maxHelpers: 0,      // supporters a row can take (0 = no limit). Any number since 2026-11-10 (1 from 2026-10-22);
+                      // the Situation card sets its own (Parallel cards: 1, see supportersFor in deal.js)
 };
 
 // A Storyteller seat passes round the table (for the Obstacle or for drawing the risks).
@@ -242,10 +261,11 @@ const PLAYER_COUNT_RULES = {
     // Obstacle: two players start the Ending with plenty of Edge the 2-per-roll limit kept unused).
   },
   3: {
+    trackStart: 2,
     target: { 'Beginning': 3, 'Middle': 4, 'Ending': 5 },
     edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 0 }, // 1 Story Point to start the game (2026-10-21), none at later acts
   },
-  4: { target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 0 } }, // 1 Story Point to start the game (2026-10-21), none at later acts
+  4: { trackStart: 1, target: { 'Beginning': 4, 'Middle': 5, 'Ending': 6 }, edgeAtActStart: { 'Beginning': 1, 'Middle': 0, 'Ending': 0 } }, // 1 Story Point to start the game (2026-10-21), none at later acts
 };
 
 // Story Points (called Edge in the code): "1 Story Point", "2 Story Points".

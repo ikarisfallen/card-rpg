@@ -719,7 +719,7 @@ html, body {
   border: 2px dashed rgba(255, 255, 255, 0.22);
 }
 
-.mat-cell.help { background: rgba(255, 255, 255, 0.04); }
+.mat-cell.help { background: rgba(255, 255, 255, 0.04); border-radius: 44px; }
 
 /* One Minus box for all three rows: its dice hit every roll. */
 .mat-cell.minus {
@@ -1951,3 +1951,101 @@ s.cancelled, .roll-parts li.cancelled s { opacity: 0.6; }
 .card-back .set-tag { color: #fff; opacity: 0.5; }
 /* On a back with a name at each end (Concept, Trouble, Location...), the set's name sits just above the lower name. */
 .card-back .name-end.upside-down ~ .set-tag { bottom: 37px; }
+
+/* ---------- Situation families: the Board's tracks and Tension gutter, the card's Setup box ---------- */
+/* The Progress (0-8) and Round (1-8) tracks under the banner, level with the card's Setup box. */
+.mat-tracks {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+.mat-track { display: flex; align-items: center; gap: 4px; height: 46px; }
+.mat-track-name { width: 86px; flex: none; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+.mat-tcell {
+  flex: 1;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.15);
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(233, 241, 234, 0.6);
+}
+/* The Tension gutter under the rows: the Tension dice, and the Clear seat at its right end. */
+.mat-gutter {
+  grid-column: 1 / -1;
+  margin: 5px;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  border-radius: 14px;
+  border: 2px dashed rgba(255, 120, 120, 0.45);
+  background: rgba(140, 20, 40, 0.14);
+}
+.mat-gutter-name { align-self: center; padding-left: 14px; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255, 200, 200, 0.85); }
+.mat-gutter-name small, .mat-clear small { display: block; margin-top: 2px; font-size: 11px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.mat-gutter-name small { max-width: 150px; }
+.mat-clear {
+  width: 130px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 6px;
+  border-left: 2px dashed rgba(255, 120, 120, 0.45);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(255, 200, 200, 0.75);
+}
+/* The track markers. */
+.token.track-marker .lift { font: 900 22px "Segoe UI", system-ui, sans-serif; border: 3px solid rgba(255, 255, 255, 0.8); color: #2a1c00; }
+.token.track-marker.progress .lift { background: radial-gradient(circle at 35% 30%, #fff1b8, #e0a92e 70%); }
+.token.track-marker.round .lift { background: radial-gradient(circle at 35% 30%, #d6ecff, #4a86c5 70%); color: #fff; }
+/* The Situation card's Setup box: how to set up the Board, and how the situation is won and lost. */
+.situation-card .sit-setup {
+  flex: none;
+  height: 120px; /* SIT_CARD.setup = MAT_TRACKS in deal.js */
+  box-sizing: border-box;
+  padding: 6px 12px;
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 1.3;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border-bottom: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.sit-setup .sit-family { color: color-mix(in srgb, var(--accent) 80%, #000); margin-right: 4px; }
+.sit-setup .sit-winlose { display: block; margin-top: 3px; }
+.sit-setup .win { color: #1f6b3a; }
+.sit-setup .lose { color: #a3332b; }
+.sit-esc-head { font-size: 0.85em; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8e2b1f; }
+.sit-esc-head small { font-weight: 600; letter-spacing: 0; text-transform: none; color: #7a6d55; }
+
+/* The player-count card, right of the Board: this count's numbers by act, and the column reminders. */
+.count-card { --accent: #2b5a3e; --back: #1d3f2c; }
+.count-card .card-front { padding: 10px 12px; gap: 8px; font-size: 13px; line-height: 1.28; }
+.count-card .cc-title { font-size: 20px; font-weight: 800; color: color-mix(in srgb, var(--accent) 85%, #000); }
+.count-card .mat-rules { width: 100%; font-size: 13px; color: var(--ink); }
+.count-card .mat-rules th, .count-card .mat-rules td { padding: 1px 4px; }
+.count-card .mat-rules td { font-size: 15px; }
+.count-card .mat-rules tr:first-child th { font-size: 10px; opacity: 0.7; }
+.count-card .mat-rules tr > th:first-child { text-align: left; opacity: 0.8; }
+.count-card .mat-rules .now { background: color-mix(in srgb, #e0a92e 30%, transparent); color: #6b4a00; }
+.count-card .cc-notes { display: flex; flex-direction: column; gap: 5px; border-top: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); padding-top: 7px; }
+.count-card .cc-note b { color: color-mix(in srgb, var(--accent) 85%, #000); }
+.count-card .mini-tok { width: 15px; height: 15px; font-size: 8px; vertical-align: -3px; color: #222; }
+
+.token.track-marker.parked { opacity: 0.35; }
+
+/* The Difficulty die's spot, top right of the Board's banner. */
+.mat-diff { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-right: 8px; }
+.mat-diff-slot { width: 86px; height: 86px; border-radius: 14px; border: 2px dashed rgba(255, 255, 255, 0.4); background: rgba(0, 0, 0, 0.18); }
+.mat-diff-name { font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #ffd25e; } /* like the Edge die's name */
